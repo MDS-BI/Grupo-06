@@ -1,0 +1,134 @@
+// MER - Módulo Ventas / CRM (notación pata de gallo)
+// Generar: dot -Tpng -Gdpi=150 docs/mer.dot -o docs/mer.png
+// Nota v0.2: se cambió splines=ortho por polyline. Con ortho, Graphviz invertía la pata de gallo en 9 de las 20 relaciones.
+digraph MER {
+  graph [rankdir=LR, splines=polyline, nodesep=0.55, ranksep=1.1, bgcolor="white",
+         fontname="Helvetica", label="MER — Módulo Ventas / CRM  (v0.2, 21-10-2026)", labelloc=t, fontsize=20];
+  node  [shape=plain, fontname="Helvetica", fontsize=10];
+  edge  [dir=both, color="#475569", fontname="Helvetica", fontsize=9, fontcolor="#334155"];
+
+  // ---------- Entidades ----------
+  VENDEDOR [label=<
+  <table border="0" cellborder="1" cellspacing="0" cellpadding="4">
+    <tr><td bgcolor="#1e3a8a"><font color="white"><b>VENDEDOR</b></font></td></tr>
+    <tr><td align="left">PK id_vendedor</td></tr>
+    <tr><td align="left">nombre<br align="left"/>email<br align="left"/>rol<br align="left"/>zona<br align="left"/>activo<br align="left"/></td></tr>
+  </table>>];
+
+  META_VENTA [label=<
+  <table border="0" cellborder="1" cellspacing="0" cellpadding="4">
+    <tr><td bgcolor="#1e3a8a"><font color="white"><b>META_VENTA</b></font></td></tr>
+    <tr><td align="left">PK id_meta</td></tr>
+    <tr><td align="left">FK id_vendedor<br align="left"/>periodo<br align="left"/>monto_meta<br align="left"/></td></tr>
+  </table>>];
+
+  CLIENTE [label=<
+  <table border="0" cellborder="1" cellspacing="0" cellpadding="4">
+    <tr><td bgcolor="#1e3a8a"><font color="white"><b>CLIENTE</b></font></td></tr>
+    <tr><td align="left">PK id_cliente</td></tr>
+    <tr><td align="left">UK rut<br align="left"/>razon_social<br align="left"/>tipo_cliente<br align="left"/>giro<br align="left"/>email · telefono<br align="left"/>direccion · comuna · region<br align="left"/>segmento<br align="left"/>estado<br align="left"/>fecha_registro<br align="left"/>consentimiento_datos<br align="left"/>fecha_consentimiento<br align="left"/>FK id_vendedor<br align="left"/></td></tr>
+  </table>>];
+
+  CONTACTO [label=<
+  <table border="0" cellborder="1" cellspacing="0" cellpadding="4">
+    <tr><td bgcolor="#1e3a8a"><font color="white"><b>CONTACTO</b></font></td></tr>
+    <tr><td align="left">PK id_contacto</td></tr>
+    <tr><td align="left">FK id_cliente<br align="left"/>nombre · cargo<br align="left"/>email · telefono<br align="left"/>es_principal<br align="left"/></td></tr>
+  </table>>];
+
+  OPORTUNIDAD [label=<
+  <table border="0" cellborder="1" cellspacing="0" cellpadding="4">
+    <tr><td bgcolor="#1e3a8a"><font color="white"><b>OPORTUNIDAD</b></font></td></tr>
+    <tr><td align="left">PK id_oportunidad</td></tr>
+    <tr><td align="left">FK id_cliente<br align="left"/>FK id_vendedor<br align="left"/>titulo<br align="left"/>etapa<br align="left"/>monto_estimado<br align="left"/>probabilidad_pct<br align="left"/>fecha_creacion<br align="left"/>fecha_cierre_estimada<br align="left"/>motivo_perdida<br align="left"/></td></tr>
+  </table>>];
+
+  INTERACCION [label=<
+  <table border="0" cellborder="1" cellspacing="0" cellpadding="4">
+    <tr><td bgcolor="#1e3a8a"><font color="white"><b>INTERACCION</b></font></td></tr>
+    <tr><td align="left">PK id_interaccion</td></tr>
+    <tr><td align="left">FK id_cliente<br align="left"/>FK id_vendedor<br align="left"/>FK id_contacto (opc.)<br align="left"/>FK id_oportunidad (opc.)<br align="left"/>tipo<br align="left"/>fecha<br align="left"/>descripcion<br align="left"/>resultado<br align="left"/></td></tr>
+  </table>>];
+
+  PRODUCTO [label=<
+  <table border="0" cellborder="1" cellspacing="0" cellpadding="4">
+    <tr><td bgcolor="#0f766e"><font color="white"><b>PRODUCTO</b>  (compartida: Inventario)</font></td></tr>
+    <tr><td align="left">PK id_producto</td></tr>
+    <tr><td align="left">UK sku<br align="left"/>nombre<br align="left"/>categoria<br align="left"/>precio_lista<br align="left"/>unidad<br align="left"/>activo<br align="left"/></td></tr>
+  </table>>];
+
+  COTIZACION [label=<
+  <table border="0" cellborder="1" cellspacing="0" cellpadding="4">
+    <tr><td bgcolor="#1e3a8a"><font color="white"><b>COTIZACION</b></font></td></tr>
+    <tr><td align="left">PK id_cotizacion</td></tr>
+    <tr><td align="left">UK numero<br align="left"/>FK id_cliente<br align="left"/>FK id_vendedor<br align="left"/>FK id_oportunidad (opc.)<br align="left"/>fecha_emision<br align="left"/>fecha_vencimiento<br align="left"/>estado<br align="left"/>descuento_global_pct<br align="left"/>neto · iva · total<br align="left"/></td></tr>
+  </table>>];
+
+  DETALLE_COTIZACION [label=<
+  <table border="0" cellborder="1" cellspacing="0" cellpadding="4">
+    <tr><td bgcolor="#1e3a8a"><font color="white"><b>DETALLE_COTIZACION</b></font></td></tr>
+    <tr><td align="left">PK id_detalle</td></tr>
+    <tr><td align="left">FK id_cotizacion<br align="left"/>FK id_producto<br align="left"/>cantidad<br align="left"/>precio_unitario<br align="left"/>descuento_pct<br align="left"/>subtotal<br align="left"/></td></tr>
+  </table>>];
+
+  PEDIDO_VENTA [label=<
+  <table border="0" cellborder="1" cellspacing="0" cellpadding="4">
+    <tr><td bgcolor="#1e3a8a"><font color="white"><b>PEDIDO_VENTA</b></font></td></tr>
+    <tr><td align="left">PK id_pedido</td></tr>
+    <tr><td align="left">UK numero<br align="left"/>FK id_cliente<br align="left"/>FK id_vendedor<br align="left"/>FK id_cotizacion (opc., único)<br align="left"/>fecha_pedido<br align="left"/>estado<br align="left"/>condicion_pago<br align="left"/>neto · iva · total<br align="left"/></td></tr>
+  </table>>];
+
+  DETALLE_PEDIDO [label=<
+  <table border="0" cellborder="1" cellspacing="0" cellpadding="4">
+    <tr><td bgcolor="#1e3a8a"><font color="white"><b>DETALLE_PEDIDO</b></font></td></tr>
+    <tr><td align="left">PK id_detalle</td></tr>
+    <tr><td align="left">FK id_pedido<br align="left"/>FK id_producto<br align="left"/>cantidad<br align="left"/>precio_unitario<br align="left"/>descuento_pct<br align="left"/>subtotal<br align="left"/></td></tr>
+  </table>>];
+
+  DOCUMENTO_VENTA [label=<
+  <table border="0" cellborder="1" cellspacing="0" cellpadding="4">
+    <tr><td bgcolor="#0f766e"><font color="white"><b>DOCUMENTO_VENTA</b>  (interfaz: Contabilidad)</font></td></tr>
+    <tr><td align="left">PK id_documento</td></tr>
+    <tr><td align="left">FK id_pedido<br align="left"/>tipo_documento<br align="left"/>folio<br align="left"/>fecha_emision<br align="left"/>fecha_vencimiento<br align="left"/>neto · iva · total<br align="left"/>estado_pago<br align="left"/></td></tr>
+  </table>>];
+
+  // ---------- Relaciones ----------
+  // Notación: tee = uno, odot = cero, crow = muchos. arrowtail = lado origen, arrowhead = lado destino
+  VENDEDOR -> META_VENTA         [arrowtail=teetee, arrowhead=crowodot, xlabel="tiene"];
+  VENDEDOR -> CLIENTE            [arrowtail=teetee, arrowhead=crowodot, xlabel="responsable de"];
+  VENDEDOR -> OPORTUNIDAD        [arrowtail=teetee, arrowhead=crowodot, xlabel="gestiona"];
+  VENDEDOR -> INTERACCION        [arrowtail=teetee, arrowhead=crowodot, xlabel="registra"];
+  VENDEDOR -> COTIZACION         [arrowtail=teetee, arrowhead=crowodot, xlabel="emite"];
+  VENDEDOR -> PEDIDO_VENTA       [arrowtail=teetee, arrowhead=crowodot, xlabel="cierra"];
+
+  CLIENTE -> CONTACTO            [arrowtail=teetee, arrowhead=crowodot, xlabel="tiene"];
+  CLIENTE -> OPORTUNIDAD         [arrowtail=teetee, arrowhead=crowodot, xlabel="genera"];
+  CLIENTE -> INTERACCION         [arrowtail=teetee, arrowhead=crowodot, xlabel="recibe"];
+  CLIENTE -> COTIZACION          [arrowtail=teetee, arrowhead=crowodot, xlabel="solicita"];
+  CLIENTE -> PEDIDO_VENTA        [arrowtail=teetee, arrowhead=crowodot, xlabel="realiza"];
+
+  CONTACTO -> INTERACCION        [arrowtail=teeodot, arrowhead=crowodot, xlabel="participa"];
+  OPORTUNIDAD -> INTERACCION     [arrowtail=teeodot, arrowhead=crowodot, xlabel="asociada"];
+  OPORTUNIDAD -> COTIZACION      [arrowtail=teeodot, arrowhead=crowodot, xlabel="origina"];
+
+  COTIZACION -> DETALLE_COTIZACION [arrowtail=teetee, arrowhead=crowtee, xlabel="contiene"];
+  PRODUCTO -> DETALLE_COTIZACION   [arrowtail=teetee, arrowhead=crowodot, xlabel="aparece en"];
+
+  COTIZACION -> PEDIDO_VENTA     [arrowtail=teeodot, arrowhead=teeodot, xlabel="se convierte en"];
+  PEDIDO_VENTA -> DETALLE_PEDIDO [arrowtail=teetee, arrowhead=crowtee, xlabel="contiene"];
+  PRODUCTO -> DETALLE_PEDIDO     [arrowtail=teetee, arrowhead=crowodot, xlabel="aparece en"];
+
+  PEDIDO_VENTA -> DOCUMENTO_VENTA [arrowtail=teetee, arrowhead=crowodot, xlabel="se factura en"];
+
+  // ---------- Leyenda ----------
+  LEYENDA [label=<
+  <table border="0" cellborder="1" cellspacing="0" cellpadding="4" bgcolor="#f8fafc">
+    <tr><td colspan="2"><b>Leyenda (pata de gallo)</b></td></tr>
+    <tr><td>││</td><td align="left">exactamente uno</td></tr>
+    <tr><td>○│</td><td align="left">cero o uno</td></tr>
+    <tr><td>○&lt;</td><td align="left">cero o muchos</td></tr>
+    <tr><td>│&lt;</td><td align="left">uno o muchos</td></tr>
+    <tr><td bgcolor="#1e3a8a"> </td><td align="left">entidad propia del módulo</td></tr>
+    <tr><td bgcolor="#0f766e"> </td><td align="left">entidad compartida / interfaz con otro módulo</td></tr>
+  </table>>];
+}
