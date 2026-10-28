@@ -8,7 +8,7 @@ Trabajo grupal de **Modelación de Sistemas 2026-2**, Departamento de Ingenierí
 
 **Especificación lista para pasar a tareas.** Están el modelo de datos, las historias de usuario y el plan técnico del módulo. La implementación se hará sobre el template del curso (descrito al final de este archivo) con Spec Driven Development (Speckit), en iteraciones semanales definidas en el [plan técnico](specs/002-modulo-adquisiciones-compras/plan.md).
 
-## Problema y solución (resumen)
+## Problema y solución (Resumen)
 
 En muchas pymes las compras se gestionan por correo y planillas: no queda registro de quién autorizó cada compra, se paga lo que el proveedor factura aunque no coincida con lo recibido, y las facturas se aprueban tarde, incumpliendo el plazo legal de pago de 30 días.
 
