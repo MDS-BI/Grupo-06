@@ -4,9 +4,12 @@ Trabajo grupal de **Modelación de Sistemas 2026-2**, Departamento de Ingenierí
 
 **Integrantes**: Bastián Domke Cifuentes, Joaquín Westermeier Manoli, Julio Castro González, Valentina Barrientos Acuña, Maximiliano Cid Cereceda, Franco García Lépez.
 
-## Estado del repositorio
+## Estado del Repositorio
 
-**Especificación lista para pasar a tareas.** Se cuenta con el modelo de datos, las historias de usuario, los requisitos, los criterios de éxito y el plan técnico del módulo. La implementación se realizará sobre el template base del curso (descrito al final de este archivo) utilizando *Spec Driven Development* (Speckit), en las iteraciones semanales definidas en el [plan técnico](specs/002-modulo-adquisiciones-compras/plan.md).
+**Fase de diseño completada y lista para desarrollo.** Se dispone de la especificación técnica integral del módulo, la cual incluye el modelo de datos, las historias de usuario, los criterios de aceptación, el plan de arquitectura y el desglose completo de tareas (`tasks.md`).
+
+La implementación se llevará a cabo sobre la plantilla base del proyecto utilizando la metodología *Spec-Driven Development* (Speckit), siguiendo las iteraciones semanales estipuladas en el [Plan Técnico](specs/002-modulo-adquisiciones-compras/plan.md) y en la lista de [Tareas del Módulo](specs/002-modulo-adquisiciones-compras/tasks.md).
+
 
 ## Problema y solución (Resumen)
 
@@ -23,10 +26,11 @@ Solicitud de compra → Cotizaciones de proveedores → Orden de compra → Rece
 | Documento | Contenido |
 |---|---|
 | [`spec.md`](specs/002-modulo-adquisiciones-compras/spec.md) | Problema, solución, usuarios, 10 historias de usuario, requisitos y criterios de éxito |
-| [`plan.md`](specs/002-modulo-adquisiciones-compras/plan.md) | Cómo se construye sobre el template base, iteraciones semanales, pruebas y escalabilidad |
-| [`data-model.md`](specs/002-modulo-adquisiciones-compras/data-model.md) | Modelo Entidad-Relación (MER), diccionario de datos, reglas de negocio, datos sensibles, riesgos y sesgos |
-| [`plan-de-trabajo.md`](docs/plan-de-trabajo.md) | Cronograma, roles del grupo y correspondencia con la rúbrica |
-| [`feedback.md`](feedback.md) | Retroalimentación del profesor tras la revisión intermedia |
+| [`plan.md`](specs/002-modulo-adquisiciones-compras/plan.md) | Cómo se construye sobre la plantilla base, iteraciones semanales, pruebas y escalabilidad |
+| [`data-model.md`](specs/002-modulo-adquisiciones-compras/data-model.md) | Modelo Entidad-Relación (MER), diagrama de clases, atributos y reglas de negocio |
+| [`tasks.md`](specs/002-modulo-adquisiciones-compras/tasks.md) | Plan de ejecución y desglose técnico ordenado por fases e historias de usuario |
+| [`plan-de-trabajo.md`](docs/plan-de-trabajo.md) | Cronograma, roles del equipo y correspondencia con la rúbrica de evaluación |
+| [`feedback.md`](feedback.md) | Retroalimentación del profesor y ajustes aplicados tras la revisión intermedia |
 
 ## Modelo entidad-relación
 
@@ -50,9 +54,10 @@ docs/
 specs/
 ├── 001-erp-base-module/            ← Especificación del template base (no se modifica)
 └── 002-modulo-adquisiciones-compras/
-    ├── spec.md
-    ├── plan.md
-    └── data-model.md
+│       ├── spec.md
+│       ├── plan.md
+│       ├── data-model.md
+│       └── tasks.md
 tests/
 ├── integration/                   ← Casos de prueba de integración
 └── unit/                          ← Casos de prueba unitarios
