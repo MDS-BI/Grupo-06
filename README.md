@@ -1,4 +1,4 @@
-# Módulo Ventas / CRM — MVP de ERP
+# Módulo Adquisiciones y Compras — MVP de ERP
 
 Trabajo grupal de **Modelación de Sistemas 2026-2**, Departamento de Ingeniería Industrial, Universidad de Concepción.
 
@@ -6,45 +6,53 @@ Trabajo grupal de **Modelación de Sistemas 2026-2**, Departamento de Ingenierí
 
 ## Estado del repositorio
 
-**Revisión intermedia** (foco: modelo entidad-relación y plan de trabajo). El módulo Ventas / CRM todavía no está implementado; se construirá sobre el template del curso (descrito al final de este archivo) con Spec Driven Development (Speckit), a partir de los archivos de `specs/002-modulo-ventas-crm/`.
+**Especificación lista para pasar a tareas.** Están el modelo de datos, las historias de usuario y el plan técnico del módulo. La implementación se hará sobre el template del curso (descrito al final de este archivo) con Spec Driven Development (Speckit), en iteraciones semanales definidas en el [plan técnico](specs/002-modulo-adquisiciones-compras/plan.md).
 
 ## Problema y solución (resumen)
 
-Las pymes que venden a otras empresas gestionan clientes, cotizaciones y pedidos en planillas y correos separados, lo que provoca cotizaciones sin seguimiento, poca visibilidad del embudo de ventas y pérdida de información cuando un vendedor deja la empresa.
+En muchas pymes las compras se gestionan por correo y planillas: no queda registro de quién autorizó cada compra, se paga lo que el proveedor factura aunque no coincida con lo recibido, y las facturas se aprueban tarde, incumpliendo el plazo legal de pago de 30 días.
 
-El MVP propone un módulo de Ventas / CRM integrado al ERP que centraliza el ciclo comercial:
+El MVP propone un módulo de Adquisiciones y Compras integrado al ERP que ordena el ciclo completo:
 
 ```
-Cliente → Interacción → Oportunidad → Cotización → Pedido → Documento de venta
+Solicitud de compra → Cotizaciones de proveedores → Orden de compra → Recepción → Factura del proveedor
 ```
 
-Detalle completo del alcance, usuarios, cronograma y roles en el [plan de trabajo](docs/plan-de-trabajo.md).
+## Documentación del módulo
+
+| Documento | Contenido |
+|---|---|
+| [`spec.md`](specs/002-modulo-adquisiciones-compras/spec.md) | Problema, solución, usuarios, 10 historias de usuario, requisitos y criterios de éxito |
+| [`plan.md`](specs/002-modulo-adquisiciones-compras/plan.md) | Cómo se construye sobre el template, iteraciones semanales, pruebas y escalabilidad |
+| [`data-model.md`](specs/002-modulo-adquisiciones-compras/data-model.md) | MER, diccionario de datos, reglas de negocio, datos sensibles, riesgos y sesgos |
+| [`plan-de-trabajo.md`](docs/plan-de-trabajo.md) | Cronograma, roles del grupo y correspondencia con la rúbrica |
+| [`feedback.md`](feedback.md) | Feedback del profesor a la revisión intermedia |
 
 ## Modelo entidad-relación
 
-![MER Módulo Ventas / CRM](docs/mer.png)
+![MER Módulo Adquisiciones y Compras](docs/mer.png)
 
-Diccionario de datos, cardinalidades, reglas de negocio, datos sensibles y sesgos en [`data-model.md`](specs/002-modulo-ventas-crm/data-model.md).
+La imagen se genera desde el diagrama de `data-model.md`, así siempre coinciden. Para regenerarla se requiere Python y [Graphviz](https://graphviz.org/download/). Desde la raíz del repositorio:
 
-## Archivos del módulo Ventas / CRM
+```bash
+python docs/generar_mer.py
+dot -Tpng -Gdpi=150 docs/mer.dot -o docs/mer.png
+```
+
+## Archivos del módulo
 
 ```
 docs/
-├── plan-de-trabajo.md             ← propuesta de MVP, cronograma, roles
-├── mer.png                        ← imagen del MER
-└── mer.dot                        ← fuente de la imagen (Graphviz)
+├── plan-de-trabajo.md
+├── mer.png                         ← imagen del MER
+├── mer.dot                         ← fuente de la imagen (generada)
+└── generar_mer.py                  ← genera mer.dot desde data-model.md
 specs/
-├── 001-erp-base-module/           ← especificación del template (no se modifica)
-└── 002-modulo-ventas-crm/
-    └── data-model.md              ← modelo de datos del módulo (Speckit)
-```
-
-Próximos archivos según el plan: `spec.md`, `plan.md` y `tasks.md` en `specs/002-modulo-ventas-crm/`, y la constitución en `.specify/memory/constitution.md`.
-
-Para regenerar la imagen del MER se requiere [Graphviz](https://graphviz.org/download/). Desde la raíz del repositorio:
-
-```bash
-dot -Tpng -Gdpi=150 docs/mer.dot -o docs/mer.png
+├── 001-erp-base-module/            ← especificación del template (no se modifica)
+└── 002-modulo-adquisiciones-compras/
+    ├── spec.md
+    ├── plan.md
+    └── data-model.md
 ```
 
 ## Registro de decisiones
