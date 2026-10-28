@@ -26,18 +26,23 @@ Solicitud de compra → Cotizaciones de proveedores → Orden de compra → Rece
 
 Cada paso exige al anterior (no hay orden de compra sin solicitud aprobada, no hay factura sin recepción), separa funciones entre quien pide, quien aprueba, quien compra y quien recibe, y concilia automáticamente la factura con la orden y la recepción. Además mantiene un registro de proveedores con su catálogo de precios y su evaluación de desempeño.
 
-### Cliente y usuarios
+### Cliente, Usuarios y Claves de Integración
 
-**Cliente** (quien adopta y paga el sistema): gerencia de administración y finanzas de una pyme chilena con un área de compras de 1 a 5 personas.
+Para asegurar el control de acceso y la integración fluida con otros módulos del ERP (Inventario, Contabilidad, RR.HH.), el módulo define las siguientes claves y niveles de acceso:
 
-| Usuario | Rol en el sistema | Necesidad principal |
-|---|---|---|
-| Solicitante (cualquier área) | `solicitante` | Pedir lo que necesita y saber en qué etapa está su solicitud |
-| Comprador | `comprador` | Cotizar, comparar ofertas y emitir órdenes de compra rápido |
-| Jefe de compras | `jefe_compras` | Aprobar solicitudes y facturas, controlar el gasto y el desempeño de proveedores |
-| Encargado de bodega | `bodega` | Registrar lo que llega y lo que se rechaza |
-| Administrador | `admin` | Mantener proveedores, datos bancarios, usuarios y centros de costo |
-| Otros módulos del ERP | — | Inventario recibe las cantidades aceptadas; Contabilidad recibe las facturas aprobadas para pago |
+**Claves de Integración (Keys):**
+* `id_producto`: Vincula con el **Módulo de Inventario**.
+* `id_proveedor`: Vincula con el **Módulo de Contabilidad/Finanzas**.
+* `id_usuario`: Vincula con el **Módulo de RRHH/Usuarios**.
+
+**Roles en el sistema:**
+| Usuario | Rol técnico | Nivel de Acceso y Propósito |
+| :--- | :--- | :--- |
+| Solicitante (cualquier área) | `solicitante` | **Restringido:** Solo ve y crea sus propias solicitudes. |
+| Comprador | `comprador` | **Ejecutor:** Cotiza, emite Órdenes de Compra (OC) y mantiene el catálogo de proveedores. No ve datos bancarios completos. |
+| Jefe de compras | `jefe_compras` | **Aprobador:** Autoriza solicitudes, aprueba facturas y gestiona excepciones comerciales. |
+| Encargado de bodega | `bodega` | **Restringido (Físico):** Solo interactúa con el registro de recepciones de una OC emitida. |
+| Administrador | `admin_ti` | **Acceso total:** Puede auditar logs, desbloquear proveedores y ver datos sensibles (ej. cuentas bancarias completas sin enmascarar). |
 
 ### Fuera de alcance
 
@@ -45,172 +50,84 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 
 ## Escenarios de Usuario y Pruebas *(obligatorio)*
 
+*Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo utiliza identificadores únicos (`id_producto`, `id_proveedor`, `id_usuario`) que conectan con los módulos de Inventario, Contabilidad y RR.HH. Los roles de acceso definen qué información es visible (ej. enmascaramiento de datos bancarios para roles no administrativos).*
+
 ### Historia de Usuario 1 - Gestionar proveedores (Prioridad: P1)
+**Como** Administrador o Comprador, **necesito** mantener un registro único, validado y seguro de nuestros proveedores, **para** tener la tranquilidad de que estamos haciendo negocios con entidades legales formales y evitar fraudes o pagos a cuentas incorrectas.
 
-Como administrador o comprador, quiero registrar, editar, buscar y bloquear proveedores con sus datos tributarios y de contacto, para tener un registro único y confiable de a quién se le compra.
-
-**Por qué esta prioridad**: Sin proveedores no se puede cotizar ni emitir órdenes de compra. Es el dato maestro del módulo y la primera pieza que se puede construir directamente sobre la Entidad del template.
+**Por qué esta prioridad**: Sin proveedores no se puede cotizar ni emitir órdenes de compra. Es el dato maestro del módulo y genera el `id_proveedor`.
 
 **Prueba Independiente**: Un usuario crea un proveedor con RUT válido, lo encuentra en la búsqueda, cambia su estado a `aprobado` y luego a `bloqueado`.
 
 **Escenarios de Aceptación**:
-
-1. **Dado** que el usuario está en la lista de proveedores, **cuando** crea un proveedor con RUT, razón social, giro y región, **entonces** el proveedor se guarda en estado `potencial` y aparece en la lista.
-2. **Dado** que el usuario ingresa un RUT con dígito verificador inválido o ya registrado, **cuando** intenta guardar, **entonces** el sistema lo impide y explica el motivo.
-3. **Dado** un proveedor con condición de pago de 45 días, **cuando** no tiene marcado `acuerdo_plazo_mayor`, **entonces** el sistema no permite guardar y explica que el máximo legal es 30 días sin acuerdo inscrito.
-4. **Dado** un proveedor con órdenes de compra, **cuando** el usuario intenta eliminarlo, **entonces** el sistema lo impide y ofrece bloquearlo.
-5. **Dado** un usuario con rol distinto de `admin`, **cuando** ve la ficha de un proveedor, **entonces** el número de cuenta bancaria aparece enmascarado y no es editable.
+1. **Dado** que el usuario está en la lista de proveedores, **cuando** crea un proveedor con RUT, razón social, giro y región, **entonces** el proveedor se guarda en estado `potencial` y aparece en la lista generando un `id_proveedor`.
+2. **Dado** que el usuario ingresa un RUT con dígito verificador inválido o ya registrado, **cuando** intenta guardar, **entonces** el sistema lo impide y sugiere usar el registro existente.
+3. **Dado** un proveedor con condición de pago de 45 días, **cuando** no tiene marcado `acuerdo_plazo_mayor`, **entonces** el sistema no permite guardar (cumplimiento Ley 21.131).
+4. **Dado** un proveedor con órdenes de compra, **cuando** el usuario intenta eliminarlo, **entonces** el sistema lo impide para proteger la integridad de los datos y ofrece bloquearlo.
+5. **Dado** un usuario con rol distinto de `admin`, **cuando** ve la ficha de un proveedor, **entonces** el número de cuenta bancaria aparece enmascarado (ej. `****5678`) y no es editable.
 
 ---
 
 ### Historia de Usuario 2 - Crear y aprobar solicitudes de compra (Prioridad: P1)
+**Como** Solicitante de cualquier área, **necesito** pedir los materiales que me faltan indicando cantidad y justificación, y que mi jefatura pueda revisarlos, **para** que las compras nazcan de una necesidad real y no se atrasen por correos perdidos.
 
-Como solicitante, quiero pedir productos indicando cantidad, fecha requerida y justificación, y como jefe de compras quiero aprobarlas o rechazarlas, para que toda compra parta de una necesidad autorizada.
+**Por qué esta prioridad**: La solicitud aprobada es la puerta de entrada y el principal control contra compras no autorizadas. Vincula el `id_producto` y el `id_usuario`.
 
-**Por qué esta prioridad**: La solicitud aprobada es la puerta de entrada obligatoria del ciclo y el principal control contra compras no autorizadas.
-
-**Prueba Independiente**: Un solicitante crea y envía una solicitud con dos productos; el jefe de compras la aprueba; la solicitud queda en estado `aprobada` con fecha y aprobador.
+**Prueba Independiente**: Un solicitante crea y envía una solicitud con dos productos; el jefe de compras la aprueba; la solicitud queda en estado `aprobada`.
 
 **Escenarios de Aceptación**:
-
-1. **Dado** que el solicitante crea una solicitud con al menos un producto activo, **cuando** la envía, **entonces** queda en estado `enviada` con número correlativo `SC-AAAA-NNNN` y monto estimado calculado.
-2. **Dada** una solicitud `enviada`, **cuando** el jefe de compras la aprueba, **entonces** queda `aprobada` con su nombre y la fecha.
-3. **Dada** una solicitud `enviada`, **cuando** el jefe de compras la rechaza sin indicar motivo, **entonces** el sistema exige el motivo antes de guardar.
-4. **Dado** que el jefe de compras es también el solicitante, **cuando** intenta aprobar su propia solicitud, **entonces** el sistema lo impide.
+1. **Dado** que el solicitante crea una solicitud con al menos un producto activo, **cuando** la envía, **entonces** queda en estado `enviada` con correlativo `SC-AAAA-NNNN` y monto estimado.
+2. **Dada** una solicitud `enviada`, **cuando** el jefe de compras la aprueba, **entonces** queda `aprobada` registrando su nombre y fecha.
+3. **Dada** una solicitud `enviada`, **cuando** el jefe de compras la rechaza, **entonces** el sistema exige escribir un motivo de rechazo.
+4. **Dado** que el jefe de compras es también el solicitante, **cuando** intenta aprobar su propia solicitud, **entonces** el sistema se lo impide (segregación de funciones).
 5. **Dada** una solicitud sin productos, **cuando** el solicitante intenta enviarla, **entonces** el sistema lo impide.
 
 ---
 
 ### Historia de Usuario 3 - Emitir órdenes de compra (Prioridad: P1)
+**Como** Comprador, **necesito** transformar una solicitud aprobada en un documento formal de compra (OC) de manera automática, **para** comprometer precios y plazos con el proveedor sin transcribir datos a mano.
 
-Como comprador, quiero emitir una orden de compra a un proveedor aprobado a partir de una solicitud aprobada, para formalizar el compromiso de compra con precios, plazo de entrega y condición de pago.
+**Por qué esta prioridad**: La OC es el documento central del módulo. Integra la solicitud con el `id_proveedor`.
 
-**Por qué esta prioridad**: La orden de compra es el documento central del módulo y el que se construye directamente sobre el Documento del template. Con esta historia y la 1 ya existe una versión integrada de prueba.
-
-**Prueba Independiente**: Con una solicitud aprobada de bajo monto, el comprador emite una OC por compra directa; la OC aparece con número `OC-AAAA-NNNN`, neto, IVA y total correctos, y la solicitud pasa a `adjudicada`.
+**Prueba Independiente**: Con una solicitud aprobada bajo monto, el comprador emite una OC; aparece con número `OC-AAAA-NNNN`, neto, IVA y total, y la solicitud pasa a `adjudicada`.
 
 **Escenarios de Aceptación**:
-
-1. **Dada** una solicitud `aprobada` bajo el umbral de cotizaciones, **cuando** el comprador emite una OC sin cotización, **entonces** la OC queda `emitida`, con IVA = 19 % del neto, y la solicitud pasa a `adjudicada`.
-2. **Dada** una solicitud sobre el umbral sin cotización seleccionada, **cuando** el comprador intenta emitir una OC directa, **entonces** el sistema lo impide y explica que se requieren cotizaciones.
-3. **Dado** un proveedor `potencial` o `bloqueado`, **cuando** el comprador intenta emitirle una OC, **entonces** el sistema lo impide.
-4. **Dada** una cotización ya convertida en OC, **cuando** se intenta generar una segunda OC desde ella, **entonces** el sistema lo impide.
-5. **Dada** una OC `emitida` sin recepciones, **cuando** el comprador la anula, **entonces** queda `anulada` y la solicitud vuelve a `aprobada` o `en_cotizacion`.
+1. **Dada** una solicitud `aprobada` bajo el umbral de cotizaciones, **cuando** el comprador emite una OC directa, **entonces** la OC queda `emitida` (con IVA=19%) y la solicitud pasa a `adjudicada`.
+2. **Dada** una solicitud sobre el umbral sin cotización seleccionada, **cuando** el comprador intenta emitir OC directa, **entonces** el sistema exige cotizaciones previas.
+3. **Dado** un proveedor en estado `bloqueado`, **cuando** el comprador intenta emitirle una OC, **entonces** el sistema cancela la operación por riesgo.
+4. **Dada** una cotización ya convertida en OC, **cuando** se intenta generar una segunda OC desde ella, **entonces** el sistema lo impide para evitar duplicidad.
+5. **Dada** una OC `emitida` sin recepciones, **cuando** el comprador la anula, **entonces** queda `anulada` dejando registro de auditoría.
 
 ---
 
-### Historia de Usuario 4 - Registrar recepciones (Prioridad: P1)
+### Historia de Usuario 4 - Registrar recepciones (Bodega) (Prioridad: P1)
+**Como** Encargado de Bodega, **necesito** contrastar físicamente lo que trae el camión contra la Orden de Compra, **para** asegurar que paguemos solo lo recibido y alertar al inventario.
 
-Como encargado de bodega, quiero registrar qué llegó de cada orden de compra, cuánto acepto y cuánto rechazo, para que el sistema sepa si la orden está completa y para informar a Inventario.
+**Por qué esta prioridad**: Es el control físico del ciclo. Genera el evento para actualizar el Módulo de Inventario mediante el `id_producto` y la cantidad aceptada.
 
-**Por qué esta prioridad**: Sin recepción no hay forma de verificar la factura ni de actualizar el stock; es el control físico del ciclo.
-
-**Prueba Independiente**: Sobre una OC de 10 unidades se registra una recepción de 6 aceptadas; la OC queda `recibida_parcial`. Una segunda recepción de 4 la deja `recibida_total`.
+**Prueba Independiente**: Sobre una OC de 10 unidades, se registran 6 aceptadas; la OC queda `recibida_parcial`. Luego 4 unidades más la dejan `recibida_total`.
 
 **Escenarios de Aceptación**:
-
-1. **Dada** una OC `emitida`, **cuando** bodega registra una recepción parcial, **entonces** la OC pasa a `recibida_parcial` y se muestra lo pendiente por línea.
+1. **Dada** una OC `emitida`, **cuando** bodega registra una recepción parcial, **entonces** la OC pasa a `recibida_parcial` mostrando lo pendiente.
 2. **Dada** una línea con 4 unidades pendientes, **cuando** bodega intenta aceptar 5, **entonces** el sistema lo impide.
-3. **Dada** una recepción con unidades rechazadas, **cuando** no se indica motivo de rechazo, **entonces** el sistema exige el motivo.
-4. **Dado** que el usuario que registra es el mismo comprador que emitió la OC, **cuando** intenta registrar la recepción, **entonces** el sistema lo impide.
+3. **Dada** una recepción con rechazos, **cuando** el bodeguero no indica el motivo, **entonces** el sistema lo exige obligatoriamente.
+4. **Dado** que el usuario que registra es el mismo comprador que emitió la OC, **cuando** intenta registrar la recepción, **entonces** el sistema se lo deniega (separación de compras y bodega).
 
 ---
 
-### Historia de Usuario 5 - Panel de compras (Prioridad: P1)
+### Historia de Usuario 7 - Registrar y conciliar facturas (Prioridad: P2)
+**Como** Jefe de Compras, **necesito** cruzar la factura del proveedor con la Orden y lo recibido en Bodega, **para** autorizar el pago a Contabilidad solo si los montos coinciden y hacerlo en plazo.
 
-Como jefe de compras, quiero un panel de inicio con acciones rápidas, pendientes y alertas, para saber de un vistazo qué requiere mi atención.
+**Por qué esta prioridad**: Cierra el ciclo de compras y prepara el pase de datos hacia el Módulo de Contabilidad.
 
-**Por qué esta prioridad**: Es la página principal que exige el enunciado y adapta el panel del template al módulo.
-
-**Prueba Independiente**: Con datos semilla, el panel muestra solicitudes por aprobar, OC por recibir, facturas próximas a vencer y el gasto del mes, y cada acción rápida abre su pantalla.
+**Prueba Independiente**: Sobre una OC recibida de 10.000 CLP neto, una factura por igual valor queda `conciliada`; una por 15.000 CLP queda `con_discrepancia`.
 
 **Escenarios de Aceptación**:
-
-1. **Dado** que el usuario abre el módulo, **cuando** carga, **entonces** ve acciones rápidas para nueva solicitud, nueva OC, registrar recepción y registrar factura.
-2. **Dadas** facturas no aprobadas que vencen en 5 días o menos, **cuando** se muestra el panel, **entonces** aparecen destacadas como alerta de plazo legal.
-3. **Dado** que se crea o modifica un registro en otra pantalla, **cuando** el usuario vuelve al panel, **entonces** los contadores reflejan el cambio.
-
----
-
-### Historia de Usuario 6 - Registrar y comparar cotizaciones (Prioridad: P2)
-
-Como comprador, quiero registrar las cotizaciones de varios proveedores para una solicitud y verlas lado a lado, para elegir la mejor oferta y dejar constancia de por qué se descartaron las demás.
-
-**Por qué esta prioridad**: Es el corazón de la parte de adquisiciones y el principal mecanismo contra el sesgo del proveedor habitual, pero el ciclo puede funcionar sin ella mediante compras directas bajo el umbral.
-
-**Prueba Independiente**: Para una solicitud sobre el umbral se registran 3 cotizaciones; el comprador selecciona una, descarta las otras con motivo y emite la OC con los precios de la seleccionada.
-
-**Escenarios de Aceptación**:
-
-1. **Dada** una solicitud `aprobada`, **cuando** se registra su primera cotización, **entonces** la solicitud pasa a `en_cotizacion`.
-2. **Dadas** varias cotizaciones de una solicitud, **cuando** el comprador abre la comparación, **entonces** ve por proveedor el total, plazo de entrega, condición de pago y evaluación promedio con su número de evaluaciones.
-3. **Dada** una solicitud sobre el umbral con solo 2 cotizaciones, **cuando** el comprador intenta seleccionar una sin justificar proveedor único, **entonces** el sistema lo impide.
-4. **Dada** una cotización, **cuando** se descarta, **entonces** se exige el motivo de descarte.
-5. **Dada** una cotización con fecha de validez vencida, **cuando** se consulta, **entonces** aparece como `vencida` y no puede seleccionarse.
-
----
-
-### Historia de Usuario 7 - Registrar y conciliar facturas de proveedor (Prioridad: P2)
-
-Como jefe de compras, quiero registrar la factura del proveedor y que el sistema la compare con la orden y lo recibido, para aprobar para pago solo lo que corresponde y hacerlo dentro del plazo legal.
-
-**Por qué esta prioridad**: Cierra el ciclo y entrega el dato a Contabilidad, pero depende de que existan OC y recepciones.
-
-**Prueba Independiente**: Sobre una OC con 6 unidades aceptadas a 10.000 CLP neto, una factura por 60.000 CLP neto queda `conciliada`; una por 80.000 CLP neto queda `con_discrepancia`.
-
-**Escenarios de Aceptación**:
-
-1. **Dada** una OC con recepciones, **cuando** se registra una factura cuyo neto coincide con el valor recibido pendiente de facturar dentro de la tolerancia, **entonces** queda `conciliada` y su fecha de vencimiento se calcula desde la fecha de recepción de la factura.
-2. **Dada** una factura cuyo neto excede la tolerancia, **cuando** se registra, **entonces** queda `con_discrepancia` y muestra la diferencia.
-3. **Dada** una factura `con_discrepancia`, **cuando** el jefe de compras intenta aprobarla para pago, **entonces** el sistema lo impide.
-4. **Dado** un folio ya registrado para el mismo proveedor y tipo de documento, **cuando** se intenta registrar de nuevo, **entonces** el sistema lo impide.
-5. **Dado** un proveedor cuya cuenta bancaria cambió hace menos de 30 días, **cuando** se aprueba una factura suya, **entonces** el sistema muestra una advertencia de posible fraude.
-
----
-
-### Historia de Usuario 8 - Catálogo de productos por proveedor (Prioridad: P2)
-
-Como comprador, quiero registrar qué productos ofrece cada proveedor con su precio de referencia y plazo habitual, para estimar solicitudes y saber a quién pedir cotización.
-
-**Por qué esta prioridad**: Mejora la calidad de las estimaciones y de la elección de proveedores, pero el ciclo funciona ingresando precios a mano.
-
-**Prueba Independiente**: Se asocia un producto a dos proveedores con precios distintos; al crear una solicitud con ese producto, se sugiere el menor precio de referencia.
-
-**Escenarios de Aceptación**:
-
-1. **Dado** un proveedor y un producto, **cuando** se registra el par por segunda vez, **entonces** el sistema actualiza el registro existente en lugar de duplicarlo.
-2. **Dado** un precio de referencia con más de 90 días sin actualizar, **cuando** se muestra, **entonces** aparece marcado como desactualizado.
-
----
-
-### Historia de Usuario 9 - Evaluar proveedores (Prioridad: P3)
-
-Como jefe de compras, quiero evaluar a cada proveedor al completar una orden de compra, para tener información objetiva al elegir en compras futuras.
-
-**Por qué esta prioridad**: Aporta valor a mediano plazo y alimenta la comparación de cotizaciones, pero no es necesaria para operar el ciclo.
-
-**Prueba Independiente**: Sobre una OC `recibida_total` entregada 2 días tarde se registra una evaluación; la nota de plazo aparece calculada como 4.
-
-**Escenarios de Aceptación**:
-
-1. **Dada** una OC `recibida_total`, **cuando** se evalúa, **entonces** la nota de plazo se calcula sola y el usuario ingresa calidad y servicio de 1 a 5.
-2. **Dada** una OC ya evaluada, **cuando** se intenta evaluar otra vez, **entonces** el sistema lo impide.
-
----
-
-### Historia de Usuario 10 - Exportar reportes (Prioridad: P3)
-
-Como jefe de compras, quiero exportar a CSV las órdenes de compra, facturas y el gasto por centro de costo, para analizarlos fuera del sistema o entregarlos a Contabilidad.
-
-**Por qué esta prioridad**: Útil pero prescindible en el MVP.
-
-**Prueba Independiente**: Desde la lista de OC filtrada por mes, el usuario descarga un CSV que se abre en Excel con las mismas filas que ve en pantalla.
-
-**Escenarios de Aceptación**:
-
-1. **Dada** una lista filtrada, **cuando** el usuario exporta, **entonces** el CSV contiene exactamente las filas filtradas, con montos en CLP sin decimales.
-
----
+1. **Dada** una OC con recepciones, **cuando** se registra una factura que coincide con el valor recibido, **entonces** queda `conciliada` y se calcula su fecha de vencimiento legal.
+2. **Dada** una factura cuyo cobro excede la tolerancia, **cuando** se registra, **entonces** queda bloqueada en `con_discrepancia`.
+3. **Dada** una factura `con_discrepancia`, **cuando** se intenta aprobarla para pago, **entonces** el sistema lo impide.
+4. **Dado** un folio de factura ya registrado para ese proveedor, **cuando** se intenta ingresar nuevamente, **entonces** el sistema evita la duplicidad.
+5. **Dado** un proveedor cuya cuenta bancaria cambió hace menos de 30 días, **cuando** se aprueba su factura, **entonces** el sistema emite una alerta de posible riesgo de fraude.
 
 ### Casos Límite
 

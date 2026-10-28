@@ -1,8 +1,8 @@
 # Data Model: Módulo Adquisiciones y Compras
 
 **Feature**: `002-modulo-adquisiciones-compras` (el `001` corresponde al módulo base del template del curso)
-**Estado**: Borrador v1.0 (27 de octubre de 2026). Reemplaza el borrador del módulo Ventas / CRM; ver sección 9.
-**Alcance**: solo frontend, sobre el template del curso. Los datos se persisten como datos semilla (JSON) y en `localStorage` del navegador. No hay backend.
+**Estado**: Borrador v1.0 (27 de octubre de 2026). Reemplaza el borrador del módulo Ventas  / CRM; ver sección 9.
+**Alcance**: Solo frontend, sobre el template del curso. Los datos se persisten como datos semilla (JSON) y en `localStorage` del navegador. No hay backend.
 
 ---
 
