@@ -6,7 +6,7 @@ Trabajo grupal de **Modelación de Sistemas 2026-2**, Departamento de Ingenierí
 
 ## Estado del repositorio
 
-**Especificación lista para pasar a tareas.** Están el modelo de datos, las historias de usuario y el plan técnico del módulo. La implementación se hará sobre el template del curso (descrito al final de este archivo) con Spec Driven Development (Speckit), en iteraciones semanales definidas en el [plan técnico](specs/002-modulo-adquisiciones-compras/plan.md).
+**Especificación lista para pasar a tareas.** Se cuenta con el modelo de datos, las historias de usuario, los requisitos, los criterios de éxito y el plan técnico del módulo. La implementación se realizará sobre el template base del curso (descrito al final de este archivo) utilizando *Spec Driven Development* (Speckit), en las iteraciones semanales definidas en el [plan técnico](specs/002-modulo-adquisiciones-compras/plan.md).
 
 ## Problema y solución (Resumen)
 
@@ -23,10 +23,10 @@ Solicitud de compra → Cotizaciones de proveedores → Orden de compra → Rece
 | Documento | Contenido |
 |---|---|
 | [`spec.md`](specs/002-modulo-adquisiciones-compras/spec.md) | Problema, solución, usuarios, 10 historias de usuario, requisitos y criterios de éxito |
-| [`plan.md`](specs/002-modulo-adquisiciones-compras/plan.md) | Cómo se construye sobre el template, iteraciones semanales, pruebas y escalabilidad |
-| [`data-model.md`](specs/002-modulo-adquisiciones-compras/data-model.md) | MER, diccionario de datos, reglas de negocio, datos sensibles, riesgos y sesgos |
+| [`plan.md`](specs/002-modulo-adquisiciones-compras/plan.md) | Cómo se construye sobre el template base, iteraciones semanales, pruebas y escalabilidad |
+| [`data-model.md`](specs/002-modulo-adquisiciones-compras/data-model.md) | Modelo Entidad-Relación (MER), diccionario de datos, reglas de negocio, datos sensibles, riesgos y sesgos |
 | [`plan-de-trabajo.md`](docs/plan-de-trabajo.md) | Cronograma, roles del grupo y correspondencia con la rúbrica |
-| [`feedback.md`](feedback.md) | Feedback del profesor a la revisión intermedia |
+| [`feedback.md`](feedback.md) | Retroalimentación del profesor tras la revisión intermedia |
 
 ## Modelo entidad-relación
 
@@ -44,86 +44,89 @@ dot -Tpng -Gdpi=150 docs/mer.dot -o docs/mer.png
 ```
 docs/
 ├── plan-de-trabajo.md
-├── mer.png                         ← imagen del MER
-├── mer.dot                         ← fuente de la imagen (generada)
-└── generar_mer.py                  ← genera mer.dot desde data-model.md
+├── mer.png                         ← Imagen del Modelo Entidad-Relación (MER)
+├── mer.dot                         ← Fuente del diagrama (generada)
+└── generar_mer.py                  ← Genera mer.dot desde data-model.md
 specs/
-├── 001-erp-base-module/            ← especificación del template (no se modifica)
+├── 001-erp-base-module/            ← Especificación del template base (no se modifica)
 └── 002-modulo-adquisiciones-compras/
     ├── spec.md
     ├── plan.md
     └── data-model.md
+tests/
+├── integration/                   ← Casos de prueba de integración
+└── unit/                          ← Casos de prueba unitarios
 ```
 
 ## Registro de decisiones
 
-Las decisiones de diseño se registran como **Issues** con la etiqueta `decision`.
+Las decisiones de diseño se registran como *Issues* con la etiqueta `decision`.
 
 ---
 
-## Template base del curso: ERP Software Base Module (Vite + Vanilla JS)
+## Template base del curso: Módulo Base ERP (Vite + Vanilla JS)
 
-Minimal single-page app serving as an Enterprise Resource Planning (ERP) software base module. It provides the common foundation for building custom ERP modules: master data management (Entities) and linked transactional documents (Documents) with create/edit/delete/search, validation, and browser localStorage persistence — using Vite and vanilla HTML, CSS, and JavaScript.
+Aplicación de página única (*single-page app*) que sirve como base para construir módulos ERP personalizados. Proporciona los fundamentos comunes: gestión de datos maestros (*Entidades*) y documentos transaccionales asociados (*Documentos*), con funcionalidades de crear, editar, eliminar, buscar, validación y persistencia en `localStorage` del navegador, utilizando Vite, HTML, CSS y JavaScript puros.
 
-The user interface is fully in **Spanish** (default terms: Entidad / Documento; module name: Módulo Base ERP), including labels, validation messages, empty states, and dialogs.
+La interfaz de usuario está completamente en **español** (términos por defecto: Entidad / Documento; nombre del módulo: Módulo Base ERP), incluyendo etiquetas, mensajes de validación, estados vacíos y diálogos.
 
-Entities carry standard ERP master-data fields (name, code, tax ID, email, phone, address, category, target date, credit limit, payment terms). Documents use series + folio numbering and carry a monetary breakdown (subtotal, discount, tax, total), currency, payment terms, notes, quantity, dates, and status.
+Las entidades cuentan con campos maestros estándar de ERP (nombre, código, RUT/identificación tributaria, correo electrónico, teléfono, dirección, categoría, fecha objetivo, límite de crédito, condiciones de pago). Los documentos utilizan numeración por serie y folio, y contienen un desglose monetario (subtotal, descuento, impuesto, total), moneda, condiciones de pago, notas, cantidades, fechas y estado.
 
-The app presents itself as a coherent ERP workspace:
+La aplicación presenta un espacio de trabajo ERP coherente:
 
-- **Workspace shell** — every screen lives inside a branded chrome: a top bar with a logo (an SVG monogram derived from the module name) and module name, plus a persistent sidebar of module buttons (Panel, Entidades, Documentos, Búsqueda). The active module is highlighted (`aria-current="page"`), and the sidebar collapses to an icon rail on narrow viewports.
-- **Home dashboard** — the entry screen offers quick-action buttons for key ERP tasks (new entity, new document, open management areas, find records) and live statistic cards showing record counts.
-- **Design tokens** — styling is driven by CSS custom properties in `src/styles.css`, so branding changes apply globally.
+- **Marco de trabajo (*workspace shell*)** — Todas las pantallas se encuentran dentro de un marco con marca: barra superior con logotipo (monograma SVG derivado del nombre del módulo) y nombre del módulo, junto a una barra lateral persistente con los módulos (Panel, Entidades, Documentos, Búsqueda). El módulo activo se resalta (`aria-current="page"`) y la barra lateral se colapsa a un menú de iconos en pantallas pequeñas.
+- **Panel de inicio (*dashboard*)** — Pantalla de entrada con botones de acción rápida para las tareas clave (nueva entidad, nuevo documento, abrir gestión, buscar registros) y tarjetas con estadísticas en tiempo real del número de registros.
+- **Tokens de diseño** — Los estilos se basan en variables CSS definidas en `src/styles.css`, lo que permite aplicar cambios de marca de forma global.
 
-### Setup
+### Configuración e inicio
 
-Install dependencies and run the dev server:
+Instalar dependencias y ejecutar el servidor de desarrollo:
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open http://localhost:5173 (or the URL Vite prints).
+Abrir [http://localhost:5173](http://localhost:5173) o la URL que indique Vite.
 
-### Tests
+### Pruebas
 
-Run the full test suite (unit + integration) with:
+Ejecutar todo el conjunto de pruebas (unitarias e integración) en modo observación:
 
 ```bash
 npm test
 ```
 
-Or a one-off run without watch mode:
+O ejecutar una sola vez sin modo observación:
 
 ```bash
 npx vitest run
 ```
 
-### Building Custom Modules
+### Construcción de módulos personalizados
 
-Custom ERP modules built on this base define:
+Los módulos ERP personalizados construidos sobre esta base deben definir:
 
-- What an **Entity** represents (e.g., customer, product, asset) plus domain-specific fields.
-- What a **Document** represents (e.g., order, invoice, contract).
-- Module-specific labels and validation rules.
+- Qué representa una **Entidad** (ej.: cliente, producto, activo), junto con sus campos específicos del dominio.
+- Qué representa un **Documento** (ej.: orden de compra, factura, contrato).
+- Las etiquetas y reglas de validación propias del módulo.
 
-The base module handles identity generation, timestamps, referential integrity between entities and documents, cascade deletion, navigation, and search. See `specs/001-erp-base-module/` for the full specification.
+El módulo base se encarga de la generación de identificadores, marcas de tiempo, integridad referencial entre entidades y documentos, eliminación en cascada, navegación y búsqueda. Ver `specs/001-erp-base-module/` para la especificación completa.
 
-### Tailoring via Configuration
+### Personalización mediante configuración
 
-All tailoring lives in one place: the `userConfig` object at the top of `src/module-config.js`. Developers edit this single export; no core code changes are required. Available knobs:
+Toda la personalización se realiza desde un único lugar: el objeto `userConfig` en la parte superior de `src/module-config.js`. No es necesario modificar el código base. Las opciones disponibles son:
 
-- `moduleName` — display name shown in the top bar, dashboard, and document title; also derives the logo monogram.
-- `labels` — rename Entity/Document terms across every screen, including sidebar buttons, quick actions, forms, and messages. Spanish articles and agreements (el/la, seleccionado/a) are derived from the first word of each configured term.
-- `customFields` — declare extra fields per record type with `target` (`entity` or `document`), `key`, `label`, `type` (`text`, `number`, `date`, or `select`), optional `required`, and `options` for selects. Keys must not collide with base field names (see `specs/001-erp-base-module/data-model.md`). Values persist alongside records and appear in search results.
-- `statusLifecycle` — restrict document statuses to a configured list of `statuses` with permitted `transitions` between them. Without it, status stays a free-form field.
-- `theme.accentColor` — a hex color (e.g., `"#0f62fe"`) applied across the shell as highlights and primary controls. Invalid values fall back to the default.
+- `moduleName` — Nombre del módulo mostrado en la barra superior, panel de inicio y título de la página. También se utiliza para generar el logotipo.
+- `labels` — Permite renombrar los términos Entidad/Documento en todas las pantallas (barra lateral, acciones rápidas, formularios, mensajes, etc.). Los artículos y concordancias en español (el/la, seleccionado/a) se derivan automáticamente a partir del primer término configurado.
+- `customFields` — Permite agregar campos adicionales por tipo de registro (`entity` o `document`) con `key`, `label`, `type` (`text`, `number`, `date` o `select`), `required` opcional y `options` para listas desplegables. Las claves no deben colisionar con los campos base (ver `specs/001-erp-base-module/data-model.md`). Los valores se guardan junto al registro y aparecen en los resultados de búsqueda.
+- `statusLifecycle` — Restringe los estados de los documentos a una lista configurada con transiciones permitidas. Si no se configura, el estado permanece como campo libre.
+- `theme.accentColor` — Color hexadecimal (ej.: `"#0f62fe"`) aplicado al marco y a los controles principales. Si es inválido o no se especifica, se utiliza el valor por defecto.
 
-If the configuration is invalid (unknown types, bad keys, transitions referencing unknown statuses, non-hex accent colors), the app shows the problems in a banner and falls back to defaults instead of breaking.
+Si la configuración es inválida (tipos desconocidos, claves en conflicto, transiciones a estados inexistentes o colores no hexadecimales), la aplicación mostrará los problemas en un banner y utilizará los valores por defecto sin fallar.
 
-### Notes
+### Notas
 
-- Data is persisted to `localStorage` under the keys `erp_base_module:entities` and `erp_base_module:documents`.
-- Deleting an entity also deletes its documents (cascade).
-- This project intentionally uses vanilla HTML, CSS, and JavaScript for simplicity.
+- Los datos se persisten en `localStorage` bajo las claves `erp_base_module:entities` y `erp_base_module:documents`.
+- Al eliminar una entidad, también se eliminan sus documentos asociados (*eliminación en cascada*).
+- Este proyecto utiliza intencionalmente HTML, CSS y JavaScript puros por simplicidad.
