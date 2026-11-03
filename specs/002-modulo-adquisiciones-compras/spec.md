@@ -115,6 +115,20 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 
 ---
 
+Historia de Usuario 5 - Panel de pendientes y alertas por rol (Prioridad: P1)
+Como usuario del módulo (solicitante, comprador, jefe de compras o bodega), necesito ver al ingresar solo lo que me corresponde atender y lo que está por vencer, para priorizar mi trabajo diario y no dejar pasar plazos legales ni solicitudes detenidas.
+Por qué esta prioridad: Es la pantalla de entrada del módulo y convierte el registro pasivo de datos en trabajo accionable. Sin ella, cada rol debe revisar listas completas para descubrir qué le toca; con ella se cumple el requisito de alertas de vencimiento (FR-017) y el criterio de éxito SC-005.
+Prueba Independiente: Un jefe de compras con dos solicitudes enviada y una factura que vence en 3 días abre el panel, ve esos tres pendientes con acceso directo y, al aprobar una solicitud, el contador baja sin recargar la página.
+Escenarios de Aceptación:
+1. Dado un usuario con un rol activo, cuando abre el panel de inicio, entonces ve solo los pendientes que su rol puede atender (solicitudes por aprobar, OC sin recepción, recepciones por registrar o facturas por conciliar) con su contador y un acceso directo a cada registro.
+2. Dada una factura no aprobada que vence en 5 días o menos, cuando el usuario abre el panel, entonces aparece una alerta destacada con el proveedor, el folio y los días restantes.
+3. Dado un solicitante, cuando revisa el panel, entonces solo ve sus propias solicitudes y no los pendientes de otros usuarios ni datos de otras áreas (acceso restringido).
+4. Dadas órdenes de compra emitidas sin recepción registrada por más de 7 días, cuando el encargado de bodega o el comprador abre el panel, entonces el sistema las lista como pendientes de seguimiento.
+5. Dado un período seleccionado (mes actual), cuando el panel carga, entonces muestra indicadores de monto comprometido en OC, órdenes abiertas y facturas aprobadas para pago, calculados con los datos existentes.
+6. Dado que no hay pendientes para el rol, cuando el usuario abre el panel, entonces ve un estado vacío claro que lo invita a crear una solicitud u orden según corresponda.
+
+---
+
 ### Historia de Usuario 7 - Registrar y conciliar facturas (Prioridad: P2)
 **Como** Jefe de Compras, **necesito** cruzar la factura del proveedor con la Orden y lo recibido en Bodega, **para** autorizar el pago a Contabilidad solo si los montos coinciden y hacerlo en plazo.
 
