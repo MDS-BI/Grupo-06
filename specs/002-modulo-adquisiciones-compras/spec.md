@@ -115,7 +115,7 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 
 ---
 
-Historia de Usuario 5 - Panel de pendientes y alertas por rol (Prioridad: P1)
+### Historia de Usuario 5 - Panel de pendientes y alertas por rol (Prioridad: P1)
 Como usuario del módulo (solicitante, comprador, jefe de compras o bodega), necesito ver al ingresar solo lo que me corresponde atender y lo que está por vencer, para priorizar mi trabajo diario y no dejar pasar plazos legales ni solicitudes detenidas.
 Por qué esta prioridad: Es la pantalla de entrada del módulo y convierte el registro pasivo de datos en trabajo accionable. Sin ella, cada rol debe revisar listas completas para descubrir qué le toca; con ella se cumple el requisito de alertas de vencimiento (FR-017) y el criterio de éxito SC-005.
 Prueba Independiente: Un jefe de compras con dos solicitudes enviada y una factura que vence en 3 días abre el panel, ve esos tres pendientes con acceso directo y, al aprobar una solicitud, el contador baja sin recargar la página.
