@@ -40,13 +40,23 @@ Para asegurar el control de acceso y la integración fluida con otros módulos d
 | :--- | :--- | :--- |
 | Solicitante (cualquier área) | `solicitante` | **Restringido:** Solo ve y crea sus propias solicitudes. |
 | Comprador | `comprador` | **Ejecutor:** Cotiza, emite Órdenes de Compra (OC) y mantiene el catálogo de proveedores. No ve datos bancarios completos. |
-| Jefe de compras | `jefe_compras` | **Aprobador:** Autoriza solicitudes, aprueba facturas y gestiona excepciones comerciales. |
+| Jefe de compras | `jefe_compras` | **Aprobador:** Autoriza solicitudes, aprueba facturas y gestiona excepciones comerciales. Ve datos bancarios completos, pero no los edita. |
 | Encargado de bodega | `bodega` | **Restringido (Físico):** Solo interactúa con el registro de recepciones de una OC emitida. |
 | Administrador | `admin_ti` | **Acceso total:** Puede auditar logs, desbloquear proveedores y ver datos sensibles (ej. cuentas bancarias completas sin enmascarar). |
 
 ### Fuera de alcance
 
 Backend real, autenticación real (los roles se simulan), conexión con el SII o recepción automática de documentos tributarios electrónicos, registro del pago (lo hace Contabilidad), control de presupuesto por centro de costo, compras públicas (Ley 19.886) y envío real de correos.
+
+## Clarifications
+
+### Session 2026-11-03
+
+- Q: ¿Qué monto neto debe usarse como `UMBRAL_COTIZACIONES` para exigir tres cotizaciones o una justificación de proveedor único? (FR-021) → A: 1.000.000 CLP neto.
+- Q: ¿Cómo debe definirse `TOLERANCIA_CONCILIACION` para clasificar una factura como conciliada o con discrepancia? (FR-022) → A: 1 % del neto.
+- Q: ¿Qué roles deben poder ver sin enmascarar los datos bancarios de un proveedor? (FR-004) → A: `admin_ti` y `jefe_compras`.
+- Q: ¿Qué formato CSV deben usar las exportaciones para abrirse correctamente en Excel en español? (FR-024) → A: UTF-8 con BOM y separador `;`.
+- Q: ¿Qué roles pueden usar la exportación CSV? (FR-024) → A: Heredan el permiso de la vista; cada rol exporta solo los listados que ya puede ver.
 
 ## Escenarios de Usuario y Pruebas *(obligatorio)*
 
@@ -64,7 +74,7 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 2. **Dado** que el usuario ingresa un RUT con dígito verificador inválido o ya registrado, **cuando** intenta guardar, **entonces** el sistema lo impide y sugiere usar el registro existente.
 3. **Dado** un proveedor con condición de pago de 45 días, **cuando** no tiene marcado `acuerdo_plazo_mayor`, **entonces** el sistema no permite guardar (cumplimiento Ley 21.131).
 4. **Dado** un proveedor con órdenes de compra, **cuando** el usuario intenta eliminarlo, **entonces** el sistema lo impide para proteger la integridad de los datos y ofrece bloquearlo.
-5. **Dado** un usuario con rol distinto de `admin`, **cuando** ve la ficha de un proveedor, **entonces** el número de cuenta bancaria aparece enmascarado (ej. `****5678`) y no es editable.
+5. **Dado** un usuario con rol `comprador`, `bodega` o `solicitante`, **cuando** ve la ficha de un proveedor, **entonces** el número de cuenta bancaria aparece enmascarado (ej. `****5678`) y no es editable.
 
 ---
 
@@ -129,6 +139,24 @@ Escenarios de Aceptación:
 
 ---
 
+### Historia de Usuario 6 - Cotizaciones y comparativa side-by-side (Prioridad: P1)
+**Como** Comprador, **necesito** registrar las cotizaciones de distintos proveedores para una solicitud aprobada y compararlas lado a lado, **para** elegir de forma justificada y auditable la mejor oferta antes de emitir la orden de compra.
+
+**Por qué esta prioridad**: Es el mecanismo de control de precios y la antesala obligatoria de la OC sobre el umbral. Sin cotizaciones no se puede demostrar por qué se eligió a un proveedor. Vincula el `id_proveedor` y el `id_producto` de la solicitud y alimenta la emisión de OC de US3.
+
+**Prueba Independiente**: Sobre una solicitud aprobada, el comprador registra tres cotizaciones de proveedores distintos, las ve comparadas lado a lado y selecciona una, dejando las demás descartadas con su motivo.
+
+**Escenarios de Aceptación**:
+1. **Dada** una solicitud `aprobada`, **cuando** el comprador registra una cotización de un proveedor, **entonces** se guarda con precios, plazo, condición de pago y fecha de validez, y la solicitud pasa a `en_cotizacion`.
+2. **Dado** que ya existe una cotización para esa solicitud y proveedor, **cuando** se intenta registrar otra, **entonces** el sistema lo impide (una cotización por proveedor y solicitud).
+3. **Dadas** varias cotizaciones, **cuando** el comprador abre la comparativa, **entonces** ve de forma side-by-side el precio, plazo de entrega, condición de pago y la evaluación promedio de cada proveedor.
+4. **Dada** una solicitud cuyo monto estimado iguala o supera `UMBRAL_COTIZACIONES`, **cuando** el comprador intenta seleccionar una cotización con menos de 3 cotizaciones, **entonces** el sistema exige una `justificacion_proveedor_unico`.
+5. **Dada** una cotización cuya `fecha_validez` ya pasó, **cuando** se intenta seleccionar, **entonces** aparece como `vencida` y no puede elegirse.
+6. **Dado** que el comprador descarta una cotización, **cuando** no ingresa `motivo_descarte`, **entonces** el sistema lo exige.
+7. **Dado** que se selecciona una cotización, **cuando** se guarda, **entonces** las demás quedan como no seleccionadas y solo una puede estar `seleccionada` por solicitud.
+
+---
+
 ### Historia de Usuario 7 - Registrar y conciliar facturas (Prioridad: P2)
 **Como** Jefe de Compras, **necesito** cruzar la factura del proveedor con la Orden y lo recibido en Bodega, **para** autorizar el pago a Contabilidad solo si los montos coinciden y hacerlo en plazo.
 
@@ -143,10 +171,58 @@ Escenarios de Aceptación:
 4. **Dado** un folio de factura ya registrado para ese proveedor, **cuando** se intenta ingresar nuevamente, **entonces** el sistema evita la duplicidad.
 5. **Dado** un proveedor cuya cuenta bancaria cambió hace menos de 30 días, **cuando** se aprueba su factura, **entonces** el sistema emite una alerta de posible riesgo de fraude.
 
+### Historia de Usuario 8 - Catálogo de productos por proveedor (Prioridad: P2)
+**Como** Comprador, **necesito** mantener por cada proveedor el catálogo de productos que ofrece, con precio de referencia y plazo de entrega, **para** cotizar más rápido y usar precios actualizados sin pedirlos por correo cada vez.
+
+**Por qué esta prioridad**: Acelera y estandariza las cotizaciones y líneas de solicitud, pero no bloquea el ciclo de compra. Depende de que existan proveedores (US1) y productos maestros de Inventario. Vincula `id_proveedor` con `id_producto` en modo solo lectura.
+
+**Prueba Independiente**: Un comprador agrega un producto al catálogo de un proveedor con precio y plazo, lo busca, actualiza el precio y el sistema marca como desactualizada una referencia con más de 90 días.
+
+**Escenarios de Aceptación**:
+1. **Dado** un proveedor y un producto activo, **cuando** el comprador agrega la relación, **entonces** se guarda una única entrada proveedor-producto con precio de referencia, plazo de entrega y fecha de actualización.
+2. **Dado** un producto ya asociado a ese proveedor, **cuando** se intenta agregar de nuevo, **entonces** el sistema lo impide.
+3. **Dado** un precio de referencia con más de 90 días desde su actualización, **cuando** se consulta el catálogo, **entonces** aparece marcado como desactualizado.
+4. **Dado** que el comprador crea una línea de solicitud, **cuando** el producto está en el catálogo, **entonces** el sistema sugiere el menor precio de referencia vigente.
+5. **Dado** un producto desactivado en Inventario, **cuando** se consulta el catálogo, **entonces** no se ofrece para nuevas líneas.
+
+---
+
+### Historia de Usuario 9 - Evaluación de desempeño de proveedores (Prioridad: P2)
+**Como** Jefe de Compras, **necesito** evaluar el desempeño de cada proveedor por orden recibida, **para** decidir con datos a quién seguir comprando y mostrar ese historial al comparar cotizaciones.
+
+**Por qué esta prioridad**: Convierte el histórico de órdenes en información de decisión. Depende de las recepciones de US4 y alimenta la comparativa de US6 y la ficha del proveedor de US1.
+
+**Prueba Independiente**: Sobre una OC recibida con 6 días de atraso, el jefe de compras registra una evaluación, obtiene `nota_plazo = 3` y el promedio aparece en la ficha del proveedor.
+
+**Escenarios de Aceptación**:
+1. **Dada** una OC en estado `recibida_total` o `cerrada`, **cuando** el jefe de compras registra una evaluación, **entonces** se guarda con sus puntajes y comentario.
+2. **Dado** que ya existe una evaluación para esa OC, **cuando** se intenta registrar otra, **entonces** el sistema lo impide (una evaluación por OC).
+3. **Dado** el atraso entre la fecha comprometida y la fecha de recepción, **cuando** se calcula la nota, **entonces** se aplica la escala: 0 días → 5; 1-3 → 4; 4-7 → 3; 8-14 → 2; más de 14 → 1.
+4. **Dado** un proveedor con evaluaciones, **cuando** se abre su ficha o la comparativa de cotizaciones, **entonces** se muestra el promedio actualizado.
+5. **Dada** una OC no recibida, **cuando** se intenta evaluar, **entonces** el sistema lo impide.
+
+---
+
+### Historia de Usuario 10 - Exportación de reportes en CSV (Prioridad: P3)
+**Como** usuario del módulo (solicitante, comprador, jefe de compras, bodega o administrador), **necesito** exportar a CSV los listados de compras y proveedores que ya puedo ver, **para** compartir la información con Contabilidad o analizarla en una planilla sin pedir extracciones manuales.
+
+**Por qué esta prioridad**: Es una salida de conveniencia sobre datos ya existentes y no bloquea el ciclo de compras. Depende de que los listados y el panel de US5 estén implementados.
+
+**Prueba Independiente**: Un jefe de compras exporta el listado de órdenes del período y obtiene un archivo CSV con encabezados y una fila por OC, respetando los filtros y el rol activo.
+
+**Escenarios de Aceptación**:
+1. **Dado** un listado visible para el rol, **cuando** se elige exportar, **entonces** se descarga un CSV con encabezados y una fila por registro del filtro vigente.
+2. **Dado** un usuario con rol `solicitante`, **cuando** exporta solicitudes, **entonces** el CSV contiene solo sus propias solicitudes.
+3. **Dado** un listado sin registros, **cuando** se exporta, **entonces** se genera un CSV solo con encabezados o se avisa que no hay datos, sin error.
+4. **Dado** un dato con coma, comillas o salto de línea, **cuando** se exporta, **entonces** el CSV lo escapa correctamente.
+5. **Dado** un usuario sin permiso para ver un listado, **cuando** intenta exportarlo, **entonces** la opción no está disponible.
+
+---
+
 ### Historia de Usuario 11 - Registrar devoluciones y notas de crédito (Prioridad: P2)
 Como Jefe de Compras, necesito registrar devoluciones y notas de crédito contra una Orden de Compra ya recibida y facturada, para descontar de lo facturado aquello que no cumple y no pagar de más al proveedor.
 
-**Por qué esta prioridad**: Cierra el hueco entre la recepción (HU4) y la conciliación de facturas (HU7). El caso límite de la nota de crédito no tiene flujo definido; sin esta historia, una devolución posterior a la recepción no se refleja en el saldo por pagar. Depende de que existan OC con recepciones y facturas registradas.
+**Por qué esta prioridad**: Cierra el hueco entre la recepción (US4) y la conciliación de facturas (US7). El caso límite de la nota de crédito no tiene flujo definido; sin esta historia, una devolución posterior a la recepción no se refleja en el saldo por pagar. Depende de que existan OC con recepciones y facturas registradas.
 
 **Prueba Independiente**: Sobre una OC `recibida_total` facturada por 100.000 CLP neto, se registra una devolución de 20.000 CLP por defectuosos; el saldo facturado pendiente baja a 80.000 CLP y una factura posterior por ese monto queda `conciliada`.
 
@@ -174,7 +250,7 @@ Como Jefe de Compras, necesito registrar devoluciones y notas de crédito contra
 - **FR-001**: El sistema DEBE permitir crear, editar, buscar y cambiar de estado proveedores, validando RUT (formato y dígito verificador) y su unicidad.
 - **FR-002**: El sistema DEBE impedir una condición de pago mayor a 30 días si el proveedor no tiene registrado un acuerdo de plazo mayor (Ley 21.131).
 - **FR-003**: El sistema DEBE impedir eliminar proveedores con órdenes de compra; en su lugar DEBE permitir bloquearlos.
-- **FR-004**: El sistema DEBE enmascarar RUT de personas naturales y números de cuenta bancaria para roles sin permiso, y DEBE registrar la fecha del último cambio de datos bancarios.
+- **FR-004**: El sistema DEBE enmascarar el RUT de personas naturales y el número de cuenta bancaria para todos los roles excepto `admin_ti` y `jefe_compras`, y DEBE registrar la fecha del último cambio de datos bancarios. Solo `admin_ti` puede editar los datos bancarios.
 - **FR-005**: El sistema DEBE permitir crear solicitudes de compra con una o más líneas y numeración correlativa `SC-AAAA-NNNN`.
 - **FR-006**: El sistema DEBE impedir que un usuario apruebe su propia solicitud y DEBE exigir motivo al rechazar.
 - **FR-007**: El sistema DEBE permitir registrar cotizaciones solo para solicitudes aprobadas, con una cotización por proveedor y solicitud.
@@ -191,8 +267,10 @@ Como Jefe de Compras, necesito registrar devoluciones y notas de crédito contra
 - **FR-018**: El sistema DEBE mostrar un panel de inicio con acciones rápidas, pendientes por rol, alertas e indicadores del período.
 - **FR-019**: El sistema DEBE permitir una evaluación por orden recibida, calculando la nota de plazo a partir de las fechas.
 - **FR-020**: El sistema DEBE funcionar con datos semilla completamente ficticios.
-- **FR-021**: El sistema DEBE definir UMBRAL_COTIZACIONES en [NECESITA ACLARACIÓN: valor propuesto 1.000.000 CLP neto; confirmar con el grupo].
-- **FR-022**: El sistema DEBE definir TOLERANCIA_CONCILIACION en [NECESITA ACLARACIÓN: valor propuesto 1 % del neto; confirmar si se prefiere un monto fijo en pesos].
+- **FR-021**: El sistema DEBE usar `UMBRAL_COTIZACIONES = 1.000.000 CLP neto` para exigir tres cotizaciones o una justificación de proveedor único.
+- **FR-022**: El sistema DEBE usar `TOLERANCIA_CONCILIACION = 1 % del neto` de la factura; una diferencia dentro de ese margen se clasifica como `conciliada` y por sobre él como `con_discrepancia`.
+- **FR-023**: El sistema DEBE mantener un catálogo proveedor-producto único por par, con precio de referencia, plazo de entrega y fecha de actualización; DEBE marcar como desactualizados los precios con más de 90 días y sugerir el menor precio vigente al crear líneas de solicitud.
+- **FR-024**: El sistema DEBE permitir exportar a CSV los listados y reportes que cada rol ya puede ver, en UTF-8 con BOM y separador `;`, respetando los filtros y permisos del rol activo, con escapado correcto de comas, comillas y saltos de línea.
 
 ### Requisitos de Integración
 
@@ -225,6 +303,7 @@ El detalle de atributos, cardinalidades y reglas está en [data-model.md](data-m
 - **SC-005**: El 100 % de las facturas que vencen en 5 días o menos sin aprobación aparecen en el panel.
 - **SC-006**: Las listas y búsquedas responden de forma instantánea con hasta 500 registros por colección, igual que el módulo base.
 - **SC-007**: Las reglas de cálculo y de estado de la sección 5 de `data-model.md` tienen pruebas unitarias que pasan.
+- **SC-008**: La exportación CSV de un listado de hasta 500 registros se completa en menos de 1 segundo y preserva los filtros y permisos del rol.
 
 ## Suposiciones
 
