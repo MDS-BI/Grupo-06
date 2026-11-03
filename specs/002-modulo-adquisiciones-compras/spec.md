@@ -129,6 +129,21 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 4. **Dado** un folio de factura ya registrado para ese proveedor, **cuando** se intenta ingresar nuevamente, **entonces** el sistema evita la duplicidad.
 5. **Dado** un proveedor cuya cuenta bancaria cambió hace menos de 30 días, **cuando** se aprueba su factura, **entonces** el sistema emite una alerta de posible riesgo de fraude.
 
+### Historia de Usuario 11 - Registrar devoluciones y notas de crédito (Prioridad: P2)
+Como Jefe de Compras, necesito registrar devoluciones y notas de crédito contra una Orden de Compra ya recibida y facturada, para descontar de lo facturado aquello que no cumple y no pagar de más al proveedor.
+
+**Por qué esta prioridad**: Cierra el hueco entre la recepción (HU4) y la conciliación de facturas (HU7). El caso límite de la nota de crédito no tiene flujo definido; sin esta historia, una devolución posterior a la recepción no se refleja en el saldo por pagar. Depende de que existan OC con recepciones y facturas registradas.
+
+**Prueba Independiente**: Sobre una OC `recibida_total` facturada por 100.000 CLP neto, se registra una devolución de 20.000 CLP por defectuosos; el saldo facturado pendiente baja a 80.000 CLP y una factura posterior por ese monto queda `conciliada`.
+
+**Escenarios de Aceptación**:
+1. **Dada** una OC con unidades aceptadas, **cuando** el jefe de compras registra una devolución indicando línea, cantidad y motivo, **entonces** el sistema genera un documento de devolución con correlativo `DEV-AAAA-NNNN` y descuenta la cantidad del saldo recibido.
+2. **Dada** una factura ya registrada, **cuando** se ingresa una nota de crédito del mismo proveedor, **entonces** se descuenta del monto facturado y no se permite que el crédito supere dicho monto.
+3. **Dada** una nota de crédito sin OC o sin factura asociada, **cuando** se intenta registrar, **entonces** el sistema lo impide y exige el documento de origen.
+4. **Dado** un folio de nota de crédito ya registrado para ese proveedor, **cuando** se intenta ingresar nuevamente, **entonces** el sistema evita la duplicidad.
+5. **Dado** que la devolución reduce el saldo pendiente a cero, **cuando** se guarda, **entonces** la OC queda `cerrada` y la factura queda saldada sin pasar a `aprobada_pago` por el monto descontado.
+6. **Dado** que quien registró la recepción es también quien intenta registrar la devolución, **cuando** lo hace, **entonces** el sistema exige la aprobación de un `jefe_compras` o `admin_ti` distinto (segregación de funciones).
+
 ### Casos Límite
 
 - ¿Qué pasa si se anula una OC con cotización seleccionada? La cotización sigue `seleccionada` y puede generar una nueva OC.
