@@ -14,7 +14,7 @@
 |  | 2. RUT inválido o ya registrado → impide y explica | CP-COM-001-02 | Validación de RUT (formato/DV) y unicidad | Validación | P1 |
 |  | 3. Condición pago > 30 sin `acuerdo_plazo_mayor` → impide | CP-COM-001-03 | Cumplimiento Ley 21.131 | Regla de Negocio | P1 |
 |  | 4. Eliminar proveedor con OC → impide y ofrece bloquear | CP-COM-001-04 | Integridad referencial | Integridad | P1 |
-|  | 5. Rol distinto a `admin` → datos bancarios enmascarados y no editables | CP-COM-001-05 | Datos sensibles / permisos | Seguridad | P1 |
+|  | 5. Rol distinto a `admin_ti` → datos bancarios enmascarados y no editables | CP-COM-001-05 | Datos sensibles / permisos | Seguridad | P1 |
 | **HU-02 Solicitudes de Compra** | 1. Enviar solicitud con productos → `enviada`, correlativo `SC-AAAA-NNNN`, monto estimado | CP-COM-002-01 | Creación y envío de solicitud | Funcional | P1 |
 |  | 2. Jefe de compras aprueba → `aprobada`, registra aprobador y fecha | CP-COM-002-02 | Aprobación | Flujo | P1 |
 |  | 3. Rechazar sin motivo → exige motivo | CP-COM-002-03 | Validación obligatoria | Validación | P1 |
@@ -32,11 +32,11 @@
 | **HU-05 Panel de Compras** | 1. Acciones rápidas presentes | CP-COM-005-01 | UI Panel | Funcional | P1 |
 |  | 2. Facturas por vencer ≤5 días → alertas destacadas | CP-COM-005-02 | Alertas plazo legal | Alertas | P1 |
 |  | 3. Contadores se actualizan al volver al panel | CP-COM-005-03 | Sincronización UI | Integración UI | P1 |
-| **HU-06 Cotizaciones** | 1. Primera cotización → solicitud pasa a `en_cotizacion` | CP-COM-006-01 | Cambio estado solicitud | Flujo | P2 |
-|  | 2. Comparador muestra totales, plazo, condición pago y evaluación | CP-COM-006-02 | Comparación | Funcional | P2 |
-|  | 3. >= umbral con < 3 cotizaciones sin justificación → impide seleccionar | CP-COM-006-03 | Umbral y justificación | Regla de Negocio | P2 |
-|  | 4. Descartar cotización → exige motivo | CP-COM-006-04 | Trazabilidad | Validación | P2 |
-|  | 5. Cotización vencida → aparece `vencida` y no seleccionable | CP-COM-006-05 | Validez | Regla | P2 |
+| **HU-06 Cotizaciones** | 1. Primera cotización → solicitud pasa a `en_cotizacion` | CP-COM-006-01 | Cambio estado solicitud | Flujo | P1 |
+|  | 2. Comparador muestra totales, plazo, condición pago y evaluación | CP-COM-006-02 | Comparación | Funcional | P1 |
+|  | 3. >= umbral con < 3 cotizaciones sin justificación → impide seleccionar | CP-COM-006-03 | Umbral y justificación | Regla de Negocio | P1 |
+|  | 4. Descartar cotización → exige motivo | CP-COM-006-04 | Trazabilidad | Validación | P1 |
+|  | 5. Cotización vencida → aparece `vencida` y no seleccionable | CP-COM-006-05 | Validez | Regla | P1 |
 | **HU-07 Facturas y Conciliación** | 1. Neto coincide dentro de tolerancia → `conciliada`, calcula vencimiento | CP-COM-007-01 | Conciliación 3 vías | Conciliación | P2 |
 |  | 2. Excede tolerancia → `con_discrepancia`, muestra diferencia | CP-COM-007-02 | Discrepancia | Conciliación | P2 |
 |  | 3. Factura con discrepancia → no permite aprobar para pago | CP-COM-007-03 | Control aprobación | Regla de Negocio | P2 |
@@ -44,9 +44,15 @@
 |  | 5. Cambio de cuenta < 30 días → advertencia fraude | CP-COM-007-05 | Alerta de riesgo | Riesgo/Fraude | P2 |
 | **HU-08 Catálogo Proveedor-Producto** | 1. Par duplicado → actualiza en lugar de duplicar | CP-COM-008-01 | Unicidad (proveedor,producto) | Integridad | P2 |
 |  | 2. Precio > 90 días sin actualizar → marcado desactualizado | CP-COM-008-02 | Calidad de datos | Alerta | P2 |
-| **HU-09 Evaluación Proveedores** | 1. Nota plazo calculada por atraso, calidad/servicio ingresadas | CP-COM-009-01 | Cálculo automático | Cálculo | P3 |
-|  | 2. OC ya evaluada → impide segunda evaluación | CP-COM-009-02 | Unicidad | Integridad | P3 |
+| **HU-09 Evaluación Proveedores** | 1. Nota plazo calculada por atraso, calidad/servicio ingresadas | CP-COM-009-01 | Cálculo automático | Cálculo | P2 |
+|  | 2. OC ya evaluada → impide segunda evaluación | CP-COM-009-02 | Unicidad | Integridad | P2 |
 | **HU-10 Exportar Reportes** | 1. CSV con filas filtradas, montos CLP sin decimales | CP-COM-010-01 | Exportación | Reportes | P3 |
+| **HU-11 Devoluciones y Notas de Crédito** | 1. Devolución con línea, cantidad y motivo → correlativo `DEV-AAAA-NNNN` y descuento del saldo | CP-COM-011-01 | Registro de devolución | Funcional | P2 |
+|  | 2. Nota de crédito contra factura → descuenta lo facturado sin superarlo | CP-COM-011-02 | Nota de crédito | Conciliación | P2 |
+|  | 3. NC sin OC o factura → impide y exige documento de origen | CP-COM-011-03 | Validación de origen | Validación | P2 |
+|  | 4. Folio de NC duplicado → impide | CP-COM-011-04 | Unicidad de folio | Integridad | P2 |
+|  | 5. Devolución salda el pendiente → OC `cerrada` y factura saldada | CP-COM-011-05 | Cierre de saldo | Flujo | P2 |
+|  | 6. Receptor registra devolución → exige aprobación de `jefe_compras`/`admin_ti` distinto | CP-COM-011-06 | Segregación de funciones | Segregación | P2 |
 
 
 ## 2. Trazabilidad Requisitos Funcionales (FR) -> Casos de Prueba
@@ -66,14 +72,16 @@
 | **FR-011** | Impedir >1 OC no anulada por solicitud y >1 OC por cotización | CP-COM-003-04, CP-COM-003-05 | Pendiente ejecución |
 | **FR-012** | Calcular subtotales, neto, IVA 19%, total en CLP enteros | CP-COM-003-01, CP-COM-007-01 | Pendiente ejecución |
 | **FR-013** | Recepciones parciales, no aceptar más de lo pendiente, actualizar estado OC | CP-COM-004-01, CP-COM-004-02 | Pendiente ejecución |
-| **FR-014** | Impedir que quien emitió OC registre su recepción | CP-COM-004-04 | Pendiente ejecución |
-| **FR-015** | Facturas/notas de crédito solo contra OC con recepciones, folio único por proveedor/tipo | CP-COM-007-01, CP-COM-007-04, CP-COM-LIM-02 | Pendiente ejecución |
-| **FR-016** | Conciliar contra valor recibido pendiente, clasificar `conciliada`/`con_discrepancia`, aplicar tolerancia | CP-COM-007-01, CP-COM-007-02 | Pendiente ejecución |
+| **FR-014** | Impedir que quien emitió OC registre su recepción y exigir aprobación distinta en devoluciones | CP-COM-004-04, CP-COM-011-06 | Pendiente ejecución |
+| **FR-015** | Facturas/notas de crédito solo contra OC con recepciones, folio único por proveedor/tipo; devoluciones con correlativo y descuento del saldo | CP-COM-007-01, CP-COM-007-04, CP-COM-011-01, CP-COM-011-03, CP-COM-011-04, CP-COM-LIM-02 | Pendiente ejecución |
+| **FR-016** | Conciliar contra valor recibido pendiente, clasificar `conciliada`/`con_discrepancia`, aplicar tolerancia; devolución que salda el pendiente cierra la OC | CP-COM-007-01, CP-COM-007-02, CP-COM-011-05 | Pendiente ejecución |
 | **FR-017** | Calcular fecha vencimiento desde fecha recepción + alertar ≤5 días sin aprobar | CP-COM-005-02, CP-COM-007-01 | Pendiente ejecución |
 | **FR-018** | Panel con acciones rápidas, pendientes por rol, alertas, indicadores | CP-COM-005-01, CP-COM-005-02, CP-COM-005-03 | Pendiente ejecución |
 | **FR-019** | Una evaluación por OC recibida, nota plazo calculada | CP-COM-009-01, CP-COM-009-02 | Pendiente ejecución |
 | **FR-020** | Datos semilla completamente ficticios | Verificación general | Pendiente ejecución |
-| **FR-021/FR-022** | Parámetros configurables `UMBRAL_COTIZACIONES` y `TOLERANCIA_CONCILIACION` | Verificación con datos de prueba | Pendiente ejecución |
+| **FR-021/FR-022** | Parámetros configurables `UMBRAL_COTIZACIONES` (1.000.000 CLP neto) y `TOLERANCIA_CONCILIACION` (1 %) | Verificación con datos de prueba | Pendiente ejecución |
+| **FR-023** | Catálogo proveedor-producto único, precio de referencia, desactualización > 90 días y sugerencia del menor precio | CP-COM-008-01, CP-COM-008-02 | Pendiente ejecución |
+| **FR-024** | Exportación CSV UTF-8 con BOM, separador `;`, filtros y permisos del rol | CP-COM-010-01 | Pendiente ejecución |
 
 
 ## 2.1 Trazabilidad Requisitos de Integración (IR) -> Casos de Prueba
@@ -96,24 +104,25 @@
 | **SC-005** | 100% facturas que vencen ≤5 días sin aprobación aparecen en panel | CP-COM-005-02 |
 | **SC-006** | Listados/búsquedas ágiles con hasta 500 registros | Verificación general con datos semilla (rendimiento) |
 | **SC-007** | Reglas cálculo/estado sección 5 data-model.md con pruebas unitarias que pasan | Revisión con suite `tests/unit/` (existente) + validación funcional |
+| **SC-008** | Exportación CSV de hasta 500 registros en < 1 segundo preservando filtros y permisos | CP-COM-010-01 (medición durante ejecución) |
 
 
 ## 4. Cobertura por Prioridad
 
 | Prioridad | N° Casos | Casos |
 |---|---|---|
-| **P1** | 25 | HU-01 (5), HU-02 (5), HU-03 (5), HU-04 (4), HU-05 (3) |
-| **P2** | 17 | HU-06 (5), HU-07 (5), HU-08 (2), Integración (5) |
-| **P3** | 3 | HU-09 (2), HU-10 (1) |
+| **P1** | 27 | HU-01 (5), HU-02 (5), HU-03 (5), HU-04 (4), HU-05 (3), HU-06 (5) |
+| **P2** | 20 | HU-07 (5), HU-08 (2), HU-09 (2), HU-11 (6), Integración (5) |
+| **P3** | 1 | HU-10 (1) |
 | **Límites** | 5 | Casos límite (CP-COM-LIM-01 a 05) |
-| **TOTAL** | **50** | Cobertura completa HU1-HU10 + Integración + Casos límite |
+| **TOTAL** | **53** | Cobertura completa HU1-HU11 + Integración + Casos límite |
 
 
 ## 5. Seguimiento de Ejecución
 
 | Estado | Cantidad | % |
 |---|---|---|
-| **No Ejecutado** | 50 | 100% |
+| **No Ejecutado** | 53 | 100% |
 | **En Ejecución** | 0 | 0% |
 | **PASSED** | 0 | 0% |
 | **FAILED** | 0 | 0% |

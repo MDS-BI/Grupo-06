@@ -92,6 +92,7 @@ Cada colección nueva implementa las mismas operaciones del contrato del templat
 | COTIZACION_PROVEEDOR + DETALLE_COTIZACION | `erp_compras:cotizaciones`, con `lineas` |
 | RECEPCION + DETALLE_RECEPCION | `erp_compras:recepciones`, con `lineas` |
 | FACTURA_PROVEEDOR | `erp_compras:facturas` |
+| DEVOLUCION + DETALLE_DEVOLUCION | `erp_compras:devoluciones`, con `lineas` |
 | PROVEEDOR_PRODUCTO | `erp_compras:catalogo` |
 | EVALUACION_PROVEEDOR | `erp_compras:evaluaciones` |
 | CONTACTO_PROVEEDOR | `erp_compras:contactos` |
@@ -106,7 +107,7 @@ specs/002-modulo-adquisiciones-compras/
 ├── spec.md          (historias de usuario y requisitos)
 ├── plan.md          (este archivo)
 ├── data-model.md    (MER, diccionario de datos, reglas)
-└── tasks.md         (siguiente paso: /speckit.tasks)
+└── tasks.md         (tareas de implementación)
 ```
 
 ### Código Fuente (raíz del repositorio)
@@ -122,6 +123,7 @@ src/
     ├── cotizaciones.js     (registro y comparación)
     ├── recepciones.js
     ├── facturas.js
+    ├── devoluciones.js     (devoluciones y notas de crédito)
     ├── catalogo.js
     ├── evaluaciones.js
     ├── panel.js            (indicadores y alertas)
@@ -142,13 +144,13 @@ tests/
 | 1. Versión integrada de prueba | 2 al 8-nov | US1, US3 simplificada, US5 básico | Proveedores y OC operando solo por configuración (el n° de solicitud se ingresa como texto, sin validarlo); panel con conteos |
 | 2. Ciclo operativo | 9 al 15-nov | US2, US4, US3 completa | Solicitud → OC → recepción; la OC se valida contra la solicitud aprobada, con líneas e IVA calculado |
 | 3. Adquisiciones y cierre del ciclo | 16 al 22-nov | US6, US7, US8 | Cotizaciones, conciliación de facturas, catálogo; demo del ciclo completo |
-| 4. Calidad | 23 al 26-nov | US9, US10, indicadores | Evaluación, CSV, README final; congelamiento del repositorio el 26-nov |
+| 4. Calidad | 23 al 26-nov | US9, US10, US11, indicadores | Evaluación, devoluciones/notas de crédito, CSV, README final; congelamiento del repositorio el 26-nov |
 
 Cada historia se asigna a un responsable en un Issue de GitHub con la etiqueta de su iteración; los acuerdos de cada semana se registran en un Issue de seguimiento.
 
 ## Dependencia crítica
 
-El repositorio del grupo **no contiene la carpeta `src/`**, aunque el README del template y sus pruebas (`tests/unit/storage.test.js` importa `../../src/storage.js`) la requieren. Antes de la iteración 1 hay que confirmar con los ayudantes si el código base debe regenerarse con Speckit a partir de `specs/001-erp-base-module/tasks.md` o si falta subirlo. Hasta resolverlo, la iteración 1 no puede ejecutarse.
+El repositorio del grupo **no contiene la carpeta `src/`** en `HEAD`, aunque el README del template y sus pruebas (`tests/unit/storage.test.js` importa `../../src/storage.js`) la requieren. El código base existe en el historial: se restaura con `git checkout 501e9c6 -- src index.html`. Si no se restaura, la iteración 1 no puede ejecutarse.
 
 ## Plan de Pruebas
 
@@ -172,6 +174,6 @@ Todos ficticios: 4 centros de costo, 6 usuarios (uno por rol y un segundo solici
 
 | Desviación del módulo base | Por qué es necesaria | Alternativa más simple descartada |
 |---|---|---|
-| Colecciones adicionales fuera de Entidad/Documento | El ciclo de compras tiene 5 documentos encadenados; el template solo modela uno | Forzar todo como Documento con un campo "tipo" mezclaría estados y reglas incompatibles |
+| Colecciones adicionales fuera de Entidad/Documento | El ciclo de compras tiene 6 documentos encadenados; el template solo modela uno | Forzar todo como Documento con un campo "tipo" mezclaría estados y reglas incompatibles |
 | Bloquear la eliminación en cascada de proveedores con OC | El template borra los documentos de una entidad eliminada; en compras eso destruiría la trazabilidad de órdenes y facturas | Advertir y borrar igual: inaceptable para auditoría |
 | Líneas de detalle dentro de la OC | El template no tiene partidas; su propio data-model las señala como punto de extensión | Una OC por producto: no refleja cómo compra una empresa |

@@ -25,7 +25,7 @@ Validar que el ciclo completo de Adquisiciones y Compras funciona de forma integ
 | `comprador` | COMP-001 | Cotizar, comparar, emitir OC (con/sin cotización según umbral), exportar listados. |
 | `jefe_compras` | JC-001 | Aprobar/rechazar solicitudes, aprobar facturas para pago, evaluar proveedores, gestionar panel y alertas. |
 | `bodega` | BOD-001 | Registrar recepciones, aceptar/rechazar unidades con motivo. No puede recibir OC que él mismo emitió. |
-| `admin` | ADM-001 | Gestionar proveedores (crear/editar/bloquear), ver datos bancarios completos, mantener maestros. |
+| `admin_ti` | ADM-001 | Gestionar proveedores (crear/editar/bloquear), ver datos bancarios completos, mantener maestros. |
 | `inventario` (simulado) | INT-001 | Verifica disponibilidad de `cantidad_aceptada` desde Recepción (Integración). |
 | `contabilidad` (simulado) | CON-001 | Recibe facturas en estado `aprobada_pago` (Integración). |
 
@@ -48,11 +48,11 @@ Validar que el ciclo completo de Adquisiciones y Compras funciona de forma integ
 
 | ID | Escenario (Spec) | Precondiciones | Pasos | Datos de Prueba | Resultado Esperado | Tipo | Prioridad |
 |---|---|---|---|---|---|---|---|
-| CP-COM-001-01 | Crear proveedor válido | Usuario con rol `admin` o `comprador` en lista de Proveedores | 1. Ir a Compras > Proveedores > Nuevo. 2. Ingresar RUT válido, razón social, giro, región, email/teléfono. 3. Guardar. | RUT: `76123456-5`, Razón Social: `Proveedor Demo SpA`, Giro: `Comercialización`, Región: `Metropolitana` | Proveedor guardado en estado `potencial`. Aparece en listado con sus datos. | Funcional | P1 |
+| CP-COM-001-01 | Crear proveedor válido | Usuario con rol `admin_ti` o `comprador` en lista de Proveedores | 1. Ir a Compras > Proveedores > Nuevo. 2. Ingresar RUT válido, razón social, giro, región, email/teléfono. 3. Guardar. | RUT: `76123456-5`, Razón Social: `Proveedor Demo SpA`, Giro: `Comercialización`, Región: `Metropolitana` | Proveedor guardado en estado `potencial`. Aparece en listado con sus datos. | Funcional | P1 |
 | CP-COM-001-02 | Validación RUT inválido o duplicado | Listado de proveedores con RUT existente | 1. Crear proveedor con RUT con DV incorrecto. 2. Crear proveedor con RUT ya registrado. | DV erróneo / RUT duplicado | Sistema impide guardar. Se muestra mensaje explicativo (formato/DV o unicidad). | Funcional/Validación | P1 |
-| CP-COM-001-03 | Condición de pago > 30 sin acuerdo | Usuario `admin/comprador` creando proveedor | 1. Ingresar `condicion_pago_dias = 45`. 2. Dejar `acuerdo_plazo_mayor = false`. 3. Intentar guardar. | 45 días sin acuerdo | No permite guardar. Explica máximo legal 30 días sin acuerdo inscrito (Ley 21.131). | Regla de Negocio | P1 |
+| CP-COM-001-03 | Condición de pago > 30 sin acuerdo | Usuario `admin_ti`/`comprador` creando proveedor | 1. Ingresar `condicion_pago_dias = 45`. 2. Dejar `acuerdo_plazo_mayor = false`. 3. Intentar guardar. | 45 días sin acuerdo | No permite guardar. Explica máximo legal 30 días sin acuerdo inscrito (Ley 21.131). | Regla de Negocio | P1 |
 | CP-COM-001-04 | Eliminar proveedor con OC | Proveedor con al menos una Orden de Compra asociada | 1. Abrir ficha del proveedor con OC. 2. Intentar eliminar. | Proveedor con `OC-2026-XXXX` | Sistema impide eliminar. Ofrece opción `Bloquear` en lugar de eliminar. | Funcional/Integridad | P1 |
-| CP-COM-001-05 | Enmascarado de datos sensibles por rol | Usuario con rol distinto a `admin` visualiza ficha de proveedor | 1. Logueado como `comprador`/`jefe_compras`/`bodega`/`solicitante`. 2. Abrir ficha proveedor con cuenta bancaria. | Proveedor con `numero_cuenta` completo | Número de cuenta bancaria aparece enmascarado. Campo no editable. RUT de persona natural también enmascarado según rol. | Seguridad/Datos Sensibles | P1 |
+| CP-COM-001-05 | Enmascarado de datos sensibles por rol | Usuario con rol distinto a `admin_ti` visualiza ficha de proveedor | 1. Logueado como `comprador`/`jefe_compras`/`bodega`/`solicitante`. 2. Abrir ficha proveedor con cuenta bancaria. | Proveedor con `numero_cuenta` completo | Número de cuenta bancaria aparece enmascarado. Campo no editable. RUT de persona natural también enmascarado según rol. | Seguridad/Datos Sensibles | P1 |
 
 
 ### HU-02: Crear y Aprobar Solicitudes de Compra (P1)
@@ -92,19 +92,19 @@ Validar que el ciclo completo de Adquisiciones y Compras funciona de forma integ
 | ID | Escenario (Spec) | Precondiciones | Pasos | Datos de Prueba | Resultado Esperado | Tipo | Prioridad |
 |---|---|---|---|---|---|---|---|
 | CP-COM-005-01 | Acciones rápidas | Usuario con rol `jefe_compras`/`comprador` ingresa al módulo | 1. Cargar panel. | Sesión válida | Se muestran acciones rápidas: `Nueva solicitud`, `Nueva OC`, `Registrar recepción`, `Registrar factura`. Accesibles con un clic. | UI/Funcional | P1 |
-| CP-COM-005-02 | Alertas de plazo legal | Existen facturas `recibida`/`conciliada` no aprobadas con `fecha_vencimiento <= hoy + 5 días` | 1. Abrir panel. | Factura vence en 5, 3 o 0 días | Aparecen destacadas como `Alerta de plazo legal`. Visible para roles con permiso (`jefe_compras`, `admin`). | Alertas/Regla | P1 |
+| CP-COM-005-02 | Alertas de plazo legal | Existen facturas `recibida`/`conciliada` no aprobadas con `fecha_vencimiento <= hoy + 5 días` | 1. Abrir panel. | Factura vence en 5, 3 o 0 días | Aparecen destacadas como `Alerta de plazo legal`. Visible para roles con permiso (`jefe_compras`, `admin_ti`). | Alertas/Regla | P1 |
 | CP-COM-005-03 | Contadores se actualizan | Cambios realizados desde otras pantallas | 1. Crear solicitud / emitir OC / registrar recepción. 2. Volver al panel. | Acciones previas | Contadores (`Solicitudes por aprobar`, `OC por recibir`, `Facturas por aprobar`, `Gasto del mes`) reflejan cambios sin recargar manual. | Integración UI | P1 |
 
 
-### HU-06: Registrar y Comparar Cotizaciones (P2)
+### HU-06: Registrar y Comparar Cotizaciones (P1)
 
 | ID | Escenario (Spec) | Precondiciones | Pasos | Datos de Prueba | Resultado Esperado | Tipo | Prioridad |
 |---|---|---|---|---|---|---|---|
-| CP-COM-006-01 | Primera cotización pasa a en_cotizacion | Solicitud `aprobada` sin cotizaciones | 1. Registrar primera cotización desde proveedor `aprobado`. | Proveedor aprobado | Estado solicitud cambia a `en_cotizacion`. Cotización queda `recibida`. | Flujo | P2 |
-| CP-COM-006-02 | Comparador con datos clave | Solicitud con >=2 cotizaciones | 1. Abrir `Comparar cotizaciones`. | 2-3 cotizaciones válidas | Se visualiza por proveedor: Total, Plazo entrega, Condición pago, Evaluación promedio + N° evaluaciones. | Funcional | P2 |
-| CP-COM-006-03 | Mínimo 3 o justificación proveedor único | Solicitud >= umbral con solo 2 cotizaciones | 1. Intentar seleccionar cotización sin `justificacion_proveedor_unico`. | 2 cotizaciones, monto >= umbral | Sistema impide selección. Requiere 3 cotizaciones o justificar proveedor único. | Regla de Negocio | P2 |
-| CP-COM-006-04 | Descartar exige motivo | Cotización en estado `recibida` | 1. Descartar sin motivo. 2. Descartar con motivo. | Sin motivo / con motivo | Sin motivo: impide. Con motivo (`precio`/`plazo`/`calidad`/`condiciones`/`otro`): pasa a `descartada` con `motivo_descarte`. | Validación | P2 |
-| CP-COM-006-05 | Cotización vencida no seleccionable | Cotización con `fecha_validez < fecha_actual` | 1. Consultar comparador. 2. Intentar seleccionar. | Fecha validez pasada | Aparece estado `vencida`. No permite seleccionar. | Regla/Validación | P2 |
+| CP-COM-006-01 | Primera cotización pasa a en_cotizacion | Solicitud `aprobada` sin cotizaciones | 1. Registrar primera cotización desde proveedor `aprobado`. | Proveedor aprobado | Estado solicitud cambia a `en_cotizacion`. Cotización queda `recibida`. | Flujo | P1 |
+| CP-COM-006-02 | Comparador con datos clave | Solicitud con >=2 cotizaciones | 1. Abrir `Comparar cotizaciones`. | 2-3 cotizaciones válidas | Se visualiza por proveedor: Total, Plazo entrega, Condición pago, Evaluación promedio + N° evaluaciones. | Funcional | P1 |
+| CP-COM-006-03 | Mínimo 3 o justificación proveedor único | Solicitud >= umbral con solo 2 cotizaciones | 1. Intentar seleccionar cotización sin `justificacion_proveedor_unico`. | 2 cotizaciones, monto >= umbral | Sistema impide selección. Requiere 3 cotizaciones o justificar proveedor único. | Regla de Negocio | P1 |
+| CP-COM-006-04 | Descartar exige motivo | Cotización en estado `recibida` | 1. Descartar sin motivo. 2. Descartar con motivo. | Sin motivo / con motivo | Sin motivo: impide. Con motivo (`precio`/`plazo`/`calidad`/`condiciones`/`otro`): pasa a `descartada` con `motivo_descarte`. | Validación | P1 |
+| CP-COM-006-05 | Cotización vencida no seleccionable | Cotización con `fecha_validez < fecha_actual` | 1. Consultar comparador. 2. Intentar seleccionar. | Fecha validez pasada | Aparece estado `vencida`. No permite seleccionar. | Regla/Validación | P1 |
 
 
 ### HU-07: Registrar y Conciliar Facturas de Proveedor (P2)
@@ -126,12 +126,12 @@ Validar que el ciclo completo de Adquisiciones y Compras funciona de forma integ
 | CP-COM-008-02 | Precio desactualizado | `fecha_actualizacion < hoy - 90 días` | 1. Visualizar catálogo/proveedor o sugerencia en solicitud. | > 90 días sin actualizar | Se marca como `desactualizado` visualmente (badge/etiqueta). | Alerta/Calidad Datos | P2 |
 
 
-### HU-09: Evaluar Proveedores (P3)
+### HU-09: Evaluar Proveedores (P2)
 
 | ID | Escenario (Spec) | Precondiciones | Pasos | Datos de Prueba | Resultado Esperado | Tipo | Prioridad |
 |---|---|---|---|---|---|---|---|
-| CP-COM-009-01 | Cálculo automático de nota_plazo | OC en `recibida_total` entregada con atraso | 1. Abrir evaluación. 2. Ingresar `nota_calidad` y `nota_servicio` (1-5). Guardar. | Entregada 2 días tarde vs fecha_entrega_esperada | `nota_plazo` se calcula automáticamente: 1-3 días tarde → 4. No editable por usuario. | Cálculo/Regla | P3 |
-| CP-COM-009-02 | Una evaluación por OC | OC ya evaluada | 1. Intentar evaluar misma OC nuevamente. | Evaluación existente | Sistema impide. Relación 1:0..1 entre OC y Evaluación. | Integridad | P3 |
+| CP-COM-009-01 | Cálculo automático de nota_plazo | OC en `recibida_total` entregada con atraso | 1. Abrir evaluación. 2. Ingresar `nota_calidad` y `nota_servicio` (1-5). Guardar. | Entregada 2 días tarde vs fecha_entrega_esperada | `nota_plazo` se calcula automáticamente: 1-3 días tarde → 4. No editable por usuario. | Cálculo/Regla | P2 |
+| CP-COM-009-02 | Una evaluación por OC | OC ya evaluada | 1. Intentar evaluar misma OC nuevamente. | Evaluación existente | Sistema impide. Relación 1:0..1 entre OC y Evaluación. | Integridad | P2 |
 
 
 ### HU-10: Exportar Reportes (P3)
@@ -139,6 +139,18 @@ Validar que el ciclo completo de Adquisiciones y Compras funciona de forma integ
 | ID | Escenario (Spec) | Precondiciones | Pasos | Datos de Prueba | Resultado Esperado | Tipo | Prioridad |
 |---|---|---|---|---|---|---|---|
 | CP-COM-010-01 | Exportar CSV con filtro aplicado | Lista OC filtrada por mes/proveedor/estado | 1. Aplicar filtro. 2. Exportar CSV. 3. Abrir con Excel/LibreOffice. | Filtrado por mes actual | CSV contiene **exactamente** las filas filtradas. Montos en CLP sin decimales. Encabezados correctos. Valores coinciden con lo visto en pantalla. | Reportes/Export | P3 |
+
+
+### HU-11: Registrar Devoluciones y Notas de Crédito (P2)
+
+| ID | Escenario (Spec) | Precondiciones | Pasos | Datos de Prueba | Resultado Esperado | Tipo | Prioridad |
+|---|---|---|---|---|---|---|---|
+| CP-COM-011-01 | Registrar devolución con correlativo | OC con recepciones, usuario `jefe_compras` | 1. Abrir OC recibida. 2. Registrar devolución con línea, cantidad y motivo. 3. Guardar. | OC recibida; devolver 2 unidades por `defectuoso` | Genera `DEV-AAAA-NNNN`, descuenta la cantidad del saldo recibido y queda en estado `registrada`. | Funcional | P2 |
+| CP-COM-011-02 | Nota de crédito descuenta lo facturado | Factura ya registrada del mismo proveedor | 1. Registrar nota de crédito contra la factura. 2. Verificar saldo pendiente. | Factura neto 100.000 CLP; NC 20.000 CLP | Descuenta 20.000 CLP del monto facturado y no permite superar el monto facturado. | Conciliación | P2 |
+| CP-COM-011-03 | Nota de crédito sin OC o factura | Usuario `jefe_compras` | 1. Intentar registrar NC sin OC o sin factura asociada. | Sin documento de origen | Sistema impide y exige el documento de origen. | Validación | P2 |
+| CP-COM-011-04 | Folio de nota de crédito duplicado | NC ya registrada para (proveedor, tipo, folio) | 1. Intentar registrar el mismo folio. | Mismo proveedor + `nota_credito` + folio | Sistema impide por unicidad de folio. | Integridad | P2 |
+| CP-COM-011-05 | Devolución salda el pendiente | OC recibida y facturada; devolución igual al saldo pendiente | 1. Registrar devolución que reduce el saldo a cero. 2. Guardar. | Saldo pendiente = devolución | OC pasa a `cerrada`; la factura queda saldada sin pasar a `aprobada_pago` por el monto descontado. | Flujo | P2 |
+| CP-COM-011-06 | Segregación receptor/devolución | Usuario que registró la recepción intenta registrar la devolución | 1. Registrar devolución con el mismo usuario de la recepción. 2. Guardar sin aprobación. | Mismo usuario receptor | Exige aprobación de un `jefe_compras` o `admin_ti` distinto. | Segregación de Funciones | P2 |
 
 
 ## 5. Casos de Prueba de Integración (End-to-End)
@@ -151,7 +163,7 @@ Estos casos validan el ciclo integrado completo y la interacción entre módulos
 | CP-COM-INT-02 | Integración con Inventario (cantidad aceptada) | OC `recibida_total` con recepciones registradas | 1. Ver detalle recepción. 2. Verificar `cantidad_aceptada` por línea. | Las `cantidad_aceptada` quedan disponibles para Inventario (IR-002). El stock se actualizaría con esos valores. No se duplica conteo. | Integración Módulos |
 | CP-COM-INT-03 | Integración con Contabilidad (factura aprobada) | Factura en estado `conciliada` aprobada por `jefe_compras` | 1. Aprobar para pago. 2. Verificar visibilidad para Contabilidad (simulado). | Factura pasa a `aprobada_pago`. Disponible para Contabilidad como cuenta por pagar (IR-003). Contabilidad solo registra pago (fuera de alcance). | Integración Módulos |
 | CP-COM-INT-04 | Producto inactivo con solicitudes existentes | Producto pasa a `inactivo` con SC abiertas | 1. Marcar producto como inactivo. 2. Intentar agregarlo a nueva solicitud. 3. Ver solicitudes existentes. | Solicitudes existentes se mantienen sin cambios. No permite agregar producto inactivo a solicitudes nuevas. | Integración/Regla |
-| CP-COM-INT-05 | Bloquear proveedor con OC abiertas | Proveedor con OC en `emitida`/`recibida_parcial` | 1. Bloquear proveedor desde ficha (admin). 2. Intentar emitir nueva OC. | OC abiertas siguen su curso normal. No permite emitir nuevas OC al proveedor `bloqueado`. | Integración/Regla |
+| CP-COM-INT-05 | Bloquear proveedor con OC abiertas | Proveedor con OC en `emitida`/`recibida_parcial` | 1. Bloquear proveedor desde ficha (admin_ti). 2. Intentar emitir nueva OC. | OC abiertas siguen su curso normal. No permite emitir nuevas OC al proveedor `bloqueado`. | Integración/Regla |
 
 
 ## 6. Casos Límite (Edge Cases)
@@ -169,7 +181,7 @@ Estos casos validan el ciclo integrado completo y la interacción entre módulos
 
 | Criterio | Condición de Aprobación |
 |---|---|
-| **Cobertura HU** | 100% de los escenarios de aceptación HU1-HU10 ejecutados con resultado PASSED. |
+| **Cobertura HU** | 100% de los escenarios de aceptación HU1-HU11 ejecutados con resultado PASSED. |
 | **Ciclo Integrado** | CP-COM-INT-01 ejecutado sin desviaciones. Números correlativos correctos. |
 | **Reglas Críticas** | Segregación de funciones (002-04, 004-04), umbral de cotizaciones (003-02, 006-03), conciliación (007-01/02/03), tope recepción (004-02, LIM-03). Todos PASSED. |
 | **Seguridad/Datos** | Enmascarado por rol (001-05), alerta cambio cuenta (007-05), folio único (007-04). Verificados. |

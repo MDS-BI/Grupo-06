@@ -65,7 +65,7 @@ describe('User Story 13 - branded ERP workspace shell', () => {
     expect(qs('nav-entities-label').textContent).toBe('Entidades');
     expect(qs('nav-documents-label').textContent).toBe('Documentos');
     expect(qs('nav-search-label').textContent).toBe('Búsqueda');
-    expect(document.querySelectorAll('.nav-module').length).toBe(4);
+    expect(document.querySelectorAll('.nav-module').length).toBe(5);
   });
 
   it('uses remapped terms on the sidebar for tailored modules', async () => {

@@ -17,6 +17,7 @@ export function renderLogo(container){
 export function applyShellLabels(){
   const labels = {
     'nav-dashboard-label': 'Panel',
+    'nav-compras-label': 'Compras',
     'nav-entities-label': getConfig().labels.entities,
     'nav-documents-label': getConfig().labels.documents,
     'nav-search-label': 'Búsqueda'

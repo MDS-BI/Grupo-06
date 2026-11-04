@@ -6,9 +6,28 @@ Trabajo grupal de **Modelación de Sistemas 2026-2**, Departamento de Ingenierí
 
 ## Estado del Repositorio
 
-**Fase de diseño completada y lista para desarrollo.** Se dispone de la especificación técnica integral del módulo, la cual incluye el modelo de datos, las historias de usuario, los criterios de aceptación, el plan de arquitectura y el desglose completo de tareas (`tasks.md`).
+**MVP implementado y probado.** El módulo de Adquisiciones y Compras se integra en la navegación principal junto al template base y cubre el ciclo solicitud → cotización → orden de compra → recepción → factura → devolución, además del panel por rol, catálogo, evaluaciones y exportación CSV.
 
-La implementación se llevará a cabo sobre la plantilla base del proyecto utilizando la metodología *Spec-Driven Development* (Speckit), siguiendo las iteraciones semanales estipuladas en el [Plan Técnico](specs/002-modulo-adquisiciones-compras/plan.md) y en la lista de [Tareas del Módulo](specs/002-modulo-adquisiciones-compras/tasks.md).
+La implementación se construyó sobre la plantilla base utilizando la metodología *Spec-Driven Development* (Speckit), siguiendo el [Plan Técnico](specs/002-modulo-adquisiciones-compras/plan.md) y la lista de [Tareas del Módulo](specs/002-modulo-adquisiciones-compras/tasks.md).
+
+### Ejecución rápida
+
+```bash
+npm install
+npm run dev        # servidor de desarrollo Vite
+npm test           # pruebas en modo observación
+npx vitest run     # suite completa una vez
+npm run lint       # ESLint
+npm run build      # build de producción
+```
+
+### Roles y datos semilla
+
+La sesión de compras parte con el rol `solicitante` y puede cambiarse desde el selector de la esquina superior derecha del módulo. Roles disponibles: `solicitante`, `comprador`, `jefe_compras`, `bodega` y `admin_ti`.
+
+La primera visita carga automáticamente `src/compras/semilla.json` con datos ficticios: 6 usuarios, 4 centros de costo, 20 productos, 8 proveedores, 10 solicitudes, 7 cotizaciones, 8 órdenes de compra, 5 recepciones, 7 documentos de facturación (incluidas notas de crédito), 2 devoluciones, 10 referencias de catálogo y 2 evaluaciones. Las fechas se desplazan al día actual para mantener vigentes los vencimientos y plazos.
+
+Las colecciones del módulo se guardan en `localStorage` con el prefijo `erp_compras:`; los proveedores se comparten con la entidad base (`erp_base_module:entities`). Para reiniciar los datos, limpia el almacenamiento local del navegador o ejecuta `reiniciarCompras()` desde la consola.
 
 
 ## Problema y solución (Resumen)
@@ -25,7 +44,7 @@ Solicitud de compra → Cotizaciones de proveedores → Orden de compra → Rece
 
 | Documento | Contenido |
 |---|---|
-| [`spec.md`](specs/002-modulo-adquisiciones-compras/spec.md) | Problema, solución, usuarios, 10 historias de usuario, requisitos y criterios de éxito |
+| [`spec.md`](specs/002-modulo-adquisiciones-compras/spec.md) | Problema, solución, usuarios, 11 historias de usuario, requisitos y criterios de éxito |
 | [`plan.md`](specs/002-modulo-adquisiciones-compras/plan.md) | Cómo se construye sobre la plantilla base, iteraciones semanales, pruebas y escalabilidad |
 | [`data-model.md`](specs/002-modulo-adquisiciones-compras/data-model.md) | Modelo Entidad-Relación (MER), diagrama de clases, atributos y reglas de negocio |
 | [`tasks.md`](specs/002-modulo-adquisiciones-compras/tasks.md) | Plan de ejecución y desglose técnico ordenado por fases e historias de usuario |
@@ -79,7 +98,7 @@ Las entidades cuentan con campos maestros estándar de ERP (nombre, código, RUT
 
 La aplicación presenta un espacio de trabajo ERP coherente:
 
-- **Marco de trabajo (*workspace shell*)** — Todas las pantallas se encuentran dentro de un marco con marca: barra superior con logotipo (monograma SVG derivado del nombre del módulo) y nombre del módulo, junto a una barra lateral persistente con los módulos (Panel, Entidades, Documentos, Búsqueda). El módulo activo se resalta (`aria-current="page"`) y la barra lateral se colapsa a un menú de iconos en pantallas pequeñas.
+- **Marco de trabajo (*workspace shell*)** — Todas las pantallas se encuentran dentro de un marco con marca: barra superior con logotipo (monograma SVG derivado del nombre del módulo) y nombre del módulo, junto a una barra lateral persistente con los módulos (Panel, Compras, Entidades, Documentos, Búsqueda). El módulo activo se resalta (`aria-current="page"`) y la barra lateral se colapsa a un menú de iconos en pantallas pequeñas.
 - **Panel de inicio (*dashboard*)** — Pantalla de entrada con botones de acción rápida para las tareas clave (nueva entidad, nuevo documento, abrir gestión, buscar registros) y tarjetas con estadísticas en tiempo real del número de registros.
 - **Tokens de diseño** — Los estilos se basan en variables CSS definidas en `src/styles.css`, lo que permite aplicar cambios de marca de forma global.
 

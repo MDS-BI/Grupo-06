@@ -7,6 +7,7 @@ import { folioLabel } from './components/document-list.js';
 import { renderLogo, applyShellLabels, setActiveModule } from './components/shell.js';
 import { renderDashboard } from './components/dashboard.js';
 import { setupSearchBar, renderSearchResults } from './components/search-bar.js';
+import { renderComprasView } from './compras/vista.js';
 
 function qs(id){ return document.getElementById(id); }
 
@@ -19,9 +20,10 @@ const articulo = (word) => esFemenina(word) ? 'la' : 'el';
 const demostrativo = (word) => esFemenina(word) ? 'esta' : 'este';
 const seleccionada = (word) => esFemenina(word) ? 'seleccionada' : 'seleccionado';
 
-const MODULES = ['dashboard', 'entities', 'documents', 'search'];
+const MODULES = ['dashboard', 'compras', 'entities', 'documents', 'search'];
 const VIEWS = {
   dashboard: 'view-dashboard',
+  compras: 'view-compras',
   entities: 'view-entities',
   documents: 'view-documents',
   search: 'view-search'
@@ -35,6 +37,9 @@ function showModule(name, opts = {}){
   setActiveModule(name);
   if(name === 'dashboard'){
     renderDashboard();
+  }
+  if(name === 'compras'){
+    renderComprasView();
   }
   if(name === 'entities'){
     populateDocumentEntitySelect();

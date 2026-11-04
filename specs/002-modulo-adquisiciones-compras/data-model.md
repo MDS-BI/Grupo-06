@@ -1,7 +1,7 @@
 # Data Model: Módulo Adquisiciones y Compras
 
 **Feature**: `002-modulo-adquisiciones-compras` (el `001` corresponde al módulo base del template del curso)
-**Estado**: Borrador v1.0 (27 de octubre de 2026). Reemplaza el borrador del módulo Ventas  / CRM; ver sección 9.
+**Estado**: Borrador v1.1 (3 de noviembre de 2026). Reemplaza el borrador del módulo Ventas / CRM; ver sección 9.
 **Alcance**: Solo frontend, sobre el template del curso. Los datos se persisten como datos semilla (JSON) y en `localStorage` del navegador. No hay backend.
 
 ---
@@ -266,7 +266,7 @@ Persona interna que opera el módulo. Su ficha maestra pertenece a RR.HH.
 | id_usuario | int | PK | |
 | nombre | string | obligatorio | (S) |
 | email | string | UK, obligatorio | Correo corporativo |
-| rol | enum | `solicitante`, `comprador`, `jefe_compras`, `bodega`, `admin` | Define qué acciones puede hacer (ver regla 8, segregación de funciones) |
+| rol | enum | `solicitante`, `comprador`, `jefe_compras`, `bodega`, `admin_ti` | Define qué acciones puede hacer (ver regla 8, segregación de funciones) |
 | id_centro_costo | int | FK → CENTRO_COSTO | Área a la que pertenece |
 | activo | bool | default `true` | |
 
@@ -465,6 +465,32 @@ Evaluación del desempeño del proveedor en una OC ya recibida.
 | nota_servicio | int | 1 a 5 | Ingresada por el evaluador |
 | comentario | text | máx. 500 caracteres | |
 
+### 3.13 DEVOLUCION y DETALLE_DEVOLUCION
+Devolución de unidades aceptadas en una recepción. Genera un documento con correlativo `DEV-AAAA-NNNN` y descuenta el saldo recibido. Las notas de crédito se siguen registrando como `FACTURA_PROVEEDOR` con `tipo_documento = nota_credito`.
+
+| Atributo | Tipo | Restricción | Descripción |
+|---|---|---|---|
+| id_devolucion | int | PK | |
+| numero | string | UK, ej. `DEV-2026-0001` | Correlativo interno |
+| id_orden | int | FK → ORDEN_COMPRA | La OC debe tener al menos una recepción |
+| id_factura | int | FK → FACTURA_PROVEEDOR, opcional | Obligatoria si la devolución descuenta una factura ya registrada |
+| id_receptor_original | int | FK → USUARIO | Quien registró la recepción; no puede registrar la devolución sin aprobación |
+| id_aprobador | int | FK → USUARIO, opcional | `jefe_compras` o `admin_ti` distinto del receptor cuando corresponda |
+| fecha | date | obligatorio | |
+| motivo | enum | `defectuoso`, `no_corresponde`, `fuera_de_especificacion`, `otro` | |
+| observaciones | text | máx. 500 caracteres | |
+| estado | enum | `registrada`, `aprobada`, `anulada` | Ver regla 10 |
+| neto | decimal | calculado | ∑ subtotales de las líneas devueltas |
+
+| Atributo (detalle) | Tipo | Restricción | Descripción |
+|---|---|---|---|
+| id_detalle_devolucion | int | PK | |
+| id_devolucion | int | FK → DEVOLUCION | |
+| id_detalle_recepcion | int | FK → DETALLE_RECEPCION | Línea recibida que se devuelve |
+| cantidad | int | > 0 | No puede superar la cantidad aceptada pendiente de devolver |
+| precio_unitario | decimal | > 0 | Se copia desde la OC |
+| subtotal | decimal | calculado | |
+
 ---
 
 ## 4. Relaciones y cardinalidades
@@ -495,13 +521,18 @@ Evaluación del desempeño del proveedor en una OC ya recibida.
 | PROVEEDOR – FACTURA_PROVEEDOR | 1 : N | Redundante con la OC a propósito: el folio es único por proveedor |
 | ORDEN_COMPRA – EVALUACION_PROVEEDOR | 1 : 0..1 | Una evaluación por OC recibida |
 | USUARIO (evaluador) – EVALUACION_PROVEEDOR | 1 : N | |
+| ORDEN_COMPRA – DEVOLUCION | 1 : N (0..N) | Una OC puede tener varias devoluciones parciales |
+| FACTURA_PROVEEDOR – DEVOLUCION | 0..1 : N | La devolución descuenta una factura ya registrada cuando corresponde |
+| DEVOLUCION – DETALLE_DEVOLUCION | 1 : 1..N | Una devolución siempre indica al menos una línea recibida |
+| DETALLE_RECEPCION – DETALLE_DEVOLUCION | 1 : N (0..N) | Controla que no se devuelva más de lo aceptado |
+| USUARIO (receptor original / aprobador) – DEVOLUCION | 1 : N | Registra quién recibió y quién aprobó la devolución |
 
 ---
 
 ## 5. Reglas de negocio y transiciones de estado
 
 1. **Cálculo de montos**: subtotal de línea = cantidad × precio_unitario × (1 − descuento_pct/100); neto = ∑ subtotales; iva = 0,19 × neto; total = neto + iva. Montos en CLP redondeados al entero.
-2. **Solicitud**: `borrador → enviada → aprobada | rechazada`; `aprobada → en_cotizacion → adjudicada`. `anulada` es posible antes de `adjudicada`. Aprueba o rechaza un usuario `jefe_compras` o `admin` distinto del solicitante; el rechazo exige `motivo_rechazo`.
+2. **Solicitud**: `borrador → enviada → aprobada | rechazada`; `aprobada → en_cotizacion → adjudicada`. `anulada` es posible antes de `adjudicada`. Aprueba o rechaza un usuario `jefe_compras` o `admin_ti` distinto del solicitante; el rechazo exige `motivo_rechazo`.
 3. **Cotización**: solo se registran cotizaciones para solicitudes `aprobada` o `en_cotizacion`; la primera cotización registrada pasa la solicitud de `aprobada` a `en_cotizacion`. Estados: `recibida → seleccionada | descartada`; pasa a `vencida` si la fecha actual supera `fecha_validez` sin haber sido seleccionada. Descartar exige `motivo_descarte`. Solo puede haber una cotización `seleccionada` por solicitud. Si `monto_estimado` ≥ **UMBRAL_COTIZACIONES**, para seleccionar una cotización la solicitud debe tener al menos **3** cotizaciones registradas, o una `justificacion_proveedor_unico` no vacía.
 4. **Orden de compra**: requiere solicitud `aprobada` o `en_cotizacion` y proveedor `aprobado`. Si viene de una cotización, esta debe estar `seleccionada`, el proveedor debe coincidir y las líneas y precios se copian; antes de crearla la aplicación verifica que no exista otra OC con el mismo `id_cotizacion`. Sin cotización (**compra directa**) solo se permite si `monto_estimado` < UMBRAL_COTIZACIONES. Al emitirse, la solicitud pasa a `adjudicada`. Estados: `borrador → emitida → recibida_parcial → recibida_total → cerrada`; `anulada` solo si no tiene recepciones; al anularla, la solicitud vuelve a `en_cotizacion` (si tiene cotizaciones) o a `aprobada`, y puede emitirse una nueva OC. Solo puede existir una OC no anulada por solicitud. Los estados `recibida_parcial` y `recibida_total` se actualizan solos con cada recepción.
 5. **Recepción**: para cada línea de la OC, la suma de `cantidad_aceptada` de todas sus recepciones no puede superar `cantidad`. Quien recibe no puede ser el comprador que emitió la OC.
@@ -509,8 +540,9 @@ Evaluación del desempeño del proveedor en una OC ya recibida.
 7. **Evaluación**: se registra una por OC en estado `recibida_total` o `cerrada`. `nota_plazo` se calcula con los días de atraso de la última recepción respecto de `fecha_entrega_esperada`: 0 días → 5; 1 a 3 → 4; 4 a 7 → 3; 8 a 14 → 2; más de 14 → 1.
 8. **Segregación de funciones**: quien solicita no aprueba su propia solicitud; quien emite la OC no registra su recepción. En el MVP los roles se simulan (no hay autenticación real), pero las reglas se validan en la interfaz.
 9. **Plazo de pago (Ley 21.131)**: `condicion_pago_dias` no puede superar 30 salvo que el proveedor tenga `acuerdo_plazo_mayor = true`. El panel alerta las facturas no aprobadas cuyo `fecha_vencimiento` está a 5 días o menos.
+10. **Devoluciones y notas de crédito**: una devolución requiere una OC con recepciones, indica línea, cantidad y motivo, y no puede superar la cantidad aceptada pendiente de devolver; genera un correlativo `DEV-AAAA-NNNN`. Una nota de crédito se registra contra una factura ya existente del mismo proveedor, no puede superar el monto facturado y su folio es único por proveedor y tipo de documento. Ambas descuentan el saldo pendiente; si este llega a cero, la OC pasa a `cerrada` y la factura queda saldada sin pasar a `aprobada_pago` por el monto descontado. Si quien registró la recepción intenta registrar la devolución, se exige la aprobación de un `jefe_compras` o `admin_ti` distinto.
 
-**Parámetros configurables** (valores preliminares, a validar con el grupo en `spec.md`): UMBRAL_COTIZACIONES = 1.000.000 CLP neto; TOLERANCIA_CONCILIACION = 1 % del neto de la factura.
+**Parámetros configurables** (valores acordados en `spec.md`, Clarifications del 2026-11-03): UMBRAL_COTIZACIONES = 1.000.000 CLP neto; TOLERANCIA_CONCILIACION = 1 % del neto de la factura.
 
 ---
 
@@ -519,8 +551,8 @@ Evaluación del desempeño del proveedor en una OC ya recibida.
 | Dato o proceso | Riesgo | Medida en el MVP |
 |---|---|---|
 | RUT, nombre, correo y teléfono de proveedores personas naturales y de contactos | Datos personales | Solo visibles completos para roles de compras; RUT enmascarado en listados (`12.***.***-9`) |
-| Datos bancarios del proveedor | Fraude por cambio de cuenta (alguien suplanta al proveedor y pide pagar a otra cuenta) | Solo `admin` puede editarlos; número de cuenta enmascarado; se guarda `fecha_cambio_cuenta` y se alerta si una factura se aprueba dentro de los 30 días siguientes a un cambio |
-| Precios negociados y cotizaciones | Información comercial confidencial | Visibles solo para `comprador`, `jefe_compras` y `admin` |
+| Datos bancarios del proveedor | Fraude por cambio de cuenta (alguien suplanta al proveedor y pide pagar a otra cuenta) | Solo `admin_ti` puede editarlos; número de cuenta enmascarado; se guarda `fecha_cambio_cuenta` y se alerta si una factura se aprueba dentro de los 30 días siguientes a un cambio |
+| Precios negociados y cotizaciones | Información comercial confidencial | Visibles solo para `comprador`, `jefe_compras` y `admin_ti` |
 | Aprobación, compra y recepción | Fraude interno si una sola persona controla todo el ciclo | Segregación de funciones (regla 8) |
 | Texto libre (justificación, observaciones, comentarios) | Registro de información sensible no estructurada | Aviso en el formulario y límite de caracteres |
 | Datos semilla | Exposición de personas o empresas reales | Todos los datos del MVP son **ficticios** |
@@ -577,3 +609,4 @@ Los identificadores de estas entidades deben coincidir con los que use el templa
 |---|---|---|
 | v0.1 – v0.2 | 20 – 21-10-2026 | Borrador del módulo Ventas / CRM (`specs/002-modulo-ventas-crm/`), subido por error: el módulo asignado al grupo es Adquisiciones y Compras |
 | v1.0 | 27-10-2026 | Nuevo modelo para Adquisiciones y Compras. Se elimina la carpeta de Ventas / CRM y se reemplazan `docs/mer.png`, `docs/mer.dot` y `docs/plan-de-trabajo.md` |
+| v1.1 | 03-11-2026 | Se alinea el rol `admin_ti` con `spec.md`, se fijan los parámetros acordados (1.000.000 CLP neto y 1 %) y se agrega `DEVOLUCION` / `DETALLE_DEVOLUCION` para US11 |

@@ -20,6 +20,57 @@
 // }
 export const userConfig = null;
 
+// Parámetros definitivos del módulo de Adquisiciones y Compras.
+export const COMPRAS_PARAMETROS = Object.freeze({
+  iva: 0.19,
+  umbralCotizaciones: 1000000,
+  toleranciaConciliacion: 0.01
+});
+
+// Configuración opcional para reutilizar el template base con Compras:
+// Proveedor como Entidad y Orden de Compra como Documento.
+export const COMPRAS_CONFIG = Object.freeze({
+  moduleName: 'Adquisiciones y Compras',
+  labels: Object.freeze({
+    entity: 'Proveedor',
+    entities: 'Proveedores',
+    document: 'Orden de Compra',
+    documents: 'Órdenes de Compra'
+  }),
+  customFields: Object.freeze([
+    { target: 'entity', key: 'tipo_persona', label: 'Tipo de persona', type: 'select', options: ['natural', 'jurídica'], required: true },
+    { target: 'entity', key: 'giro', label: 'Giro', type: 'text', required: true },
+    { target: 'entity', key: 'region', label: 'Región', type: 'text', required: true },
+    { target: 'entity', key: 'comuna', label: 'Comuna', type: 'text' },
+    { target: 'entity', key: 'tamano_empresa', label: 'Tamaño de empresa', type: 'select', options: ['micro', 'pequeña', 'mediana', 'grande'] },
+    { target: 'entity', key: 'estado_proveedor', label: 'Estado del proveedor', type: 'select', options: ['potencial', 'aprobado', 'bloqueado'], required: true },
+    { target: 'entity', key: 'condicion_pago_dias', label: 'Condición de pago (días)', type: 'number', required: true },
+    { target: 'entity', key: 'acuerdo_plazo_mayor', label: 'Acuerdo de plazo mayor', type: 'text' },
+    { target: 'entity', key: 'banco', label: 'Banco', type: 'text' },
+    { target: 'entity', key: 'numero_cuenta', label: 'Número de cuenta', type: 'text' },
+    { target: 'entity', key: 'fecha_cambio_cuenta', label: 'Fecha de cambio de cuenta', type: 'date' },
+    { target: 'document', key: 'solicitud_id', label: 'Solicitud de compra', type: 'text' },
+    { target: 'document', key: 'cotizacion_id', label: 'Cotización', type: 'text' },
+    { target: 'document', key: 'proveedor_id', label: 'Proveedor', type: 'text', required: true },
+    { target: 'document', key: 'fecha_emision', label: 'Fecha de emisión', type: 'date' },
+    { target: 'document', key: 'fecha_entrega_prometida', label: 'Fecha de entrega prometida', type: 'date' },
+    { target: 'document', key: 'condicion_pago_dias', label: 'Condición de pago (días)', type: 'number' },
+    { target: 'document', key: 'moneda', label: 'Moneda', type: 'text' },
+    { target: 'document', key: 'emitida_por', label: 'Emitida por', type: 'text' }
+  ]),
+  statusLifecycle: Object.freeze({
+    statuses: Object.freeze(['emitida', 'recibida_parcial', 'recibida_total', 'cerrada', 'anulada']),
+    transitions: Object.freeze({
+      emitida: Object.freeze(['recibida_parcial', 'recibida_total', 'anulada']),
+      recibida_parcial: Object.freeze(['recibida_total']),
+      recibida_total: Object.freeze(['cerrada']),
+      cerrada: Object.freeze([]),
+      anulada: Object.freeze([])
+    })
+  }),
+  theme: Object.freeze({ accentColor: '#2563eb' })
+});
+
 // ---------------------------------------------------------------------------
 // Cargador central — no deberías necesitar modificar nada debajo de esta línea.
 // ---------------------------------------------------------------------------

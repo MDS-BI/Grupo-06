@@ -1,0 +1,541 @@
+{
+  "usuarios": [
+    { "id": "u-solicitante-1", "nombre": "Ana Pérez", "rol": "solicitante", "centro_costo_id": "cc-001", "email": "ana.perez@example.com" },
+    { "id": "u-solicitante-2", "nombre": "Luis Soto", "rol": "solicitante", "centro_costo_id": "cc-002", "email": "luis.soto@example.com" },
+    { "id": "u-comprador-1", "nombre": "Carla Díaz", "rol": "comprador", "centro_costo_id": "cc-003", "email": "carla.diaz@example.com" },
+    { "id": "u-jefe-1", "nombre": "Marta Ruiz", "rol": "jefe_compras", "centro_costo_id": "cc-003", "email": "marta.ruiz@example.com" },
+    { "id": "u-bodega-1", "nombre": "Pedro Gil", "rol": "bodega", "centro_costo_id": "cc-004", "email": "pedro.gil@example.com" },
+    { "id": "u-admin-1", "nombre": "Admin TI", "rol": "admin_ti", "centro_costo_id": "cc-003", "email": "admin.ti@example.com" }
+  ],
+  "centros_costo": [
+    { "id": "cc-001", "codigo": "CC-ADM", "nombre": "Administración", "activo": true },
+    { "id": "cc-002", "codigo": "CC-OPE", "nombre": "Operaciones", "activo": true },
+    { "id": "cc-003", "codigo": "CC-COM", "nombre": "Compras", "activo": true },
+    { "id": "cc-004", "codigo": "CC-BOD", "nombre": "Bodega", "activo": true }
+  ],
+  "productos": [
+    { "id": "prod-001", "codigo": "P-001", "nombre": "Notebook 14 pulgadas", "categoria": "Tecnología", "unidad": "unidad", "activo": true, "precio_referencia": 850000 },
+    { "id": "prod-002", "codigo": "P-002", "nombre": "Monitor 24 pulgadas", "categoria": "Tecnología", "unidad": "unidad", "activo": true, "precio_referencia": 180000 },
+    { "id": "prod-003", "codigo": "P-003", "nombre": "Silla ergonómica", "categoria": "Mobiliario", "unidad": "unidad", "activo": true, "precio_referencia": 120000 },
+    { "id": "prod-004", "codigo": "P-004", "nombre": "Escritorio regulable", "categoria": "Mobiliario", "unidad": "unidad", "activo": true, "precio_referencia": 250000 },
+    { "id": "prod-005", "codigo": "P-005", "nombre": "Lámpara de escritorio", "categoria": "Mobiliario", "unidad": "unidad", "activo": true, "precio_referencia": 25000 },
+    { "id": "prod-006", "codigo": "P-006", "nombre": "Servidor de rack", "categoria": "Tecnología", "unidad": "unidad", "activo": true, "precio_referencia": 1500000 },
+    { "id": "prod-007", "codigo": "P-007", "nombre": "Impresora láser", "categoria": "Tecnología", "unidad": "unidad", "activo": true, "precio_referencia": 200000 },
+    { "id": "prod-008", "codigo": "P-008", "nombre": "Resma de papel A4", "categoria": "Insumos", "unidad": "caja", "activo": true, "precio_referencia": 10000 },
+    { "id": "prod-009", "codigo": "P-009", "nombre": "Tóner negro", "categoria": "Insumos", "unidad": "unidad", "activo": true, "precio_referencia": 20000 },
+    { "id": "prod-010", "codigo": "P-010", "nombre": "Teclado mecánico", "categoria": "Tecnología", "unidad": "unidad", "activo": true, "precio_referencia": 10000 },
+    { "id": "prod-011", "codigo": "P-011", "nombre": "Mouse inalámbrico", "categoria": "Tecnología", "unidad": "unidad", "activo": true, "precio_referencia": 10000 },
+    { "id": "prod-012", "codigo": "P-012", "nombre": "Cable HDMI", "categoria": "Tecnología", "unidad": "unidad", "activo": true, "precio_referencia": 10000 },
+    { "id": "prod-013", "codigo": "P-013", "nombre": "Guantes de seguridad", "categoria": "Seguridad", "unidad": "par", "activo": true, "precio_referencia": 8000 },
+    { "id": "prod-014", "codigo": "P-014", "nombre": "Casco de seguridad", "categoria": "Seguridad", "unidad": "unidad", "activo": true, "precio_referencia": 15000 },
+    { "id": "prod-015", "codigo": "P-015", "nombre": "Extintor ABC", "categoria": "Seguridad", "unidad": "unidad", "activo": true, "precio_referencia": 35000 },
+    { "id": "prod-016", "codigo": "P-016", "nombre": "Café molido 1 kg", "categoria": "Insumos", "unidad": "kg", "activo": true, "precio_referencia": 12000 },
+    { "id": "prod-017", "codigo": "P-017", "nombre": "Agua embotellada 500 ml", "categoria": "Insumos", "unidad": "caja", "activo": true, "precio_referencia": 9000 },
+    { "id": "prod-018", "codigo": "P-018", "nombre": "Artículo descontinuado", "categoria": "Insumos", "unidad": "unidad", "activo": false, "precio_referencia": 5000 },
+    { "id": "prod-019", "codigo": "P-019", "nombre": "Proyector portátil", "categoria": "Tecnología", "unidad": "unidad", "activo": true, "precio_referencia": 450000 },
+    { "id": "prod-020", "codigo": "P-020", "nombre": "Pizarra acrílica", "categoria": "Mobiliario", "unidad": "unidad", "activo": true, "precio_referencia": 60000 }
+  ],
+  "proveedores": [
+    {
+      "entity_id": "prov-001",
+      "razon_social": "Tecnología Andina SpA",
+      "codigo": "PRV-001",
+      "rut": "12345678-5",
+      "tipo_persona": "jurídica",
+      "giro": "Venta de equipos tecnológicos",
+      "region": "Metropolitana",
+      "comuna": "Santiago",
+      "direccion": "Av. Providencia 1234",
+      "telefono": "+56 2 2345 6789",
+      "email": "ventas@tecandina.example.com",
+      "categoria": "Tecnología",
+      "tamano_empresa": "mediana",
+      "estado_proveedor": "aprobado",
+      "condicion_pago_dias": 30,
+      "acuerdo_plazo_mayor": "",
+      "banco": "Banco Estado",
+      "numero_cuenta": "123456789",
+      "fecha_cambio_cuenta": "2026-01-15"
+    },
+    {
+      "entity_id": "prov-002",
+      "razon_social": "Suministros del Sur Ltda.",
+      "codigo": "PRV-002",
+      "rut": "23456789-6",
+      "tipo_persona": "jurídica",
+      "giro": "Distribución de insumos de oficina",
+      "region": "Biobío",
+      "comuna": "Concepción",
+      "direccion": "Calle O'Higgins 456",
+      "telefono": "+56 41 234 5678",
+      "email": "contacto@sumsur.example.com",
+      "categoria": "Insumos",
+      "tamano_empresa": "pequeña",
+      "estado_proveedor": "aprobado",
+      "condicion_pago_dias": 45,
+      "acuerdo_plazo_mayor": "Acuerdo firmado el 2026-02-01",
+      "banco": "Banco de Chile",
+      "numero_cuenta": "987654321",
+      "fecha_cambio_cuenta": "2026-10-20",
+      "cambio_cuenta_reciente": true
+    },
+    {
+      "entity_id": "prov-003",
+      "razon_social": "Juan Pablo Morales",
+      "codigo": "PRV-003",
+      "rut": "9876543-3",
+      "tipo_persona": "natural",
+      "giro": "Servicios de mantenimiento",
+      "region": "Valparaíso",
+      "comuna": "Viña del Mar",
+      "direccion": "Pasaje Los Aromos 789",
+      "telefono": "+56 9 8765 4321",
+      "email": "jpmorales@example.com",
+      "categoria": "Servicios",
+      "tamano_empresa": "micro",
+      "estado_proveedor": "aprobado",
+      "condicion_pago_dias": 15,
+      "acuerdo_plazo_mayor": "",
+      "banco": "Banco Santander",
+      "numero_cuenta": "555444333",
+      "fecha_cambio_cuenta": "2025-12-01"
+    },
+    {
+      "entity_id": "prov-004",
+      "razon_social": "Mobiliario Corporativo SpA",
+      "codigo": "PRV-004",
+      "rut": "11222333-9",
+      "tipo_persona": "jurídica",
+      "giro": "Fabricación de muebles de oficina",
+      "region": "Metropolitana",
+      "comuna": "Quilicura",
+      "direccion": "Av. Industrial 1500",
+      "telefono": "+56 2 2987 6543",
+      "email": "ventas@mobcorp.example.com",
+      "categoria": "Mobiliario",
+      "tamano_empresa": "grande",
+      "estado_proveedor": "aprobado",
+      "condicion_pago_dias": 30,
+      "acuerdo_plazo_mayor": "",
+      "banco": "Banco BCI",
+      "numero_cuenta": "111222333",
+      "fecha_cambio_cuenta": "2025-08-10"
+    },
+    {
+      "entity_id": "prov-005",
+      "razon_social": "Seguridad Total Ltda.",
+      "codigo": "PRV-005",
+      "rut": "15566777-K",
+      "tipo_persona": "jurídica",
+      "giro": "Elementos de protección personal",
+      "region": "Antofagasta",
+      "comuna": "Antofagasta",
+      "direccion": "Av. Costanera 250",
+      "telefono": "+56 55 222 3344",
+      "email": "ventas@segtotal.example.com",
+      "categoria": "Seguridad",
+      "tamano_empresa": "mediana",
+      "estado_proveedor": "potencial",
+      "condicion_pago_dias": 30,
+      "acuerdo_plazo_mayor": "",
+      "banco": "Banco Estado",
+      "numero_cuenta": "777888999",
+      "fecha_cambio_cuenta": "2026-03-01"
+    },
+    {
+      "entity_id": "prov-006",
+      "razon_social": "Riegos y Riegos SpA",
+      "codigo": "PRV-006",
+      "rut": "19888777-3",
+      "tipo_persona": "jurídica",
+      "giro": "Comercialización de artículos de riego",
+      "region": "Maule",
+      "comuna": "Talca",
+      "direccion": "Camino Norte 45",
+      "telefono": "+56 71 234 567",
+      "email": "contacto@riegos.example.com",
+      "categoria": "Insumos",
+      "tamano_empresa": "pequeña",
+      "estado_proveedor": "bloqueado",
+      "condicion_pago_dias": 30,
+      "acuerdo_plazo_mayor": "",
+      "banco": "Banco Estado",
+      "numero_cuenta": "333222111",
+      "fecha_cambio_cuenta": "2025-06-15"
+    },
+    {
+      "entity_id": "prov-007",
+      "razon_social": "Papelería Central Ltda.",
+      "codigo": "PRV-007",
+      "rut": "21000111-5",
+      "tipo_persona": "jurídica",
+      "giro": "Venta de artículos de papelería",
+      "region": "Metropolitana",
+      "comuna": "Santiago",
+      "direccion": "Calle Moneda 300",
+      "telefono": "+56 2 2678 1234",
+      "email": "ventas@papcentral.example.com",
+      "categoria": "Insumos",
+      "tamano_empresa": "micro",
+      "estado_proveedor": "aprobado",
+      "condicion_pago_dias": 30,
+      "acuerdo_plazo_mayor": "",
+      "banco": "Banco de Chile",
+      "numero_cuenta": "444555666",
+      "fecha_cambio_cuenta": "2026-02-20"
+    },
+    {
+      "entity_id": "prov-008",
+      "razon_social": "Conecta Digital SpA",
+      "codigo": "PRV-008",
+      "rut": "13579246-2",
+      "tipo_persona": "jurídica",
+      "giro": "Accesorios y redes de computación",
+      "region": "Metropolitana",
+      "comuna": "Las Condes",
+      "direccion": "Av. Apoquindo 4500",
+      "telefono": "+56 2 2456 7890",
+      "email": "ventas@conectadigital.example.com",
+      "categoria": "Tecnología",
+      "tamano_empresa": "mediana",
+      "estado_proveedor": "aprobado",
+      "condicion_pago_dias": 30,
+      "acuerdo_plazo_mayor": "",
+      "banco": "Banco BCI",
+      "numero_cuenta": "666777888",
+      "fecha_cambio_cuenta": "2025-11-05"
+    }
+  ],
+  "solicitudes": [
+    {
+      "id": "sol-001", "numero": "SC-2026-0001", "estado": "borrador",
+      "solicitante_id": "u-solicitante-1", "centro_costo_id": "cc-001", "prioridad": "media",
+      "justificacion": "Reposición de equipos para el área administrativa", "fecha_requerida": "2026-11-10",
+      "fecha_creacion": "2026-10-28", "lineas": [
+        { "linea_id": "sl-001-1", "producto_id": "prod-001", "cantidad": 2, "precio_estimado": 850000 },
+        { "linea_id": "sl-001-2", "producto_id": "prod-002", "cantidad": 1, "precio_estimado": 180000 }
+      ], "monto_estimado": 1880000
+    },
+    {
+      "id": "sol-002", "numero": "SC-2026-0002", "estado": "enviada",
+      "solicitante_id": "u-solicitante-1", "centro_costo_id": "cc-001", "prioridad": "alta",
+      "justificacion": "Renovación de sillas del personal", "fecha_requerida": "2026-11-15",
+      "fecha_creacion": "2026-11-01", "lineas": [
+        { "linea_id": "sl-002-1", "producto_id": "prod-003", "cantidad": 5, "precio_estimado": 100000 }
+      ], "monto_estimado": 500000
+    },
+    {
+      "id": "sol-003", "numero": "SC-2026-0003", "estado": "aprobada",
+      "solicitante_id": "u-solicitante-2", "centro_costo_id": "cc-002", "prioridad": "media",
+      "justificacion": "Habilitación de nuevo puesto de trabajo", "fecha_requerida": "2026-11-20",
+      "fecha_creacion": "2026-10-30", "aprobada_por": "u-jefe-1", "fecha_aprobacion": "2026-11-02",
+      "lineas": [
+        { "linea_id": "sl-003-1", "producto_id": "prod-004", "cantidad": 5, "precio_estimado": 50000 },
+        { "linea_id": "sl-003-2", "producto_id": "prod-005", "cantidad": 2, "precio_estimado": 25000 }
+      ], "monto_estimado": 300000
+    },
+    {
+      "id": "sol-004", "numero": "SC-2026-0004", "estado": "en_cotizacion",
+      "solicitante_id": "u-solicitante-2", "centro_costo_id": "cc-002", "prioridad": "alta",
+      "justificacion": "Renovación de servidor de datos", "fecha_requerida": "2026-12-01",
+      "fecha_creacion": "2026-10-25", "aprobada_por": "u-jefe-1", "fecha_aprobacion": "2026-10-27",
+      "lineas": [
+        { "linea_id": "sl-004-1", "producto_id": "prod-006", "cantidad": 1, "precio_estimado": 1500000 }
+      ], "monto_estimado": 1500000
+    },
+    {
+      "id": "sol-005", "numero": "SC-2026-0005", "estado": "adjudicada",
+      "solicitante_id": "u-solicitante-1", "centro_costo_id": "cc-001", "prioridad": "media",
+      "justificacion": "Impresora para recepción", "fecha_requerida": "2026-11-05",
+      "fecha_creacion": "2026-10-15", "aprobada_por": "u-jefe-1", "fecha_aprobacion": "2026-10-17",
+      "lineas": [
+        { "linea_id": "sl-005-1", "producto_id": "prod-007", "cantidad": 1, "precio_estimado": 200000 }
+      ], "monto_estimado": 200000
+    },
+    {
+      "id": "sol-006", "numero": "SC-2026-0006", "estado": "rechazada",
+      "solicitante_id": "u-solicitante-1", "centro_costo_id": "cc-001", "prioridad": "baja",
+      "justificacion": "Compra no presupuestada", "fecha_requerida": "2026-11-30",
+      "fecha_creacion": "2026-10-20", "motivo_rechazo": "No existe presupuesto disponible",
+      "rechazada_por": "u-jefe-1", "fecha_rechazo": "2026-10-22",
+      "lineas": [
+        { "linea_id": "sl-006-1", "producto_id": "prod-019", "cantidad": 1, "precio_estimado": 450000 }
+      ], "monto_estimado": 450000
+    },
+    {
+      "id": "sol-007", "numero": "SC-2026-0007", "estado": "anulada",
+      "solicitante_id": "u-solicitante-2", "centro_costo_id": "cc-002", "prioridad": "baja",
+      "justificacion": "Solicitud duplicada", "fecha_requerida": "2026-11-18",
+      "fecha_creacion": "2026-10-18", "anulada_por": "u-solicitante-2", "fecha_anulacion": "2026-10-19",
+      "lineas": [
+        { "linea_id": "sl-007-1", "producto_id": "prod-013", "cantidad": 10, "precio_estimado": 8000 }
+      ], "monto_estimado": 80000
+    },
+    {
+      "id": "sol-008", "numero": "SC-2026-0008", "estado": "aprobada",
+      "solicitante_id": "u-solicitante-1", "centro_costo_id": "cc-001", "prioridad": "alta",
+      "justificacion": "Compra directa de insumos bajo el umbral", "fecha_requerida": "2026-11-12",
+      "fecha_creacion": "2026-10-29", "aprobada_por": "u-jefe-1", "fecha_aprobacion": "2026-10-31",
+      "lineas": [
+        { "linea_id": "sl-008-1", "producto_id": "prod-008", "cantidad": 10, "precio_estimado": 10000 }
+      ], "monto_estimado": 100000
+    },
+    {
+      "id": "sol-009", "numero": "SC-2026-0009", "estado": "en_cotizacion",
+      "solicitante_id": "u-solicitante-2", "centro_costo_id": "cc-002", "prioridad": "alta",
+      "justificacion": "Compra sobre el umbral con una sola cotización", "fecha_requerida": "2026-12-10",
+      "fecha_creacion": "2026-10-26", "aprobada_por": "u-jefe-1", "fecha_aprobacion": "2026-10-28",
+      "lineas": [
+        { "linea_id": "sl-009-1", "producto_id": "prod-019", "cantidad": 3, "precio_estimado": 450000 }
+      ], "monto_estimado": 1350000
+    },
+    {
+      "id": "sol-010", "numero": "SC-2026-0010", "estado": "adjudicada",
+      "solicitante_id": "u-solicitante-1", "centro_costo_id": "cc-001", "prioridad": "media",
+      "justificacion": "Insumos de impresión", "fecha_requerida": "2026-11-08",
+      "fecha_creacion": "2026-10-10", "aprobada_por": "u-jefe-1", "fecha_aprobacion": "2026-10-12",
+      "lineas": [
+        { "linea_id": "sl-010-1", "producto_id": "prod-008", "cantidad": 10, "precio_estimado": 10000 }
+      ], "monto_estimado": 100000
+    }
+  ],
+  "cotizaciones": [
+    {
+      "id": "cot-001", "numero": "COT-2026-0001", "solicitud_id": "sol-004", "proveedor_id": "prov-001",
+      "estado": "recibida", "plazo_entrega_dias": 10, "condicion_pago_dias": 30,
+      "fecha_validez": "2026-11-30", "fecha_registro": "2026-10-28", "moneda": "CLP",
+      "lineas": [{ "linea_id": "cl-001-1", "producto_id": "prod-006", "cantidad": 1, "precio_unitario": 1450000, "descuento_pct": 0 }],
+      "subtotal": 1450000, "descuento": 0, "neto": 1450000, "iva": 275500, "total": 1725500
+    },
+    {
+      "id": "cot-002", "numero": "COT-2026-0002", "solicitud_id": "sol-004", "proveedor_id": "prov-002",
+      "estado": "recibida", "plazo_entrega_dias": 15, "condicion_pago_dias": 45,
+      "fecha_validez": "2026-11-25", "fecha_registro": "2026-10-29", "moneda": "CLP",
+      "lineas": [{ "linea_id": "cl-002-1", "producto_id": "prod-006", "cantidad": 1, "precio_unitario": 1500000, "descuento_pct": 0 }],
+      "subtotal": 1500000, "descuento": 0, "neto": 1500000, "iva": 285000, "total": 1785000
+    },
+    {
+      "id": "cot-003", "numero": "COT-2026-0003", "solicitud_id": "sol-004", "proveedor_id": "prov-004",
+      "estado": "recibida", "plazo_entrega_dias": 7, "condicion_pago_dias": 30,
+      "fecha_validez": "2026-12-05", "fecha_registro": "2026-10-30", "moneda": "CLP",
+      "lineas": [{ "linea_id": "cl-003-1", "producto_id": "prod-006", "cantidad": 1, "precio_unitario": 1550000, "descuento_pct": 2 }],
+      "subtotal": 1550000, "descuento": 31000, "neto": 1519000, "iva": 288610, "total": 1807610
+    },
+    {
+      "id": "cot-004", "numero": "COT-2026-0004", "solicitud_id": "sol-005", "proveedor_id": "prov-001",
+      "estado": "seleccionada", "plazo_entrega_dias": 5, "condicion_pago_dias": 30,
+      "fecha_validez": "2026-11-20", "fecha_registro": "2026-10-18", "moneda": "CLP",
+      "lineas": [{ "linea_id": "cl-004-1", "producto_id": "prod-007", "cantidad": 1, "precio_unitario": 190000, "descuento_pct": 0 }],
+      "subtotal": 190000, "descuento": 0, "neto": 190000, "iva": 36100, "total": 226100,
+      "motivo_seleccion": "Mejor relación precio-plazo"
+    },
+    {
+      "id": "cot-005", "numero": "COT-2026-0005", "solicitud_id": "sol-009", "proveedor_id": "prov-002",
+      "estado": "recibida", "plazo_entrega_dias": 12, "condicion_pago_dias": 45,
+      "fecha_validez": "2026-12-01", "fecha_registro": "2026-10-29", "moneda": "CLP",
+      "lineas": [{ "linea_id": "cl-005-1", "producto_id": "prod-019", "cantidad": 3, "precio_unitario": 440000, "descuento_pct": 0 }],
+      "subtotal": 1320000, "descuento": 0, "neto": 1320000, "iva": 250800, "total": 1570800
+    },
+    {
+      "id": "cot-006", "numero": "COT-2026-0006", "solicitud_id": "sol-004", "proveedor_id": "prov-003",
+      "estado": "descartada", "plazo_entrega_dias": 20, "condicion_pago_dias": 15,
+      "fecha_validez": "2026-11-10", "fecha_registro": "2026-10-27", "moneda": "CLP",
+      "motivo_descarte": "Plazo de entrega no cumple con la fecha requerida",
+      "lineas": [{ "linea_id": "cl-006-1", "producto_id": "prod-006", "cantidad": 1, "precio_unitario": 1600000, "descuento_pct": 0 }],
+      "subtotal": 1600000, "descuento": 0, "neto": 1600000, "iva": 304000, "total": 1904000
+    },
+    {
+      "id": "cot-007", "numero": "COT-2026-0007", "solicitud_id": "sol-004", "proveedor_id": "prov-007",
+      "estado": "vencida", "plazo_entrega_dias": 8, "condicion_pago_dias": 30,
+      "fecha_validez": "2026-10-20", "fecha_registro": "2026-10-15", "moneda": "CLP",
+      "lineas": [{ "linea_id": "cl-007-1", "producto_id": "prod-006", "cantidad": 1, "precio_unitario": 1520000, "descuento_pct": 0 }],
+      "subtotal": 1520000, "descuento": 0, "neto": 1520000, "iva": 288800, "total": 1808800
+    }
+  ],
+  "ordenes": [
+    {
+      "id": "oc-001", "numero": "OC-2026-0001", "solicitud_id": "sol-005", "cotizacion_id": "cot-004",
+      "proveedor_id": "prov-001", "estado": "emitida", "fecha_emision": "2026-10-20",
+      "fecha_entrega_prometida": "2026-10-25", "condicion_pago_dias": 30, "moneda": "CLP",
+      "emitida_por": "u-comprador-1",
+      "lineas": [{ "linea_id": "ol-001-1", "producto_id": "prod-007", "cantidad": 1, "precio_unitario": 190000, "descuento_pct": 0 }],
+      "subtotal": 190000, "descuento": 0, "neto": 190000, "iva": 36100, "total": 226100
+    },
+    {
+      "id": "oc-002", "numero": "OC-2026-0002", "solicitud_id": "sol-010", "cotizacion_id": null,
+      "proveedor_id": "prov-002", "estado": "recibida_parcial", "fecha_emision": "2026-10-15",
+      "fecha_entrega_prometida": "2026-10-22", "condicion_pago_dias": 45, "moneda": "CLP",
+      "emitida_por": "u-comprador-1",
+      "lineas": [{ "linea_id": "ol-002-1", "producto_id": "prod-008", "cantidad": 10, "precio_unitario": 10000, "descuento_pct": 0 }],
+      "subtotal": 100000, "descuento": 0, "neto": 100000, "iva": 19000, "total": 119000
+    },
+    {
+      "id": "oc-003", "numero": "OC-2026-0003", "solicitud_id": null, "cotizacion_id": null,
+      "proveedor_id": "prov-003", "estado": "recibida_total", "fecha_emision": "2026-10-25",
+      "fecha_entrega_prometida": "2026-10-30", "condicion_pago_dias": 30, "moneda": "CLP",
+      "emitida_por": "u-comprador-1",
+      "lineas": [{ "linea_id": "ol-003-1", "producto_id": "prod-009", "cantidad": 5, "precio_unitario": 20000, "descuento_pct": 0 }],
+      "subtotal": 100000, "descuento": 0, "neto": 100000, "iva": 19000, "total": 119000
+    },
+    {
+      "id": "oc-004", "numero": "OC-2026-0004", "solicitud_id": null, "cotizacion_id": null,
+      "proveedor_id": "prov-004", "estado": "cerrada", "fecha_emision": "2026-10-10",
+      "fecha_entrega_prometida": "2026-10-18", "condicion_pago_dias": 30, "moneda": "CLP",
+      "emitida_por": "u-comprador-1",
+      "lineas": [{ "linea_id": "ol-004-1", "producto_id": "prod-010", "cantidad": 10, "precio_unitario": 10000, "descuento_pct": 0 }],
+      "subtotal": 100000, "descuento": 0, "neto": 100000, "iva": 19000, "total": 119000
+    },
+    {
+      "id": "oc-005", "numero": "OC-2026-0005", "solicitud_id": null, "cotizacion_id": null,
+      "proveedor_id": "prov-005", "estado": "anulada", "fecha_emision": "2026-10-12",
+      "fecha_entrega_prometida": "2026-10-20", "condicion_pago_dias": 30, "moneda": "CLP",
+      "emitida_por": "u-comprador-1", "motivo_anulacion": "Proveedor sin stock",
+      "anulada_por": "u-jefe-1", "fecha_anulacion": "2026-10-13",
+      "lineas": [{ "linea_id": "ol-005-1", "producto_id": "prod-011", "cantidad": 1, "precio_unitario": 100000, "descuento_pct": 0 }],
+      "subtotal": 100000, "descuento": 0, "neto": 100000, "iva": 19000, "total": 119000
+    },
+    {
+      "id": "oc-006", "numero": "OC-2026-0006", "solicitud_id": null, "cotizacion_id": null,
+      "proveedor_id": "prov-006", "estado": "emitida", "fecha_emision": "2026-10-05",
+      "fecha_entrega_prometida": "2026-10-15", "condicion_pago_dias": 30, "moneda": "CLP",
+      "emitida_por": "u-comprador-1",
+      "lineas": [{ "linea_id": "ol-006-1", "producto_id": "prod-013", "cantidad": 20, "precio_unitario": 8000, "descuento_pct": 0 }],
+      "subtotal": 160000, "descuento": 0, "neto": 160000, "iva": 30400, "total": 190400
+    },
+    {
+      "id": "oc-007", "numero": "OC-2026-0007", "solicitud_id": null, "cotizacion_id": null,
+      "proveedor_id": "prov-001", "estado": "recibida_total", "fecha_emision": "2026-10-26",
+      "fecha_entrega_prometida": "2026-10-28", "condicion_pago_dias": 9, "moneda": "CLP",
+      "emitida_por": "u-comprador-1",
+      "lineas": [{ "linea_id": "ol-007-1", "producto_id": "prod-011", "cantidad": 3, "precio_unitario": 10000, "descuento_pct": 0 }],
+      "subtotal": 30000, "descuento": 0, "neto": 30000, "iva": 5700, "total": 35700
+    },
+    {
+      "id": "oc-008", "numero": "OC-2026-0008", "solicitud_id": null, "cotizacion_id": null,
+      "proveedor_id": "prov-008", "estado": "recibida_total", "fecha_emision": "2026-10-20",
+      "fecha_entrega_prometida": "2026-10-24", "condicion_pago_dias": 30, "moneda": "CLP",
+      "emitida_por": "u-comprador-1",
+      "lineas": [{ "linea_id": "ol-008-1", "producto_id": "prod-012", "cantidad": 4, "precio_unitario": 10000, "descuento_pct": 0 }],
+      "subtotal": 40000, "descuento": 0, "neto": 40000, "iva": 7600, "total": 47600
+    }
+  ],
+  "recepciones": [
+    {
+      "id": "rec-001", "numero": "REC-2026-0001", "orden_id": "oc-002", "estado": "parcial",
+      "fecha_recepcion": "2026-10-25", "registrada_por": "u-bodega-1", "observaciones": "Primera entrega parcial",
+      "lineas": [{ "detalle_id": "rl-001-1", "orden_linea_id": "ol-002-1", "producto_id": "prod-008", "cantidad_recibida": 6, "cantidad_aceptada": 6, "cantidad_rechazada": 0, "motivo_rechazo": "" }]
+    },
+    {
+      "id": "rec-002", "numero": "REC-2026-0002", "orden_id": "oc-003", "estado": "total",
+      "fecha_recepcion": "2026-11-05", "registrada_por": "u-bodega-1", "observaciones": "Entrega con 6 días de atraso",
+      "lineas": [{ "detalle_id": "rl-002-1", "orden_linea_id": "ol-003-1", "producto_id": "prod-009", "cantidad_recibida": 5, "cantidad_aceptada": 5, "cantidad_rechazada": 0, "motivo_rechazo": "" }]
+    },
+    {
+      "id": "rec-003", "numero": "REC-2026-0003", "orden_id": "oc-004", "estado": "total",
+      "fecha_recepcion": "2026-10-20", "registrada_por": "u-bodega-1", "observaciones": "Recepción conforme",
+      "lineas": [{ "detalle_id": "rl-003-1", "orden_linea_id": "ol-004-1", "producto_id": "prod-010", "cantidad_recibida": 10, "cantidad_aceptada": 10, "cantidad_rechazada": 0, "motivo_rechazo": "" }]
+    },
+    {
+      "id": "rec-004", "numero": "REC-2026-0004", "orden_id": "oc-007", "estado": "total",
+      "fecha_recepcion": "2026-10-28", "registrada_por": "u-bodega-1", "observaciones": "",
+      "lineas": [{ "detalle_id": "rl-004-1", "orden_linea_id": "ol-007-1", "producto_id": "prod-011", "cantidad_recibida": 3, "cantidad_aceptada": 3, "cantidad_rechazada": 0, "motivo_rechazo": "" }]
+    },
+    {
+      "id": "rec-005", "numero": "REC-2026-0005", "orden_id": "oc-008", "estado": "total",
+      "fecha_recepcion": "2026-10-25", "registrada_por": "u-bodega-1", "observaciones": "",
+      "lineas": [{ "detalle_id": "rl-005-1", "orden_linea_id": "ol-008-1", "producto_id": "prod-012", "cantidad_recibida": 4, "cantidad_aceptada": 4, "cantidad_rechazada": 0, "motivo_rechazo": "" }]
+    }
+  ],
+  "facturas": [
+    {
+      "id": "fac-001", "tipo_documento": "factura", "folio": "1001", "orden_id": "oc-003", "proveedor_id": "prov-003",
+      "estado": "con_discrepancia", "fecha_emision": "2026-11-05", "fecha_recepcion": "2026-11-05",
+      "fecha_vencimiento": "2026-12-05", "neto": 100000, "iva": 19000, "total": 119000,
+      "diferencia": 10000, "tolerancia_monto": 1000, "registrada_por": "u-comprador-1",
+      "factura_referencia_id": null
+    },
+    {
+      "id": "fac-002", "tipo_documento": "factura", "folio": "1002", "orden_id": "oc-004", "proveedor_id": "prov-004",
+      "estado": "conciliada", "fecha_emision": "2026-10-21", "fecha_recepcion": "2026-10-21",
+      "fecha_vencimiento": "2026-11-20", "neto": 80000, "iva": 15200, "total": 95200,
+      "diferencia": 0, "tolerancia_monto": 800, "registrada_por": "u-comprador-1",
+      "factura_referencia_id": null
+    },
+    {
+      "id": "fac-003", "tipo_documento": "factura", "folio": "1003", "orden_id": "oc-007", "proveedor_id": "prov-001",
+      "estado": "registrada", "fecha_emision": "2026-10-28", "fecha_recepcion": "2026-10-28",
+      "fecha_vencimiento": "2026-11-06", "neto": 30000, "iva": 5700, "total": 35700,
+      "registrada_por": "u-comprador-1", "factura_referencia_id": null
+    },
+    {
+      "id": "fac-004", "tipo_documento": "factura", "folio": "1004", "orden_id": "oc-008", "proveedor_id": "prov-008",
+      "estado": "aprobada_pago", "fecha_emision": "2026-10-25", "fecha_recepcion": "2026-10-25",
+      "fecha_vencimiento": "2026-11-24", "neto": 40000, "iva": 7600, "total": 47600,
+      "diferencia": 0, "tolerancia_monto": 400, "registrada_por": "u-comprador-1",
+      "aprobada_por": "u-jefe-1", "fecha_aprobacion": "2026-10-26", "alerta_fraude": false,
+      "factura_referencia_id": null
+    },
+    {
+      "id": "fac-005", "tipo_documento": "nota_credito", "folio": "2001", "orden_id": "oc-003", "proveedor_id": "prov-003",
+      "estado": "conciliada", "fecha_emision": "2026-11-06", "fecha_recepcion": "2026-11-06",
+      "fecha_vencimiento": "2026-12-06", "neto": 10000, "iva": 1900, "total": 11900,
+      "registrada_por": "u-comprador-1", "factura_referencia_id": "fac-001"
+    },
+    {
+      "id": "fac-006", "tipo_documento": "factura", "folio": "1005", "orden_id": "oc-002", "proveedor_id": "prov-002",
+      "estado": "con_discrepancia", "fecha_emision": "2026-10-26", "fecha_recepcion": "2026-10-26",
+      "fecha_vencimiento": "2026-12-10", "neto": 90000, "iva": 17100, "total": 107100,
+      "diferencia": 30000, "tolerancia_monto": 900, "registrada_por": "u-comprador-1",
+      "factura_referencia_id": null
+    },
+    {
+      "id": "fac-007", "tipo_documento": "factura", "folio": "1006", "orden_id": "oc-007", "proveedor_id": "prov-001",
+      "estado": "rechazada", "fecha_emision": "2026-10-29", "fecha_recepcion": "2026-10-29",
+      "fecha_vencimiento": "2026-11-07", "neto": 5000, "iva": 950, "total": 5950,
+      "motivo_rechazo": "Documento no corresponde a la orden", "registrada_por": "u-comprador-1",
+      "factura_referencia_id": null
+    }
+  ],
+  "devoluciones": [
+    {
+      "id": "dev-001", "numero": "DEV-2026-0001", "orden_id": "oc-004", "estado": "aprobada",
+      "fecha_devolucion": "2026-10-22", "registrada_por": "u-bodega-1", "aprobada_por": "u-jefe-1",
+      "fecha_aprobacion": "2026-10-23", "observaciones": "Unidades defectuosas",
+      "lineas": [{ "detalle_id": "dl-001-1", "orden_linea_id": "ol-004-1", "producto_id": "prod-010", "cantidad": 2, "motivo": "defectuoso", "precio_unitario": 10000, "neto": 20000 }],
+      "neto": 20000
+    },
+    {
+      "id": "dev-002", "numero": "DEV-2026-0002", "orden_id": "oc-003", "estado": "pendiente_aprobacion",
+      "fecha_devolucion": "2026-11-06", "registrada_por": "u-bodega-1", "aprobada_por": null,
+      "fecha_aprobacion": null, "observaciones": "Tóner con daño de embalaje",
+      "lineas": [{ "detalle_id": "dl-002-1", "orden_linea_id": "ol-003-1", "producto_id": "prod-009", "cantidad": 1, "motivo": "dañado", "precio_unitario": 20000, "neto": 20000 }],
+      "neto": 20000
+    }
+  ],
+  "catalogo": [
+    { "id": "cat-001", "proveedor_id": "prov-001", "producto_id": "prod-001", "precio_referencia": 840000, "plazo_entrega_dias": 7, "fecha_actualizacion": "2026-10-15", "activo": true },
+    { "id": "cat-002", "proveedor_id": "prov-001", "producto_id": "prod-007", "precio_referencia": 190000, "plazo_entrega_dias": 5, "fecha_actualizacion": "2026-10-20", "activo": true },
+    { "id": "cat-003", "proveedor_id": "prov-002", "producto_id": "prod-006", "precio_referencia": 1500000, "plazo_entrega_dias": 15, "fecha_actualizacion": "2026-06-01", "activo": true },
+    { "id": "cat-004", "proveedor_id": "prov-002", "producto_id": "prod-008", "precio_referencia": 9500, "plazo_entrega_dias": 3, "fecha_actualizacion": "2026-10-30", "activo": true },
+    { "id": "cat-005", "proveedor_id": "prov-003", "producto_id": "prod-009", "precio_referencia": 19000, "plazo_entrega_dias": 4, "fecha_actualizacion": "2026-09-01", "activo": true },
+    { "id": "cat-006", "proveedor_id": "prov-004", "producto_id": "prod-010", "precio_referencia": 9800, "plazo_entrega_dias": 10, "fecha_actualizacion": "2026-10-25", "activo": true },
+    { "id": "cat-007", "proveedor_id": "prov-004", "producto_id": "prod-004", "precio_referencia": 245000, "plazo_entrega_dias": 12, "fecha_actualizacion": "2026-10-01", "activo": true },
+    { "id": "cat-008", "proveedor_id": "prov-007", "producto_id": "prod-016", "precio_referencia": 11500, "plazo_entrega_dias": 2, "fecha_actualizacion": "2026-07-15", "activo": true },
+    { "id": "cat-009", "proveedor_id": "prov-008", "producto_id": "prod-012", "precio_referencia": 9000, "plazo_entrega_dias": 3, "fecha_actualizacion": "2026-10-28", "activo": true },
+    { "id": "cat-010", "proveedor_id": "prov-001", "producto_id": "prod-018", "precio_referencia": 4500, "plazo_entrega_dias": 5, "fecha_actualizacion": "2026-10-10", "activo": false }
+  ],
+  "evaluaciones": [
+    {
+      "id": "eval-001", "orden_id": "oc-003", "proveedor_id": "prov-003",
+      "puntaje_calidad": 4, "puntaje_plazo": 3, "puntaje_atencion": 5,
+      "promedio": 4, "dias_atraso": 6, "comentario": "Entrega atrasada pero productos en buen estado",
+      "evaluado_por": "u-comprador-1", "fecha_evaluacion": "2026-11-06"
+    },
+    {
+      "id": "eval-002", "orden_id": "oc-008", "proveedor_id": "prov-008",
+      "puntaje_calidad": 5, "puntaje_plazo": 5, "puntaje_atencion": 4,
+      "promedio": 4.7, "dias_atraso": 1, "comentario": "Cumplió con lo comprometido",
+      "evaluado_por": "u-comprador-1", "fecha_evaluacion": "2026-10-26"
+    }
+  ]
+}

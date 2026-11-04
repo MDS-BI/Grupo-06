@@ -29,7 +29,7 @@ Solicitud de compra → Cotizaciones de proveedores → Orden de compra → Rece
 | Administrador | Mantener proveedores, datos bancarios, usuarios y centros de costo |
 | Otros módulos del ERP | Inventario lee lo recibido; Contabilidad lee las facturas aprobadas para pago |
 
-**Alcance del MVP**: 10 historias de usuario priorizadas (P1 a P3) en [`spec.md`](../specs/002-modulo-adquisiciones-compras/spec.md).
+**Alcance del MVP**: 11 historias de usuario priorizadas (P1 a P3) en [`spec.md`](../specs/002-modulo-adquisiciones-compras/spec.md).
 
 | Prioridad | Funcionalidad |
 |---|---|
@@ -38,11 +38,12 @@ Solicitud de compra → Cotizaciones de proveedores → Orden de compra → Rece
 | P1 | Órdenes de compra (US3) |
 | P1 | Recepciones parciales y totales (US4) |
 | P1 | Panel con pendientes y alertas (US5) |
-| P2 | Cotizaciones y comparación de ofertas (US6) |
+| P1 | Cotizaciones y comparación de ofertas (US6) |
 | P2 | Facturas con conciliación de tres vías (US7) |
 | P2 | Catálogo de productos por proveedor (US8) |
-| P3 | Evaluación de proveedores (US9) |
+| P2 | Evaluación de proveedores (US9) |
 | P3 | Exportación de reportes a CSV (US10) |
+| P2 | Devoluciones y notas de crédito (US11) |
 
 **Fuera de alcance:** backend real, autenticación real, conexión con el SII, registro del pago, control de presupuesto y compras públicas.
 
@@ -55,9 +56,9 @@ Cada fase produce un archivo en `specs/002-modulo-adquisiciones-compras/`. Las d
 | Fase | Comando Speckit | Producto | Estado |
 |---|---|---|---|
 | 0. Principios | `speckit.constitution` | `.specify/memory/constitution.md` | Se usa la del template (v1.0.0) |
-| 1. Especificación | `speckit.specify` + `speckit.clarify` | `spec.md` | Borrador listo; quedan 2 puntos por aclarar (FR-021 y FR-022) |
+| 1. Especificación | `speckit.specify` + `speckit.clarify` | `spec.md` | Listo; FR-021 y FR-022 aclarados el 2026-11-03 |
 | 2. Diseño técnico | `speckit.plan` | `plan.md`, `data-model.md` | Borrador listo |
-| 3. Tareas | `speckit.tasks` | `tasks.md` | Pendiente |
+| 3. Tareas | `speckit.tasks` | `tasks.md` | Listo |
 | 4. Implementación | `speckit.implement` | Código en `src/compras/` dentro del template | Pendiente |
 
 Los comandos están en `.opencode/commands/` del repositorio.
@@ -99,7 +100,7 @@ Cada rol tiene un responsable, pero **todos revisan todo**: el presentador se el
 | Ítem de la rúbrica | Dónde se cumple |
 |---|---|
 | Formato general | README y archivos `.md` con estructura uniforme y referencias |
-| Historias de usuario y decisiones de bases de datos | `spec.md` (10 historias) + Issues `decision` + diccionario de datos en `data-model.md` |
+| Historias de usuario y decisiones de bases de datos | `spec.md` (11 historias) + Issues `decision` + diccionario de datos en `data-model.md` |
 | Claridad del problema y solución | Secciones Problema y Solución propuesta en `spec.md` |
 | MER consistente con la solución | `docs/mer.png`, generado automáticamente desde el diagrama de `data-model.md`; cada historia usa entidades del MER |
 | Usuarios y manejo de riesgos | Cliente y usuarios en `spec.md`; datos sensibles, riesgos y sesgos en `data-model.md`, sección 6 |
@@ -122,7 +123,7 @@ Cada rol tiene un responsable, pero **todos revisan todo**: el presentador se el
 
 | Riesgo | Mitigación |
 |---|---|
-| Falta la carpeta `src/` del template | Consultar a los ayudantes en la semana del 28 oct; bloquea la iteración 1 |
+| Falta la carpeta `src/` del template | Restaurarla desde el historial de git (`git checkout 501e9c6 -- src index.html`); bloquea la iteración 1 |
 | El código generado por IA no respeta el template | Constitución del template y `plan.md` como contexto obligatorio de cada `speckit.implement` |
 | El ciclo completo es grande para el plazo | Historias priorizadas: P1 asegura un MVP funcional aunque P3 no alcance |
 | Desbalance de carga (afecta la coevaluación) | Historias asignadas en Issues con responsable visible |
