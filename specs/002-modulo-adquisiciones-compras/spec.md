@@ -236,6 +236,21 @@ Como Jefe de Compras, necesito registrar devoluciones y notas de crédito contra
 
 ### Casos Límite
 
+**Privacidad y enmascaramiento**
+
+- ¿Qué pasa si el proveedor es persona natural y el rol no tiene permiso? Su RUT se muestra enmascarado con el formato `12.***.***-9` en la ficha, los listados, la comparativa de cotizaciones, el panel y las exportaciones; el RUT de personas jurídicas no se enmascara.
+- ¿Qué pasa si el número de cuenta tiene 4 dígitos o menos? Se conservan solo los últimos 2 dígitos y se enmascara el resto, para no exponer la cuenta completa.
+- ¿Qué pasa si el proveedor no tiene datos bancarios registrados? Se muestra "No registrado" y no se renderiza una máscara ni un valor ficticio.
+- ¿Qué pasa si `jefe_compras` intenta editar los datos bancarios? El sistema lo impide aunque pueda verlos completos; solo `admin_ti` puede editarlos y cada cambio actualiza `fecha_cambio_cuenta`.
+- ¿Qué pasa si un rol sin permiso intenta ver, editar o exportar datos sensibles? La operación se rechaza y la exportación CSV contiene el valor enmascarado, nunca el valor completo.
+- ¿Qué pasa si un rol sin permiso intenta recuperar el valor enmascarado por canales indirectos (tooltips, mensajes de error, historial de auditoría, HTML o almacenamiento del navegador)? El enmascaramiento se aplica en el origen de los datos antes de renderizar o exportar, de modo que el valor completo no llega a ese rol.
+- ¿Qué pasa si un rol sin permiso busca por RUT o número de cuenta completo? La búsqueda puede encontrar el registro, pero el resultado se muestra enmascarado y no revela el valor completo ni confirma dígitos fuera de la máscara.
+- ¿Qué pasa si se cambia de usuario o de rol simulado en la misma sesión? El enmascaramiento se recalcula de inmediato y no quedan valores completos visibles de la sesión anterior.
+- ¿Qué pasa si la cuenta cambió hace menos de 30 días y se aprueba una factura? La alerta de fraude muestra solo la cuenta enmascarada y la fecha del cambio a los roles sin permiso, nunca el número completo.
+- ¿Qué pasa si los datos semilla incluyen proveedores, contactos o cuentas? Todos son ficticios; no se usan RUT, nombres, correos, teléfonos ni cuentas de personas o empresas reales.
+
+**Operación y datos**
+
 - ¿Qué pasa si se anula una OC con cotización seleccionada? La cotización sigue `seleccionada` y puede generar una nueva OC.
 - ¿Qué pasa si llega una nota de crédito? Se registra contra la misma OC y descuenta del monto facturado.
 - ¿Qué pasa si el proveedor entrega más de lo pedido? Solo se acepta hasta lo pendiente; el excedente se registra como rechazado con motivo `no_corresponde`.
@@ -271,6 +286,7 @@ Como Jefe de Compras, necesito registrar devoluciones y notas de crédito contra
 - **FR-022**: El sistema DEBE usar `TOLERANCIA_CONCILIACION = 1 % del neto` de la factura; una diferencia dentro de ese margen se clasifica como `conciliada` y por sobre él como `con_discrepancia`.
 - **FR-023**: El sistema DEBE mantener un catálogo proveedor-producto único por par, con precio de referencia, plazo de entrega y fecha de actualización; DEBE marcar como desactualizados los precios con más de 90 días y sugerir el menor precio vigente al crear líneas de solicitud.
 - **FR-024**: El sistema DEBE permitir exportar a CSV los listados y reportes que cada rol ya puede ver, en UTF-8 con BOM y separador `;`, respetando los filtros y permisos del rol activo, con escapado correcto de comas, comillas y saltos de línea.
+- **FR-025**: El sistema DEBE aplicar el enmascaramiento de RUT de personas naturales y de números de cuenta en el origen de los datos, de modo que un rol sin permiso nunca reciba el valor completo en vistas, búsquedas, tooltips, mensajes de error, historial de auditoría ni archivos CSV exportados.
 
 ### Requisitos de Integración
 
@@ -304,6 +320,7 @@ El detalle de atributos, cardinalidades y reglas está en [data-model.md](data-m
 - **SC-006**: Las listas y búsquedas responden de forma instantánea con hasta 500 registros por colección, igual que el módulo base.
 - **SC-007**: Las reglas de cálculo y de estado de la sección 5 de `data-model.md` tienen pruebas unitarias que pasan.
 - **SC-008**: La exportación CSV de un listado de hasta 500 registros se completa en menos de 1 segundo y preserva los filtros y permisos del rol.
+- **SC-009**: El 0 % de las vistas, búsquedas y exportaciones realizadas por roles sin permiso expone el RUT completo de una persona natural o el número de cuenta completo de un proveedor, verificado en listados, ficha, panel, comparativa y CSV.
 
 ## Suposiciones
 
