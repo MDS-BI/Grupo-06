@@ -17,6 +17,7 @@ El trabajo se divide en iteraciones semanales; cada una termina con una versión
 **Lenguaje/Versión**: JavaScript (ES2022), HTML, CSS (igual que el template)  
 **Dependencias Principales**: Vite; sin framework de interfaz (igual que el template)  
 **Almacenamiento**: `localStorage` del navegador; las colecciones nuevas usan el prefijo `erp_compras:`  
+**Codificación de exportaciones**: los archivos CSV usan UTF-8 con BOM y separador `;` para abrirse correctamente en Excel en español  
 **Pruebas**: Vitest con jsdom (ya configurado en `vitest.config.mjs`)  
 **Plataforma Objetivo**: Navegadores modernos de escritorio  
 **Tipo de Proyecto**: Aplicación web de una página, solo frontend  

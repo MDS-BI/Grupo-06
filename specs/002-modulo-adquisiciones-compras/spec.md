@@ -55,7 +55,7 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 - Q: ¿Qué monto neto debe usarse como `UMBRAL_COTIZACIONES` para exigir tres cotizaciones o una justificación de proveedor único? (FR-021) → A: 1.000.000 CLP neto.
 - Q: ¿Cómo debe definirse `TOLERANCIA_CONCILIACION` para clasificar una factura como conciliada o con discrepancia? (FR-022) → A: 1 % del neto.
 - Q: ¿Qué roles deben poder ver sin enmascarar los datos bancarios de un proveedor? (FR-004) → A: `admin_ti` y `jefe_compras`.
-- Q: ¿Qué formato CSV deben usar las exportaciones para abrirse correctamente en Excel en español? (FR-024) → A: UTF-8 con BOM y separador `;`.
+- Q: ¿Qué formato CSV deben usar las exportaciones para abrirse correctamente en Excel en español? (FR-024) → A: La codificación y el separador definidos en `plan.md` (UTF-8 con BOM y separador `;`).
 - Q: ¿Qué roles pueden usar la exportación CSV? (FR-024) → A: Heredan el permiso de la vista; cada rol exporta solo los listados que ya puede ver.
 
 ## Escenarios de Usuario y Pruebas *(obligatorio)*
@@ -216,6 +216,7 @@ Escenarios de Aceptación:
 3. **Dado** un listado sin registros, **cuando** se exporta, **entonces** se genera un CSV solo con encabezados o se avisa que no hay datos, sin error.
 4. **Dado** un dato con coma, comillas o salto de línea, **cuando** se exporta, **entonces** el CSV lo escapa correctamente.
 5. **Dado** un usuario sin permiso para ver un listado, **cuando** intenta exportarlo, **entonces** la opción no está disponible.
+6. **Dado** un listado exportado, **cuando** se abre en una planilla de cálculo, **entonces** el archivo usa la codificación y el separador definidos en [plan.md](plan.md) y muestra correctamente tildes, eñes y símbolos del español.
 
 ---
 
@@ -285,7 +286,7 @@ Como Jefe de Compras, necesito registrar devoluciones y notas de crédito contra
 - **FR-021**: El sistema DEBE usar `UMBRAL_COTIZACIONES = 1.000.000 CLP neto` para exigir tres cotizaciones o una justificación de proveedor único.
 - **FR-022**: El sistema DEBE usar `TOLERANCIA_CONCILIACION = 1 % del neto` de la factura; una diferencia dentro de ese margen se clasifica como `conciliada` y por sobre él como `con_discrepancia`.
 - **FR-023**: El sistema DEBE mantener un catálogo proveedor-producto único por par, con precio de referencia, plazo de entrega y fecha de actualización; DEBE marcar como desactualizados los precios con más de 90 días y sugerir el menor precio vigente al crear líneas de solicitud.
-- **FR-024**: El sistema DEBE permitir exportar a CSV los listados y reportes que cada rol ya puede ver, en UTF-8 con BOM y separador `;`, respetando los filtros y permisos del rol activo, con escapado correcto de comas, comillas y saltos de línea.
+- **FR-024**: El sistema DEBE permitir exportar a CSV los listados y reportes que cada rol ya puede ver, usando la codificación y el separador definidos en [plan.md](plan.md), respetando los filtros y permisos del rol activo, con escapado correcto de comas, comillas y saltos de línea.
 - **FR-025**: El sistema DEBE aplicar el enmascaramiento de RUT de personas naturales y de números de cuenta en el origen de los datos, de modo que un rol sin permiso nunca reciba el valor completo en vistas, búsquedas, tooltips, mensajes de error, historial de auditoría ni archivos CSV exportados.
 
 ### Requisitos de Integración
@@ -321,6 +322,7 @@ El detalle de atributos, cardinalidades y reglas está en [data-model.md](data-m
 - **SC-007**: Las reglas de cálculo y de estado de la sección 5 de `data-model.md` tienen pruebas unitarias que pasan.
 - **SC-008**: La exportación CSV de un listado de hasta 500 registros se completa en menos de 1 segundo y preserva los filtros y permisos del rol.
 - **SC-009**: El 0 % de las vistas, búsquedas y exportaciones realizadas por roles sin permiso expone el RUT completo de una persona natural o el número de cuenta completo de un proveedor, verificado en listados, ficha, panel, comparativa y CSV.
+- **SC-010**: El 100 % de los archivos exportados con la codificación definida en [plan.md](plan.md) se abre en una planilla de cálculo en español sin caracteres corruptos (tildes, ñ y símbolos), verificado con datos acentuados.
 
 ## Suposiciones
 
@@ -329,4 +331,5 @@ El detalle de atributos, cardinalidades y reglas está en [data-model.md](data-m
 - Los roles se eligen desde un selector de usuario simulado; no hay inicio de sesión real.
 - El módulo funciona en un solo navegador con `localStorage`; no hay sincronización entre equipos.
 - Productos, usuarios y centros de costo vienen como datos semilla mientras los módulos de Inventario, RR.HH. y Contabilidad no estén conectados.
+- La codificación y el separador de los archivos CSV exportados son los definidos en [plan.md](plan.md); un cambio de esa codificación se realiza en el plan y no en esta especificación.
 - El módulo se construye sobre el template del curso (`specs/001-erp-base-module`); ver [plan.md](plan.md).
