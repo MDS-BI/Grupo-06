@@ -106,7 +106,7 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 2. **Dada** una solicitud sobre el umbral sin cotización seleccionada, **cuando** el comprador intenta emitir OC directa, **entonces** el sistema exige cotizaciones previas.
 3. **Dado** un proveedor en estado `bloqueado`, **cuando** el comprador intenta emitirle una OC, **entonces** el sistema cancela la operación por riesgo.
 4. **Dada** una cotización ya convertida en OC, **cuando** se intenta generar una segunda OC desde ella, **entonces** el sistema lo impide para evitar duplicidad.
-5. **Dada** una OC `emitida` sin recepciones, **cuando** el comprador la anula, **entonces** queda `anulada` dejando registro de auditoría.
+5. **Dada** una OC `emitida` sin recepciones, **cuando** el comprador la anula, **entonces** queda `anulada` dejando registro de auditoría conforme a los requisitos de trazabilidad FR-027 a FR-030.
 
 ---
 
@@ -122,6 +122,8 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 2. **Dada** una línea con 4 unidades pendientes, **cuando** bodega intenta aceptar 5, **entonces** el sistema lo impide.
 3. **Dada** una recepción con rechazos, **cuando** el bodeguero no indica el motivo, **entonces** el sistema lo exige obligatoriamente.
 4. **Dado** que el usuario que registra es el mismo comprador que emitió la OC, **cuando** intenta registrar la recepción, **entonces** el sistema se lo deniega (separación de compras y bodega).
+5. **Dada** una OC `emitida`, **cuando** bodega detecta al recibir unidades dañadas, **entonces** las registra como rechazadas con motivo `danado`, no las cuenta como recibidas, no las incluye en el valor a facturar y las deja pendientes en la OC para reposición.
+6. **Dada** una recepción con unidades rechazadas por motivo `danado`, **cuando** se consulta el valor a facturar de la OC, **entonces** dicho valor excluye las unidades dañadas y la OC mantiene la cantidad pendiente para reposición.
 
 ---
 
@@ -234,6 +236,8 @@ Como Jefe de Compras, necesito registrar devoluciones y notas de crédito contra
 4. **Dado** un folio de nota de crédito ya registrado para ese proveedor, **cuando** se intenta ingresar nuevamente, **entonces** el sistema evita la duplicidad.
 5. **Dado** que la devolución reduce el saldo pendiente a cero, **cuando** se guarda, **entonces** la OC queda `cerrada` y la factura queda saldada sin pasar a `aprobada_pago` por el monto descontado.
 6. **Dado** que quien registró la recepción es también quien intenta registrar la devolución, **cuando** lo hace, **entonces** el sistema exige la aprobación de un `jefe_compras` o `admin_ti` distinto (segregación de funciones).
+7. **Dada** una OC con unidades aceptadas y facturadas, **cuando** el daño se detecta después de la aceptación, **entonces** el jefe de compras registra una devolución con motivo `defectuoso` que descuenta la cantidad del saldo recibido y del monto facturado.
+8. **Dada** una devolución con motivo `defectuoso` registrada, **cuando** se consulta el saldo pendiente, **entonces** el saldo recibido y facturado refleja el descuento y no se factura ni paga lo devuelto.
 
 ### Casos Límite
 
@@ -244,7 +248,7 @@ Como Jefe de Compras, necesito registrar devoluciones y notas de crédito contra
 - ¿Qué pasa si el proveedor no tiene datos bancarios registrados? Se muestra "No registrado" y no se renderiza una máscara ni un valor ficticio.
 - ¿Qué pasa si `jefe_compras` intenta editar los datos bancarios? El sistema lo impide aunque pueda verlos completos; solo `admin_ti` puede editarlos y cada cambio actualiza `fecha_cambio_cuenta`.
 - ¿Qué pasa si un rol sin permiso intenta ver, editar o exportar datos sensibles? La operación se rechaza y la exportación CSV contiene el valor enmascarado, nunca el valor completo.
-- ¿Qué pasa si un rol sin permiso intenta recuperar el valor enmascarado por canales indirectos (tooltips, mensajes de error, historial de auditoría, HTML o almacenamiento del navegador)? El enmascaramiento se aplica en el origen de los datos antes de renderizar o exportar, de modo que el valor completo no llega a ese rol.
+- ¿Qué pasa si un rol sin permiso intenta recuperar el valor enmascarado por canales indirectos (tooltips, mensajes de error, historial de trazabilidad FR-027 a FR-030, HTML o almacenamiento del navegador)? El enmascaramiento se aplica en el origen de los datos antes de renderizar o exportar, de modo que el valor completo no llega a ese rol.
 - ¿Qué pasa si un rol sin permiso busca por RUT o número de cuenta completo? La búsqueda puede encontrar el registro, pero el resultado se muestra enmascarado y no revela el valor completo ni confirma dígitos fuera de la máscara.
 - ¿Qué pasa si se cambia de usuario o de rol simulado en la misma sesión? El enmascaramiento se recalcula de inmediato y no quedan valores completos visibles de la sesión anterior.
 - ¿Qué pasa si la cuenta cambió hace menos de 30 días y se aprueba una factura? La alerta de fraude muestra solo la cuenta enmascarada y la fecha del cambio a los roles sin permiso, nunca el número completo.
@@ -258,6 +262,12 @@ Como Jefe de Compras, necesito registrar devoluciones y notas de crédito contra
 - ¿Qué pasa si un producto se desactiva con solicitudes abiertas? Las solicitudes existentes se mantienen; no se puede agregar a solicitudes nuevas.
 - ¿Qué pasa si se bloquea un proveedor con OC abiertas? Las OC abiertas siguen su curso; no se le pueden emitir nuevas.
 - ¿Qué pasa si `localStorage` está lleno o deshabilitado? La aplicación muestra un mensaje claro y no pierde lo que el usuario tenía en pantalla.
+
+**Productos dañados**
+
+- ¿Qué pasa si toda la entrega llega dañada? Se registra el 100 % de las unidades como rechazadas con motivo `danado`, la OC mantiene el saldo pendiente para reposición y el valor a facturar de esa entrega es cero.
+- ¿Qué pasa si el daño se detecta con la factura ya aprobada para pago? Se registra una devolución con motivo `defectuoso` que descuenta el saldo recibido y facturado; el monto aprobado para pago se ajusta y la diferencia queda como crédito a favor o pendiente de nota de crédito, sin pagar lo dañado.
+- ¿Qué pasa si el proveedor no repone lo dañado? La OC se cierra con saldo pendiente, dejando registrada la cantidad no repuesta, y no se factura ni paga lo dañado.
 
 ## Requisitos *(obligatorio)*
 
@@ -287,7 +297,12 @@ Como Jefe de Compras, necesito registrar devoluciones y notas de crédito contra
 - **FR-022**: El sistema DEBE usar `TOLERANCIA_CONCILIACION = 1 % del neto` de la factura; una diferencia dentro de ese margen se clasifica como `conciliada` y por sobre él como `con_discrepancia`.
 - **FR-023**: El sistema DEBE mantener un catálogo proveedor-producto único por par, con precio de referencia, plazo de entrega y fecha de actualización; DEBE marcar como desactualizados los precios con más de 90 días y sugerir el menor precio vigente al crear líneas de solicitud.
 - **FR-024**: El sistema DEBE permitir exportar a CSV los listados y reportes que cada rol ya puede ver, usando la codificación y el separador definidos en [plan.md](plan.md), respetando los filtros y permisos del rol activo, con escapado correcto de comas, comillas y saltos de línea.
-- **FR-025**: El sistema DEBE aplicar el enmascaramiento de RUT de personas naturales y de números de cuenta en el origen de los datos, de modo que un rol sin permiso nunca reciba el valor completo en vistas, búsquedas, tooltips, mensajes de error, historial de auditoría ni archivos CSV exportados.
+- **FR-025**: El sistema DEBE aplicar el enmascaramiento de RUT de personas naturales y de números de cuenta en el origen de los datos, de modo que un rol sin permiso nunca reciba el valor completo en vistas, búsquedas, tooltips, mensajes de error, el historial de trazabilidad (FR-027 a FR-030) ni archivos CSV exportados.
+- **FR-026**: El sistema DEBE permitir registrar unidades dañadas en la recepción como rechazadas con motivo `danado`, de modo que no cuenten como recibidas ni entren al valor a facturar y queden pendientes en la OC para reposición; cuando el daño se detecte después de aceptar, DEBE registrar una devolución con motivo `defectuoso` que descuente el saldo recibido y facturado.
+- **FR-027**: El sistema DEBE registrar, para todo cambio de estado de solicitud, cotización, orden de compra, recepción, factura y devolución, quién lo realizó, cuándo ocurrió y qué acción se ejecutó.
+- **FR-028**: El sistema DEBE permitir navegar, desde cualquier documento, la cadena completa solicitud, cotización, orden de compra, recepción, factura y devolución.
+- **FR-029**: El sistema DEBE impedir la eliminación de documentos con historial y DEBE permitir solo su anulación con motivo registrado.
+- **FR-030**: El sistema DEBE registrar cada cambio de datos bancarios con el valor enmascarado, nunca con el número completo.
 
 ### Requisitos de Integración
 
@@ -308,6 +323,7 @@ El detalle de atributos, cardinalidades y reglas está en [data-model.md](data-m
 - **Factura de proveedor**: documento tributario que se concilia y se aprueba para pago.
 - **Evaluación de proveedor**: desempeño del proveedor en una orden.
 - **Usuario y centro de costo**: quién opera el sistema y a qué área se imputa cada compra.
+- **Historial de trazabilidad**: registro de quién, cuándo y qué acción se ejecutó sobre solicitudes, cotizaciones, órdenes de compra, recepciones, facturas y devoluciones; permite navegar la cadena documental completa y conserva las anulaciones con su motivo y los cambios bancarios con el valor enmascarado.
 
 ## Criterios de Éxito *(obligatorio)*
 
@@ -323,6 +339,8 @@ El detalle de atributos, cardinalidades y reglas está en [data-model.md](data-m
 - **SC-008**: La exportación CSV de un listado de hasta 500 registros se completa en menos de 1 segundo y preserva los filtros y permisos del rol.
 - **SC-009**: El 0 % de las vistas, búsquedas y exportaciones realizadas por roles sin permiso expone el RUT completo de una persona natural o el número de cuenta completo de un proveedor, verificado en listados, ficha, panel, comparativa y CSV.
 - **SC-010**: El 100 % de los archivos exportados con la codificación definida en [plan.md](plan.md) se abre en una planilla de cálculo en español sin caracteres corruptos (tildes, ñ y símbolos), verificado con datos acentuados.
+- **SC-011**: El 100 % de las unidades dañadas registradas con motivo `danado` o devueltas con motivo `defectuoso` queda excluido del valor a facturar y del saldo pagado, verificado con entregas parciales, entregas totalmente dañadas y facturas ya aprobadas para pago.
+- **SC-012**: El 100 % de los cambios de estado de solicitud, cotización, OC, recepción, factura y devolución registra quién, cuándo y qué acción, y desde cualquier documento se puede navegar la cadena completa sin búsquedas manuales, verificado con una prueba de auditoría de punta a punta.
 
 ## Suposiciones
 
