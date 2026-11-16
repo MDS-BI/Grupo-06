@@ -9,7 +9,9 @@ import { registrarCotizacion, seleccionarCotizacion } from '../../../src/compras
 import {
   anularOrdenCompra,
   emitirOrdenCompra,
-  obtenerOrden
+  lineasPendientes,
+  obtenerOrden,
+  valorRecibidoNeto
 } from '../../../src/compras/ordenes-compra.js';
 import { registrarRecepcion } from '../../../src/compras/recepciones.js';
 import {
@@ -18,6 +20,10 @@ import {
   obtenerFactura,
   registrarFactura
 } from '../../../src/compras/facturas.js';
+import {
+  devolucionesAprobadasNeto,
+  registrarDevolucion
+} from '../../../src/compras/devoluciones.js';
 import { exportarProveedores, exportarSolicitudes } from '../../../src/compras/exportacion.js';
 import { guardar, leer } from '../../../src/compras/almacenamiento.js';
 import { cambiarEstadoProveedor } from '../../../src/compras/proveedores.js';
@@ -82,6 +88,31 @@ function ordenConRecepcion({
     USUARIOS.bodega
   );
   return { solicitud, cotizacion, orden };
+}
+
+function ordenEmitida({ monto = 100000, producto = 'prod-001', cantidad = 1 } = {}) {
+  const solicitud = solicitudAprobada({ monto, producto, cantidad });
+  const cotizacion = registrarCotizacion(
+    {
+      solicitud_id: solicitud.id,
+      proveedor_id: 'prov-001',
+      fecha_validez: '2026-12-31',
+      plazo_entrega_dias: 2,
+      condicion_pago_dias: 30,
+      lineas: [{ producto_id: producto, cantidad, precio_unitario: monto / cantidad }]
+    },
+    USUARIOS.comprador
+  );
+  seleccionarCotizacion(cotizacion.id, USUARIOS.comprador);
+  return emitirOrdenCompra(
+    {
+      solicitud_id: solicitud.id,
+      cotizacion_id: cotizacion.id,
+      fecha_emision: '2026-11-02',
+      fecha_entrega_prometida: '2026-11-05'
+    },
+    USUARIOS.comprador
+  );
 }
 
 describe('casos límite de compras', () => {
@@ -462,5 +493,177 @@ describe('casos límite de compras', () => {
     const vacio = exportarProveedores({ filas: [], descargar: false });
     expect(vacio.startsWith('\uFEFF')).toBe(true);
     expect(vacio.trim().split('\r\n').length).toBe(1);
+  });
+
+  it('exporta RUT y cuenta enmascarados según el rol activo', () => {
+    const comprador = exportarProveedores({ descargar: false, usuario: USUARIOS.comprador });
+    expect(comprador).toContain('98.***.***-3');
+    expect(comprador).not.toContain('9.876.543-3');
+    expect(comprador).not.toContain('555444333');
+
+    const jefe = exportarProveedores({ descargar: false, usuario: USUARIOS.jefe });
+    expect(jefe).toContain('9.876.543-3');
+
+    const admin = exportarProveedores({ descargar: false, usuario: USUARIOS.admin });
+    expect(admin).toContain('9.876.543-3');
+  });
+
+  it('aplica tope por línea, segregación y actualiza el estado de la OC', () => {
+    const orden = ordenEmitida({ monto: 300000, cantidad: 3 });
+
+    expect(() =>
+      registrarRecepcion(
+        {
+          orden_id: orden.id,
+          lineas: [
+            {
+              orden_linea_id: orden.lineas[0].linea_id,
+              cantidad_recibida: 1,
+              cantidad_aceptada: 1
+            }
+          ]
+        },
+        { id: USUARIOS.comprador.id, rol: 'bodega' }
+      )
+    ).toThrow(/segregación/);
+
+    const parcial = registrarRecepcion(
+      {
+        orden_id: orden.id,
+        lineas: [
+          {
+            orden_linea_id: orden.lineas[0].linea_id,
+            cantidad_recibida: 2,
+            cantidad_aceptada: 2
+          }
+        ]
+      },
+      USUARIOS.bodega
+    );
+    expect(parcial.estado).toBe('parcial');
+    expect(obtenerOrden(orden.id).estado).toBe('recibida_parcial');
+    expect(lineasPendientes(obtenerOrden(orden.id))[0].cantidad_pendiente).toBe(1);
+
+    const excedida = registrarRecepcion(
+      {
+        orden_id: orden.id,
+        lineas: [
+          {
+            orden_linea_id: orden.lineas[0].linea_id,
+            cantidad_recibida: 5,
+            cantidad_aceptada: 5
+          }
+        ]
+      },
+      USUARIOS.bodega
+    );
+    expect(excedida.lineas[0].cantidad_aceptada).toBe(1);
+    expect(excedida.lineas[0].cantidad_rechazada).toBe(4);
+    expect(excedida.lineas[0].motivo_rechazo).toBe('no_corresponde');
+    expect(obtenerOrden(orden.id).estado).toBe('recibida_total');
+  });
+
+  it('registra unidades dañadas como rechazadas y las excluye del valor a facturar', () => {
+    const orden = ordenEmitida({ monto: 200000, cantidad: 2 });
+    const recepcion = registrarRecepcion(
+      {
+        orden_id: orden.id,
+        lineas: [
+          {
+            orden_linea_id: orden.lineas[0].linea_id,
+            cantidad_recibida: 2,
+            cantidad_aceptada: 1,
+            cantidad_rechazada: 1,
+            motivo_rechazo: 'danado'
+          }
+        ]
+      },
+      USUARIOS.bodega
+    );
+
+    expect(recepcion.lineas[0].cantidad_aceptada).toBe(1);
+    expect(recepcion.lineas[0].cantidad_rechazada).toBe(1);
+    expect(recepcion.lineas[0].motivo_rechazo).toBe('danado');
+    expect(obtenerOrden(orden.id).estado).toBe('recibida_parcial');
+    expect(lineasPendientes(obtenerOrden(orden.id))[0].cantidad_pendiente).toBe(1);
+    expect(valorRecibidoNeto(obtenerOrden(orden.id))).toBe(100000);
+  });
+
+  it('excluye una entrega totalmente dañada del valor a facturar', () => {
+    const orden = ordenEmitida({ monto: 200000, cantidad: 2 });
+    const recepcion = registrarRecepcion(
+      {
+        orden_id: orden.id,
+        lineas: [
+          {
+            orden_linea_id: orden.lineas[0].linea_id,
+            cantidad_recibida: 2,
+            cantidad_aceptada: 0,
+            cantidad_rechazada: 2,
+            motivo_rechazo: 'danado'
+          }
+        ]
+      },
+      USUARIOS.bodega
+    );
+
+    expect(recepcion.estado).toBe('parcial');
+    expect(obtenerOrden(orden.id).estado).toBe('emitida');
+    expect(lineasPendientes(obtenerOrden(orden.id))[0].cantidad_pendiente).toBe(2);
+    expect(valorRecibidoNeto(obtenerOrden(orden.id))).toBe(0);
+
+    const factura = registrarFactura(
+      { orden_id: orden.id, folio: 'F-DANADA', neto: 0 },
+      USUARIOS.comprador
+    );
+    const conciliada = conciliarFactura(factura.id, USUARIOS.comprador);
+    expect(conciliada.estado).toBe('conciliada');
+    expect(conciliada.pendiente_conciliacion).toBe(0);
+  });
+
+  it('cierra la OC con cantidad pendiente cuando el proveedor no repone lo dañado', () => {
+    const orden = ordenEmitida({ monto: 200000, cantidad: 2 });
+    registrarRecepcion(
+      {
+        orden_id: orden.id,
+        lineas: [
+          {
+            orden_linea_id: orden.lineas[0].linea_id,
+            cantidad_recibida: 2,
+            cantidad_aceptada: 1,
+            cantidad_rechazada: 1,
+            motivo_rechazo: 'danado'
+          }
+        ]
+      },
+      USUARIOS.bodega
+    );
+    const factura = registrarFactura(
+      { orden_id: orden.id, folio: 'F-PARCIAL', neto: 100000 },
+      USUARIOS.comprador
+    );
+    conciliarFactura(factura.id, USUARIOS.comprador);
+    aprobarPago(factura.id, USUARIOS.jefe);
+
+    const devolucion = registrarDevolucion(
+      {
+        orden_id: orden.id,
+        lineas: [
+          {
+            orden_linea_id: orden.lineas[0].linea_id,
+            cantidad: 1,
+            motivo: 'defectuoso'
+          }
+        ]
+      },
+      USUARIOS.admin
+    );
+
+    expect(devolucion.estado).toBe('aprobada');
+    expect(devolucionesAprobadasNeto(orden.id)).toBe(100000);
+    expect(obtenerOrden(orden.id).estado).toBe('cerrada');
+    expect(lineasPendientes(obtenerOrden(orden.id))[0].cantidad_pendiente).toBe(1);
+    expect(obtenerFactura(factura.id).saldada).toBe(true);
+    expect(obtenerFactura(factura.id).estado).toBe('aprobada_pago');
   });
 });

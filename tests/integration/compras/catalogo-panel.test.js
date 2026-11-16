@@ -8,6 +8,7 @@ import {
   precioReferenciaVigente
 } from '../../../src/compras/catalogo.js';
 import { alertasVencimiento } from '../../../src/compras/facturas.js';
+import { compararCotizaciones } from '../../../src/compras/cotizaciones.js';
 import { construirPanel, contarPendientes } from '../../../src/compras/panel.js';
 import { cargarDatos, USUARIOS } from './helpers.js';
 
@@ -150,5 +151,40 @@ describe('panel por rol y alertas', () => {
     expect(alertas.map((f) => f.id)).toContain('fac-003');
     expect(alertas.find((f) => f.id === 'fac-003').dias_restantes).toBe(3);
     expect(alertas.map((f) => f.id)).not.toContain('fac-004');
+  });
+
+  it('cubre los seis escenarios de US5 y SC-005', () => {
+    const jefe = construirPanel(USUARIOS.jefe, HOY);
+    const claves = jefe.pendientes.map((p) => p.clave);
+    expect(claves).toContain('solicitudes_por_aprobar');
+    expect(claves).toContain('oc_sin_recepcion');
+    expect(claves).toContain('facturas_por_conciliar');
+    expect(jefe.alertas.find((f) => f.id === 'fac-003').dias_restantes).toBe(3);
+
+    const solicitante = construirPanel(USUARIOS.solicitante, HOY);
+    expect(solicitante.pendientes.map((p) => p.clave)).toEqual(['mis_solicitudes']);
+    expect(solicitante.alertas).toHaveLength(0);
+
+    const comprador = construirPanel(USUARIOS.comprador, HOY);
+    expect(comprador.seguimiento.some((o) => o.id === 'oc-001')).toBe(true);
+    expect(typeof comprador.indicadores.monto_comprometido).toBe('number');
+    expect(comprador.indicadores.ordenes_abiertas).toBeGreaterThan(0);
+    expect(typeof comprador.indicadores.facturas_aprobadas_pago).toBe('number');
+
+    const vacio = construirPanel({ id: 'u-sin-pendientes', rol: 'solicitante' }, HOY);
+    expect(vacio.vacio).toBe(true);
+    expect(contarPendientes(USUARIOS.jefe, HOY)).toBeGreaterThan(0);
+  });
+
+  it('no expone RUT ni cuenta de personas naturales en el panel ni en la comparativa', () => {
+    const panel = JSON.stringify(construirPanel(USUARIOS.comprador, HOY));
+    expect(panel).not.toContain('9.876.543-3');
+    expect(panel).not.toContain('555444333');
+
+    const comparativa = JSON.stringify(compararCotizaciones('sol-004', USUARIOS.comprador));
+    expect(comparativa).toContain('98.***.***-3');
+    expect(comparativa).toContain('****4333');
+    expect(comparativa).not.toContain('9.876.543-3');
+    expect(comparativa).not.toContain('555444333');
   });
 });

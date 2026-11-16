@@ -1,6 +1,7 @@
 import { leer, guardar, generarId, exigirPermiso, getUsuarioActivo } from './almacenamiento.js';
 import { generarNumero, siguienteSecuencia, hoyISO } from './reglas.js';
 import { obtenerOrden, lineasPendientes, recepcionesDeOrden } from './ordenes-compra.js';
+import { registrarEvento } from './trazabilidad.js';
 
 export function listarRecepciones({ orden_id } = {}) {
   return leer('recepciones')
@@ -12,7 +13,7 @@ export function obtenerRecepcion(id) {
   return leer('recepciones').find((r) => r.id === id);
 }
 
-function actualizarEstadoOrden(ordenId) {
+function actualizarEstadoOrden(ordenId, usuario = getUsuarioActivo()) {
   const orden = obtenerOrden(ordenId);
   if (!orden) return null;
   const pendientes = lineasPendientes(orden);
@@ -27,6 +28,12 @@ function actualizarEstadoOrden(ordenId) {
     if (idx !== -1) {
       lista[idx] = { ...lista[idx], estado, updatedAt: new Date().toISOString() };
       guardar('ordenes', lista);
+      registrarEvento('orden', ordenId, 'cambio_estado', {
+        usuario,
+        anterior: orden.estado,
+        nuevo: estado,
+        detalle: 'Actualización automática por recepción'
+      });
       return lista[idx];
     }
   }
@@ -118,11 +125,16 @@ export function registrarRecepcion(datos, usuario = getUsuarioActivo()) {
   const lista = leer('recepciones');
   lista.push(recepcion);
   guardar('recepciones', lista);
-  const actualizada = actualizarEstadoOrden(orden.id);
+  const actualizada = actualizarEstadoOrden(orden.id, usuario);
   recepcion.estado = actualizada?.estado === 'recibida_total' ? 'total' : 'parcial';
   const idx = lista.findIndex((r) => r.id === recepcion.id);
   lista[idx] = recepcion;
   guardar('recepciones', lista);
+  registrarEvento('recepcion', recepcion.id, 'registro', {
+    usuario,
+    nuevo: recepcion.estado,
+    detalle: `OC ${orden.numero}`
+  });
   return recepcion;
 }
 

@@ -18,6 +18,19 @@ describe('exportación CSV', () => {
     expect(escaparCSV(null)).toBe('');
   });
 
+  it('conserva tildes y eñes con BOM UTF-8 y separador punto y coma', () => {
+    const csv = generarCSV(
+      [
+        { key: 'nombre', header: 'Descripción' },
+        { key: 'monto', header: 'Monto' }
+      ],
+      [{ nombre: 'Artículo dañado · ñandú', monto: 1500 }]
+    );
+    expect(csv.charCodeAt(0)).toBe(0xfeff);
+    expect(csv).toContain('Descripción;Monto\r\n');
+    expect(csv).toContain('Artículo dañado · ñandú;1500\r\n');
+  });
+
   it('genera CSV con BOM, cabecera, separador punto y coma y CRLF', () => {
     const csv = generarCSV(
       [

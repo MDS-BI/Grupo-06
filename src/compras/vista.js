@@ -63,6 +63,7 @@ import {
 } from './catalogo.js';
 import { listarEvaluaciones, registrarEvaluacion, promedioProveedor } from './evaluaciones.js';
 import { construirPanel } from './panel.js';
+import { cadenaDocumental, historialDe } from './trazabilidad.js';
 import {
   exportarProveedores,
   exportarSolicitudes,
@@ -100,6 +101,7 @@ let devOrdenId = '';
 let catProveedorId = '';
 let catFiltro = '';
 let evalOrdenId = '';
+let traza = null;
 
 function qs(id) {
   return document.getElementById(id);
@@ -200,6 +202,13 @@ export function renderComprasView() {
     })
   );
   renderComprasTab();
+  renderTrazaCadena();
+  root.querySelectorAll('[data-traza]').forEach((btn) =>
+    btn.addEventListener('click', () => {
+      traza = { tipo: btn.dataset.traza, id: btn.dataset.id };
+      renderComprasView();
+    })
+  );
 }
 
 function renderComprasTab() {
@@ -218,6 +227,57 @@ function renderComprasTab() {
 function irA(nuevaTab) {
   tab = nuevaTab;
   renderComprasView();
+}
+
+function fechaHora(valor) {
+  return String(valor ?? '')
+    .replace('T', ' ')
+    .slice(0, 16);
+}
+
+function renderTrazaCadena() {
+  if (!traza) return;
+  const content = qs('compras-content');
+  if (!content) return;
+  const cadena = cadenaDocumental(traza.tipo, traza.id);
+  const eventos = historialDe(traza.tipo, traza.id);
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.id = 'compras-traza';
+  card.innerHTML = `
+    <div class="toolbar"><h2>Cadena documental y trazabilidad</h2><button type="button" id="traza-cerrar" class="secondary">Cerrar</button></div>
+    ${
+      cadena.length === 0
+        ? '<div class="empty">No se encontró la cadena documental.</div>'
+        : `<ol class="traza-cadena">${cadena
+            .map(
+              (n) =>
+                `<li>${badge(n.estado)} <button type="button" class="link" data-traza-ir="${esc(n.tab)}">${esc(n.etiqueta)}</button></li>`
+            )
+            .join('')}</ol>`
+    }
+    <h3>Historial de cambios</h3>
+    ${
+      eventos.length === 0
+        ? '<div class="empty">Sin eventos registrados.</div>'
+        : `<table><thead><tr><th>Fecha y hora</th><th>Acción</th><th>Estado anterior</th><th>Estado nuevo</th><th>Usuario</th><th>Detalle</th></tr></thead><tbody>
+      ${eventos
+        .map(
+          (e) =>
+            `<tr><td>${esc(fechaHora(e.fecha_hora))}</td><td>${esc(e.accion)}</td><td>${esc(e.estado_anterior)}</td><td>${esc(e.estado_nuevo)}</td><td>${esc(nombreUsuario(e.usuario_id))}</td><td>${esc(e.detalle)}</td></tr>`
+        )
+        .join('')}
+      </tbody></table>`
+    }
+  `;
+  content.appendChild(card);
+  qs('traza-cerrar').addEventListener('click', () => {
+    traza = null;
+    renderComprasView();
+  });
+  card.querySelectorAll('[data-traza-ir]').forEach((btn) =>
+    btn.addEventListener('click', () => irA(btn.dataset.trazaIr))
+  );
 }
 
 function renderPanel() {
@@ -294,7 +354,9 @@ function renderProveedores() {
   const lista = (provFiltro ? buscarProveedores(provFiltro) : listarProveedores()).map((p) =>
     vistaProveedor(p, usuario.rol)
   );
-  const editando = provEditId ? obtenerProveedor(provEditId) : null;
+  const editando = provEditId
+    ? vistaProveedor(obtenerProveedor(provEditId), usuario.rol)
+    : null;
   const content = qs('compras-content');
   content.innerHTML = `
     <div class="card">
@@ -329,11 +391,11 @@ function renderProveedores() {
         lista.length === 0
           ? '<div class="empty">No hay proveedores que coincidan.</div>'
           : `
-      <table><thead><tr><th>Código</th><th>Razón social</th><th>RUT</th><th>Tipo</th><th>Región</th><th>Condición</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>
+      <table><thead><tr><th>Código</th><th>Razón social</th><th>RUT</th><th>Cuenta</th><th>Tipo</th><th>Región</th><th>Condición</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>
       ${lista
         .map(
           (p) => `<tr>
-        <td>${esc(p.code)}</td><td>${esc(p.name)}</td><td>${esc(p.rut_visible)}</td><td>${esc(p.tipo_persona)}</td><td>${esc(p.region)}</td><td>${esc(p.condicion_pago_dias)} días</td><td>${badge(p.estado_proveedor)}</td>
+        <td>${esc(p.code)}</td><td>${esc(p.name)}</td><td>${esc(p.rut_visible)}</td><td>${esc(p.cuenta_visible)}</td><td>${esc(p.tipo_persona)}</td><td>${esc(p.region)}</td><td>${esc(p.condicion_pago_dias)} días</td><td>${badge(p.estado_proveedor)}</td>
         <td class="actions">
           <button type="button" class="link" data-prov-accion="editar" data-id="${esc(p.id)}">Editar</button>
           ${p.estado_proveedor === 'potencial' ? `<button type="button" class="link" data-prov-accion="aprobar" data-id="${esc(p.id)}">Aprobar</button>` : ''}
@@ -389,6 +451,19 @@ function renderProveedores() {
         banco: qs('prov-banco').value,
         numero_cuenta: qs('prov-cuenta').value
       };
+      if (usuario.rol !== 'admin_ti') {
+        delete datos.banco;
+        delete datos.numero_cuenta;
+      }
+      if (
+        editando &&
+        String(editando.tipo_persona || '')
+          .toLowerCase()
+          .startsWith('natural') &&
+        !['admin_ti', 'jefe_compras'].includes(usuario.rol)
+      ) {
+        delete datos.rut;
+      }
       ejecutar(() => {
         if (provEditId) actualizarProveedor(provEditId, datos, usuario);
         else crearProveedor(datos, usuario);
@@ -478,6 +553,7 @@ function renderSolicitudes() {
           (s) => `<tr>
         <td>${esc(s.numero)}</td><td>${esc(nombreUsuario(s.solicitante_id))}</td><td>${esc(s.centro_costo_id)}</td><td>${esc(s.prioridad)}</td><td>${fecha(s.fecha_requerida)}</td><td>${clp(s.monto_estimado)}</td><td>${badge(s.estado)}</td>
         <td class="actions">
+          <button type="button" class="link" data-traza="solicitud" data-id="${esc(s.id)}">Cadena</button>
           ${s.estado === 'borrador' ? `<button type="button" class="link" data-sol-accion="enviar" data-id="${esc(s.id)}">Enviar</button>` : ''}
           ${s.estado === 'enviada' && puede('aprobar_solicitud', usuario) && s.solicitante_id !== usuario.id ? `<button type="button" class="link" data-sol-accion="aprobar" data-id="${esc(s.id)}">Aprobar</button><button type="button" class="link danger" data-sol-accion="rechazar" data-id="${esc(s.id)}">Rechazar</button>` : ''}
           ${['aprobada', 'en_cotizacion'].includes(s.estado) ? `<button type="button" class="link" data-sol-accion="cotizar" data-id="${esc(s.id)}">Cotizaciones</button>` : ''}
@@ -555,7 +631,7 @@ function renderSolicitudes() {
           return aprobarSolicitud(id, usuario, { aprobar: false, motivo });
         }
         if (btn.dataset.solAccion === 'anular') {
-          const motivo = pedirTexto('Motivo de anulación (opcional):') || '';
+          const motivo = pedirTexto('Motivo de anulación:') || '';
           return anularSolicitud(id, usuario, motivo);
         }
         if (btn.dataset.solAccion === 'cotizar') {
@@ -653,6 +729,7 @@ function renderCotizaciones() {
           (c) => `<tr>
         <td>${esc(c.proveedor?.name || c.proveedor_id)}</td><td>${clp(c.neto)}</td><td>${clp(c.iva)}</td><td>${clp(c.total)}</td><td>${esc(c.plazo_entrega_dias)} días</td><td>${esc(c.condicion_pago_dias)} días</td><td>${c.evaluacion_promedio || '—'}</td><td>${fecha(c.fecha_validez)}</td><td>${badge(c.estado)}</td>
         <td class="actions">
+          <button type="button" class="link" data-traza="cotizacion" data-id="${esc(c.id)}">Cadena</button>
           ${c.estado === 'recibida' && puede('gestionar_cotizaciones', usuario) ? `<button type="button" class="link" data-cot-accion="seleccionar" data-id="${esc(c.id)}">Seleccionar</button><button type="button" class="link danger" data-cot-accion="descartar" data-id="${esc(c.id)}">Descartar</button>` : ''}
           ${c.motivo_descarte ? `<span class="muted">${esc(c.motivo_descarte)}</span>` : ''}
         </td>
@@ -771,7 +848,7 @@ function renderOrdenes() {
           (
             o
           ) => `<tr><td>${esc(o.numero)}</td><td>${esc(nombreProveedor(o.proveedor_id))}</td><td>${esc(o.solicitud_id || '—')}</td><td>${fecha(o.fecha_emision)}</td><td>${clp(o.neto)}</td><td>${clp(o.iva)}</td><td>${clp(o.total)}</td><td>${badge(o.estado)}</td>
-        <td class="actions">${['emitida', 'recibida_parcial'].includes(o.estado) && puede('emitir_oc', usuario) ? `<button type="button" class="link danger" data-oc-accion="anular" data-id="${esc(o.id)}">Anular</button>` : ''}</td>
+        <td class="actions"><button type="button" class="link" data-traza="orden" data-id="${esc(o.id)}">Cadena</button>${['emitida', 'recibida_parcial'].includes(o.estado) && puede('emitir_oc', usuario) ? `<button type="button" class="link danger" data-oc-accion="anular" data-id="${esc(o.id)}">Anular</button>` : ''}</td>
       </tr>`
         )
         .join('')}
@@ -864,8 +941,8 @@ function renderRecepciones() {
         lista.length === 0
           ? '<div class="empty">Sin recepciones registradas.</div>'
           : `
-      <table><thead><tr><th>Número</th><th>OC</th><th>Fecha</th><th>Estado</th><th>Registrada por</th><th>Líneas</th></tr></thead><tbody>
-      ${lista.map((r) => `<tr><td>${esc(r.numero)}</td><td>${esc(r.orden_id)}</td><td>${fecha(r.fecha_recepcion)}</td><td>${badge(r.estado)}</td><td>${esc(nombreUsuario(r.registrada_por))}</td><td>${(r.lineas || []).map((l) => `${esc(nombreProducto(l.producto_id))}: ${l.cantidad_aceptada}`).join(', ')}</td></tr>`).join('')}
+      <table><thead><tr><th>Número</th><th>OC</th><th>Fecha</th><th>Estado</th><th>Registrada por</th><th>Líneas</th><th>Acciones</th></tr></thead><tbody>
+      ${lista.map((r) => `<tr><td>${esc(r.numero)}</td><td>${esc(r.orden_id)}</td><td>${fecha(r.fecha_recepcion)}</td><td>${badge(r.estado)}</td><td>${esc(nombreUsuario(r.registrada_por))}</td><td>${(r.lineas || []).map((l) => `${esc(nombreProducto(l.producto_id))}: ${l.cantidad_aceptada}`).join(', ')}</td><td class="actions"><button type="button" class="link" data-traza="recepcion" data-id="${esc(r.id)}">Cadena</button></td></tr>`).join('')}
       </tbody></table>`
       }
       ${
@@ -965,6 +1042,7 @@ function renderFacturas() {
             f
           ) => `<tr><td>${esc(f.tipo_documento)}</td><td>${esc(f.folio)}</td><td>${esc(f.orden_id)}</td><td>${esc(nombreProveedor(f.proveedor_id))}</td><td>${clp(f.neto)}</td><td>${clp(f.iva)}</td><td>${clp(f.total)}</td><td>${fecha(f.fecha_vencimiento)}</td><td>${badge(f.estado)}${f.alerta_fraude ? ' ⚠️' : ''}</td><td>${f.diferencia === undefined ? '—' : clp(f.diferencia)}</td>
         <td class="actions">
+          <button type="button" class="link" data-traza="factura" data-id="${esc(f.id)}">Cadena</button>
           ${f.tipo_documento === 'factura' && ['registrada', 'con_discrepancia'].includes(f.estado) && puede('conciliar_factura', usuario) ? `<button type="button" class="link" data-fac-accion="conciliar" data-id="${esc(f.id)}">Conciliar</button>` : ''}
           ${f.estado === 'conciliada' && puede('aprobar_pago', usuario) ? `<button type="button" class="link" data-fac-accion="aprobar" data-id="${esc(f.id)}">Aprobar pago</button>` : ''}
           ${!['aprobada_pago', 'rechazada'].includes(f.estado) && puede('conciliar_factura', usuario) ? `<button type="button" class="link danger" data-fac-accion="rechazar" data-id="${esc(f.id)}">Rechazar</button>` : ''}
@@ -1066,6 +1144,7 @@ function renderDevoluciones() {
             d
           ) => `<tr><td>${esc(d.numero)}</td><td>${esc(d.orden_id)}</td><td>${fecha(d.fecha_devolucion)}</td><td>${clp(d.neto)}</td><td>${badge(d.estado)}</td><td>${esc(nombreUsuario(d.registrada_por))}</td>
         <td class="actions">
+          <button type="button" class="link" data-traza="devolucion" data-id="${esc(d.id)}">Cadena</button>
           ${d.estado === 'pendiente_aprobacion' && puede('aprobar_devolucion', usuario) ? `<button type="button" class="link" data-dev-accion="aprobar" data-id="${esc(d.id)}">Aprobar</button><button type="button" class="link danger" data-dev-accion="rechazar" data-id="${esc(d.id)}">Rechazar</button>` : ''}
         </td>
       </tr>`

@@ -48,10 +48,20 @@ describe('reglas de compras', () => {
     it('enmascara RUT y cuenta según el rol', () => {
       expect(enmascararRut('12345678-5', 'comprador')).toBe('12.***.***-5');
       expect(enmascararRut('12345678-5', 'admin_ti')).toBe('12.345.678-5');
+      expect(enmascararRut('12345678-5', 'jefe_compras')).toBe('12.345.678-5');
       expect(enmascararRut('invalido', 'bodega')).toBe('***');
       expect(enmascararCuenta('123456789', 'comprador')).toBe('****6789');
       expect(enmascararCuenta('123456789', 'admin_ti')).toBe('123456789');
+      expect(enmascararCuenta('123456789', 'jefe_compras')).toBe('123456789');
       expect(enmascararCuenta('', 'admin_ti')).toBe('');
+    });
+
+    it('enmascara cuentas cortas conservando solo los últimos dos dígitos', () => {
+      expect(enmascararCuenta('1234', 'comprador')).toBe('**34');
+      expect(enmascararCuenta('123', 'bodega')).toBe('*23');
+      expect(enmascararCuenta('12', 'solicitante')).toBe('12');
+      expect(enmascararCuenta('1', 'solicitante')).toBe('1');
+      expect(enmascararCuenta('1234', 'jefe_compras')).toBe('1234');
     });
   });
 

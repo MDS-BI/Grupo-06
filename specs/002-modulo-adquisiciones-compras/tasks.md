@@ -12,7 +12,7 @@
 >
 > **Roles**: se usan los roles definidos en `spec.md`: `solicitante`, `comprador`, `jefe_compras`, `bodega` y `admin_ti`.
 >
-> **Extensión necesaria para US11**: para cumplir el documento de devolución con correlativo `DEV-AAAA-NNNN` se agrega `src/compras/devoluciones.js` y la colección `erp_compras:devoluciones`, no detallada en `plan.md` pero exigida por los escenarios de US11. Las notas de crédito se registran como `FACTURA_PROVEEDOR` con `tipo_documento = nota_credito`, según `data-model.md`.
+> **Extensión necesaria para US11**: para cumplir el documento de devolución con correlativo `DEV-AAAA-NNNN` se agrega `src/compras/devoluciones.js` y la colección `erp_compras:devoluciones`, detallada en `plan.md`, según los escenarios de US11. Las notas de crédito se registran como `FACTURA_PROVEEDOR` con `tipo_documento = nota_credito`, según `data-model.md`.
 >
 > **Extensión necesaria para US10**: se agrega `src/compras/exportacion.js` con el generador CSV, sin dependencias externas, respetando filtros y permisos del rol activo.
 
@@ -71,10 +71,10 @@
 - [x] T017 [US1] Enmascarar el RUT de personas naturales y el número de cuenta bancaria para roles distintos de `admin_ti` y `jefe_compras`; `admin_ti` y `jefe_compras` ven los datos sin enmascarar, pero solo `admin_ti` puede editarlos, actualizando `fecha_cambio_cuenta` al modificarlos. [FR-004]
 - [x] T018 [US1] Agregar pruebas unitarias de RUT, condición de pago, enmascaramiento y eliminación/bloqueo en `tests/unit/compras/reglas.test.js` y `tests/integration/compras/proveedores.test.js`.
 - [x] T019 [US1] Agregar prueba de integración del flujo completo de US1 en `tests/integration/compras/proveedores.test.js`.
-- [ ] T093 [US1] [FR-025] Alinear `src/compras/reglas.js` y `src/compras/proveedores.js` para que `jefe_compras` vea el RUT de personas naturales y el número de cuenta sin enmascarar, manteniendo la edición bancaria exclusiva de `admin_ti`; actualizar `tests/unit/compras/reglas.test.js` y `tests/integration/compras/proveedores.test.js`.
-- [ ] T094 [US1] [FR-025] En `src/compras/reglas.js`, enmascarar cuentas de 4 dígitos o menos conservando solo los últimos 2 dígitos; agregar los casos en `tests/unit/compras/reglas.test.js`.
-- [ ] T095 [US1] [FR-025] Mostrar "No registrado" cuando el proveedor no tiene número de cuenta, sin máscara ni valor ficticio, en `src/compras/proveedores.js` y `src/compras/vista.js`; cubrirlo en `tests/integration/compras/proveedores.test.js` y `tests/integration/compras/vista.test.js`.
-- [ ] T096 [US1] [SC-009] Agregar pruebas de no exposición de RUT y cuenta en listados, ficha, panel, comparativa y CSV para roles sin permiso, y de visibilidad sin máscara para `admin_ti` y `jefe_compras`, en `tests/integration/compras/proveedores.test.js`, `tests/integration/compras/catalogo-panel.test.js`, `tests/integration/compras/casos-limite.test.js` y `tests/unit/compras/reglas.test.js`.
+- [x] T093 [US1] [FR-025] Alinear `src/compras/reglas.js` y `src/compras/proveedores.js` para que `jefe_compras` vea el RUT de personas naturales y el número de cuenta sin enmascarar, manteniendo la edición bancaria exclusiva de `admin_ti`; actualizar `tests/unit/compras/reglas.test.js` y `tests/integration/compras/proveedores.test.js`.
+- [x] T094 [US1] [FR-025] En `src/compras/reglas.js`, enmascarar cuentas de 4 dígitos o menos conservando solo los últimos 2 dígitos; agregar los casos en `tests/unit/compras/reglas.test.js`.
+- [x] T095 [US1] [FR-025] Mostrar "No registrado" cuando el proveedor no tiene número de cuenta, sin máscara ni valor ficticio, en `src/compras/proveedores.js` y `src/compras/vista.js`; cubrirlo en `tests/integration/compras/proveedores.test.js` y `tests/integration/compras/vista.test.js`.
+- [x] T096 [US1] [SC-009] Agregar pruebas de no exposición de RUT y cuenta en listados, ficha, panel, comparativa y CSV para roles sin permiso, y de visibilidad sin máscara para `admin_ti` y `jefe_compras`, en `tests/integration/compras/proveedores.test.js`, `tests/integration/compras/catalogo-panel.test.js`, `tests/integration/compras/casos-limite.test.js` y `tests/unit/compras/reglas.test.js`.
 
 **Punto de control**: gestión de proveedores funcional.
 
@@ -91,7 +91,7 @@
 - [x] T022 [US2] Implementar la numeración correlativa `SC-AAAA-NNNN` y las transiciones `borrador → enviada → aprobada | rechazada`, `aprobada → en_cotizacion → adjudicada` y `anulada` antes de `adjudicada`. [FR-005]
 - [x] T023 [US2] Impedir enviar solicitudes sin productos y restringir al `solicitante` a ver y crear solo sus propias solicitudes. [FR-005, FR-018]
 - [x] T024 [US2] Implementar aprobación y rechazo solo por `jefe_compras` o `admin_ti` distinto del solicitante; el rechazo exige motivo y se registra el aprobador con su fecha. [FR-006]
-- [ ] T025 [US2] Agregar pruebas de transiciones, autoaprobación bloqueada, rechazo sin motivo y solicitud vacía en `tests/integration/compras/flujo-compras.test.js`.
+- [x] T025 [US2] Agregar pruebas de transiciones, autoaprobación bloqueada, rechazo sin motivo y solicitud vacía en `tests/integration/compras/flujo-compras.test.js`.
 - [x] T026 [US2] Agregar prueba de integración del flujo completo de US2 en `tests/integration/compras/flujo-compras.test.js`.
 
 **Punto de control**: solicitudes de compra funcionales.
@@ -129,10 +129,10 @@
 - [x] T038 [US4] Impedir que el comprador que emitió la OC registre su recepción y restringir la operación al rol `bodega` (o `admin_ti` para auditoría), manteniendo la segregación de funciones. [FR-014]
 - [x] T039 [US4] Actualizar automáticamente el estado de la OC a `recibida_parcial` o `recibida_total` según la suma de cantidades aceptadas por línea. [FR-013]
 - [x] T040 [US4] Dejar disponibles las cantidades aceptadas de cada recepción para que Inventario actualice el stock, usando `id_producto`. [IR-002]
-- [ ] T041 [US4] Agregar pruebas de tope por línea, motivo de rechazo, segregación y actualización de estado en `tests/integration/compras/casos-limite.test.js`.
+- [x] T041 [US4] Agregar pruebas de tope por línea, motivo de rechazo, segregación y actualización de estado en `tests/integration/compras/casos-limite.test.js`.
 - [x] T042 [US4] Agregar prueba de integración del flujo completo de US4 en `tests/integration/compras/flujo-compras.test.js` y `tests/integration/compras/casos-limite.test.js`.
-- [ ] T097 [US4] [FR-026] Registrar unidades dañadas al recibir como rechazadas con motivo `danado`, sin contarlas como recibidas ni incluirlas en el valor a facturar y dejando la cantidad pendiente en la OC para reposición, en `src/compras/recepciones.js`; agregar pruebas en `tests/integration/compras/casos-limite.test.js`.
-- [ ] T098 [US4] [SC-011] Agregar pruebas de entrega totalmente dañada y de exclusión del valor a facturar en `tests/integration/compras/casos-limite.test.js` y `tests/integration/compras/flujo-compras.test.js`.
+- [x] T097 [US4] [FR-026] Registrar unidades dañadas al recibir como rechazadas con motivo `danado`, sin contarlas como recibidas ni incluirlas en el valor a facturar y dejando la cantidad pendiente en la OC para reposición, en `src/compras/recepciones.js`; agregar pruebas en `tests/integration/compras/casos-limite.test.js`.
+- [x] T098 [US4] [SC-011] Agregar pruebas de entrega totalmente dañada y de exclusión del valor a facturar en `tests/integration/compras/casos-limite.test.js` y `tests/integration/compras/flujo-compras.test.js`.
 
 **Punto de control**: recepciones funcionales.
 
@@ -151,7 +151,7 @@
 - [x] T047 [US5] Calcular y mostrar los indicadores del período seleccionado (mes actual): monto comprometido en OC no anuladas, órdenes abiertas y facturas aprobadas para pago. [FR-018]
 - [x] T048 [US5] Implementar el estado vacío del panel cuando no hay pendientes y actualizar los contadores sin recargar la página tras una acción. [FR-018]
 - [x] T049 [US5] Agregar acciones rápidas por rol para crear solicitud, OC, recepción o registrar factura según corresponda. [FR-018]
-- [ ] T050 [US5] Agregar prueba de integración de US5 que cubra los seis escenarios y SC-005 en `tests/integration/compras/catalogo-panel.test.js` y `tests/integration/compras/vista.test.js`.
+- [x] T050 [US5] Agregar prueba de integración de US5 que cubra los seis escenarios y SC-005 en `tests/integration/compras/catalogo-panel.test.js` y `tests/integration/compras/vista.test.js`.
 
 **Punto de control**: panel de compras funcional.
 
@@ -167,7 +167,7 @@
 - [x] T052 [US6] Implementar el registro y actualización de cotizaciones en `src/compras/cotizaciones.js` y la vista de comparación side-by-side con precio, plazo, condición de pago y evaluación promedio del proveedor. [FR-007]
 - [x] T053 [US6] Marcar cotizaciones como `vencidas` al superar `fecha_validez` sin selección, exigir `motivo_descarte` al descartar y permitir una sola cotización `seleccionada` por solicitud. [FR-009]
 - [x] T054 [US6] Exigir al menos 3 cotizaciones o una `justificacion_proveedor_unico` no vacía para seleccionar una cotización cuando `monto_estimado` sea igual o superior a `UMBRAL_COTIZACIONES`. [FR-008]
-- [ ] T055 [US6] Agregar pruebas de cotización duplicada, vencida, descarte sin motivo, umbral y única seleccionada en `tests/integration/compras/flujo-compras.test.js`.
+- [x] T055 [US6] Agregar pruebas de cotización duplicada, vencida, descarte sin motivo, umbral y única seleccionada en `tests/integration/compras/flujo-compras.test.js`.
 - [x] T056 [US6] Agregar prueba de integración del flujo completo de US6 en `tests/integration/compras/flujo-compras.test.js`.
 
 **Punto de control**: cotizaciones y comparativa funcionales.
@@ -234,7 +234,7 @@
 - [x] T075 [US10] Agregar acciones de exportación a los listados de proveedores, solicitudes, OC, recepciones y facturas, respetando el filtro vigente. [FR-024]
 - [x] T076 [US10] Restringir la exportación según rol (el `solicitante` solo exporta sus solicitudes) y manejar listados vacíos sin error. [FR-024]
 - [x] T077 [US10] Agregar pruebas unitarias y de integración de exportación CSV en `tests/unit/compras/exportacion.test.js` y `tests/integration/compras/casos-limite.test.js`. [SC-008]
-- [ ] T099 [US10] [SC-010] Agregar prueba con datos acentuados que verifique que el CSV con BOM UTF-8 y separador `;` se abre sin caracteres corruptos en `tests/unit/compras/exportacion.test.js`.
+- [x] T099 [US10] [SC-010] Agregar prueba con datos acentuados que verifique que el CSV con BOM UTF-8 y separador `;` se abre sin caracteres corruptos en `tests/unit/compras/exportacion.test.js`.
 
 **Punto de control**: exportación CSV funcional.
 
@@ -253,8 +253,8 @@
 - [x] T082 [US11] Si quien registró la recepción intenta registrar la devolución, exigir la aprobación de un `jefe_compras` o `admin_ti` distinto. [FR-014]
 - [x] T083 [US11] Agregar pruebas de devoluciones, notas de crédito, topes, duplicidad, cierre de OC y segregación en `tests/integration/compras/flujo-compras.test.js` y `tests/integration/compras/casos-limite.test.js`.
 - [x] T084 [US11] Agregar prueba de integración del flujo completo de US11 en `tests/integration/compras/flujo-compras.test.js`.
-- [ ] T100 [US11] [FR-026] Registrar devoluciones con motivo `defectuoso` cuando el daño se detecta después de aceptar, descontando el saldo recibido y facturado, en `src/compras/devoluciones.js`; agregar pruebas en `tests/integration/compras/flujo-compras.test.js`.
-- [ ] T101 [US11] [SC-011] Cubrir el daño detectado con la factura ya aprobada para pago y el cierre de la OC con saldo pendiente cuando el proveedor no repone, en `tests/integration/compras/casos-limite.test.js`.
+- [x] T100 [US11] [FR-026] Registrar devoluciones con motivo `defectuoso` cuando el daño se detecta después de aceptar, descontando el saldo recibido y facturado, en `src/compras/devoluciones.js`; agregar pruebas en `tests/integration/compras/flujo-compras.test.js`.
+- [x] T101 [US11] [SC-011] Cubrir el daño detectado con la factura ya aprobada para pago y el cierre de la OC con saldo pendiente cuando el proveedor no repone, en `tests/integration/compras/casos-limite.test.js`.
 
 **Punto de control**: devoluciones y notas de crédito funcionales; ciclo de P2 cerrado.
 
@@ -266,11 +266,11 @@
 
 **Prueba Independiente**: desde una devolución se navega a la factura, recepción, OC, cotización y solicitud; cada cambio de estado muestra usuario, fecha y acción, y un documento con historial no puede eliminarse.
 
-- [ ] T102 [FR-027] Implementar en `src/compras/trazabilidad.js` el registro de quién, cuándo y qué acción para cada cambio de estado de solicitud, cotización, OC, recepción, factura y devolución, integrándolo en `src/compras/solicitudes.js`, `src/compras/cotizaciones.js`, `src/compras/ordenes-compra.js`, `src/compras/recepciones.js`, `src/compras/facturas.js` y `src/compras/devoluciones.js`.
-- [ ] T103 [FR-028] Implementar en `src/compras/trazabilidad.js` y `src/compras/vista.js` la navegación desde cualquier documento a la cadena completa solicitud, cotización, OC, recepción, factura y devolución.
-- [ ] T104 [FR-029] Impedir la eliminación de documentos con historial y permitir solo su anulación con motivo en `src/compras/almacenamiento.js`, `src/compras/ordenes-compra.js`, `src/compras/facturas.js` y `src/compras/devoluciones.js`.
-- [ ] T105 [FR-030] Registrar cada cambio de datos bancarios con el valor enmascarado, nunca el completo, en `src/compras/proveedores.js` y `src/compras/trazabilidad.js`.
-- [ ] T106 [SC-012] Agregar pruebas de auditoría de punta a punta en `tests/integration/compras/trazabilidad.test.js` que verifiquen quién, cuándo y qué acción en cada cambio de estado, la navegación de la cadena completa y la conservación de documentos anulados.
+- [x] T102 [FR-027] Implementar en `src/compras/trazabilidad.js` el registro de quién, cuándo y qué acción para cada cambio de estado de solicitud, cotización, OC, recepción, factura y devolución, integrándolo en `src/compras/solicitudes.js`, `src/compras/cotizaciones.js`, `src/compras/ordenes-compra.js`, `src/compras/recepciones.js`, `src/compras/facturas.js` y `src/compras/devoluciones.js`.
+- [x] T103 [FR-028] Implementar en `src/compras/trazabilidad.js` y `src/compras/vista.js` la navegación desde cualquier documento a la cadena completa solicitud, cotización, OC, recepción, factura y devolución.
+- [x] T104 [FR-029] Impedir la eliminación de documentos con historial y permitir solo su anulación con motivo en `src/compras/almacenamiento.js`, `src/compras/ordenes-compra.js`, `src/compras/facturas.js` y `src/compras/devoluciones.js`.
+- [x] T105 [FR-030] Registrar cada cambio de datos bancarios con el valor enmascarado, nunca el completo, en `src/compras/proveedores.js` y `src/compras/trazabilidad.js`.
+- [x] T106 [SC-012] Agregar pruebas de auditoría de punta a punta en `tests/integration/compras/trazabilidad.test.js` que verifiquen quién, cuándo y qué acción en cada cambio de estado, la navegación de la cadena completa y la conservación de documentos anulados.
 
 **Punto de control**: trazabilidad completa y documentos no eliminables.
 

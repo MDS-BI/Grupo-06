@@ -9,6 +9,7 @@ import {
   validarCondicionPago,
   hoyISO
 } from './reglas.js';
+import { registrarCambioBancario } from './trazabilidad.js';
 
 const ESTADOS_PROVEEDOR = Object.freeze(['potencial', 'aprobado', 'bloqueado']);
 const TRANSICIONES_PROVEEDOR = Object.freeze({
@@ -158,6 +159,7 @@ export function crearProveedor(datos, usuario) {
   const lista = loadEntities();
   lista.push(proveedor);
   saveEntities(lista);
+  if (proveedor.banco || proveedor.numero_cuenta) registrarCambioBancario(proveedor, usuario);
   return proveedor;
 }
 
@@ -178,6 +180,7 @@ export function actualizarProveedor(id, cambios, usuario) {
   }
   lista[idx] = { ...previo, ...payloadDesdeDatos(fusionado, previo) };
   saveEntities(lista);
+  if (bancoCambio) registrarCambioBancario(lista[idx], usuario);
   return lista[idx];
 }
 
@@ -228,13 +231,22 @@ export function vistaProveedor(proveedor, rol) {
   const natural = String(proveedor.tipo_persona || '')
     .toLowerCase()
     .startsWith('natural');
-  return {
+  const puedeVerBanco = rol === 'admin_ti' || rol === 'jefe_compras';
+  const puedeVerRut = rol === 'admin_ti' || rol === 'jefe_compras';
+  const rutVisible = natural ? enmascararRut(proveedor.taxId, rol) : formatearRut(proveedor.taxId);
+  const cuentaVisible = proveedor.numero_cuenta
+    ? enmascararCuenta(proveedor.numero_cuenta, rol)
+    : 'No registrado';
+  const vista = {
     ...proveedor,
-    rut_visible: natural ? enmascararRut(proveedor.taxId, rol) : formatearRut(proveedor.taxId),
-    cuenta_visible: enmascararCuenta(proveedor.numero_cuenta, rol),
-    datos_bancarios_visibles: rol === 'admin_ti',
+    rut_visible: rutVisible,
+    cuenta_visible: cuentaVisible,
+    datos_bancarios_visibles: puedeVerBanco,
     puede_editar_banco: rol === 'admin_ti'
   };
+  if (natural && !puedeVerRut) vista.taxId = rutVisible;
+  if (!puedeVerBanco) vista.numero_cuenta = cuentaVisible;
+  return vista;
 }
 
 export function cuentaCambiadaRecientemente(proveedor, hoy = hoyISO()) {

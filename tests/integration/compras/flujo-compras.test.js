@@ -6,11 +6,17 @@ import {
   obtenerSolicitud
 } from '../../../src/compras/solicitudes.js';
 import {
+  descartarCotizacion,
   obtenerCotizacion,
   registrarCotizacion,
   seleccionarCotizacion
 } from '../../../src/compras/cotizaciones.js';
-import { emitirOrdenCompra, obtenerOrden } from '../../../src/compras/ordenes-compra.js';
+import {
+  emitirOrdenCompra,
+  lineasPendientes,
+  obtenerOrden,
+  valorRecibidoNeto
+} from '../../../src/compras/ordenes-compra.js';
 import { registrarRecepcion } from '../../../src/compras/recepciones.js';
 import { aprobarPago, conciliarFactura, registrarFactura } from '../../../src/compras/facturas.js';
 import {
@@ -269,5 +275,98 @@ describe('flujo completo de compras', () => {
       justificacion_proveedor_unico: 'Único proveedor certificado'
     });
     expect(seleccionada.estado).toBe('seleccionada');
+  });
+
+  it('valida transiciones, autoaprobación, motivo de rechazo y solicitud vacía', () => {
+    const solicitud = crearSolicitudDePrueba();
+    expect(() => aprobarSolicitud(solicitud.id, USUARIOS.jefe)).toThrow(/enviadas/);
+    enviarSolicitud(solicitud.id, USUARIOS.solicitante);
+    expect(() => enviarSolicitud(solicitud.id, USUARIOS.solicitante)).toThrow(/borrador/);
+    expect(() =>
+      aprobarSolicitud(solicitud.id, USUARIOS.jefe, { aprobar: false, motivo: '' })
+    ).toThrow(/motivo/);
+
+    const propia = crearSolicitud(
+      {
+        justificacion: 'Solicitud creada por el jefe',
+        fecha_requerida: '2026-12-01',
+        centro_costo_id: 'cc-001',
+        lineas: [{ producto_id: 'prod-001', cantidad: 1, precio_estimado: 100000 }]
+      },
+      USUARIOS.jefe
+    );
+    enviarSolicitud(propia.id, USUARIOS.jefe);
+    expect(() => aprobarSolicitud(propia.id, USUARIOS.jefe)).toThrow(/propia solicitud/);
+
+    expect(() =>
+      crearSolicitud(
+        {
+          justificacion: 'Sin líneas',
+          fecha_requerida: '2026-12-01',
+          centro_costo_id: 'cc-001',
+          lineas: []
+        },
+        USUARIOS.solicitante
+      )
+    ).toThrow(/al menos un producto/);
+  });
+
+  it('controla duplicados, vencimiento, descarte y selección única', () => {
+    const solicitud = crearSolicitudDePrueba();
+    enviarSolicitud(solicitud.id, USUARIOS.solicitante);
+    aprobarSolicitud(solicitud.id, USUARIOS.jefe);
+
+    const base = {
+      solicitud_id: solicitud.id,
+      proveedor_id: 'prov-001',
+      fecha_validez: '2026-12-31',
+      lineas: [{ producto_id: 'prod-001', cantidad: 2, precio_unitario: 90000 }]
+    };
+    const primera = registrarCotizacion(base, USUARIOS.comprador);
+    expect(() => registrarCotizacion(base, USUARIOS.comprador)).toThrow(/Ya existe una cotización/);
+
+    const vencida = registrarCotizacion(
+      { ...base, proveedor_id: 'prov-002', fecha_validez: '2026-11-01' },
+      USUARIOS.comprador
+    );
+    expect(() => seleccionarCotizacion(vencida.id, USUARIOS.comprador)).toThrow(
+      /recibida|vencida/
+    );
+    expect(obtenerCotizacion(vencida.id).estado).toBe('vencida');
+
+    const segunda = registrarCotizacion(
+      { ...base, proveedor_id: 'prov-004' },
+      USUARIOS.comprador
+    );
+    expect(() => descartarCotizacion(segunda.id, '', USUARIOS.comprador)).toThrow(/motivo/);
+
+    const seleccionada = seleccionarCotizacion(primera.id, USUARIOS.comprador);
+    expect(seleccionada.estado).toBe('seleccionada');
+    expect(obtenerCotizacion(segunda.id).estado).toBe('descartada');
+    expect(obtenerCotizacion(segunda.id).motivo_descarte).toMatch(/Otra cotización/);
+    expect(() => seleccionarCotizacion(segunda.id, USUARIOS.comprador)).toThrow(/recibida/);
+  });
+
+  it('excluye del valor a facturar las unidades dañadas', () => {
+    const { orden } = flujoHastaRecepcion();
+    registrarRecepcion(
+      {
+        orden_id: orden.id,
+        fecha_recepcion: '2026-11-05',
+        lineas: [
+          {
+            orden_linea_id: orden.lineas[0].linea_id,
+            cantidad_recibida: 2,
+            cantidad_aceptada: 1,
+            cantidad_rechazada: 1,
+            motivo_rechazo: 'danado'
+          }
+        ]
+      },
+      USUARIOS.bodega
+    );
+
+    expect(valorRecibidoNeto(obtenerOrden(orden.id))).toBe(90000);
+    expect(lineasPendientes(obtenerOrden(orden.id))[0].cantidad_pendiente).toBe(1);
   });
 });

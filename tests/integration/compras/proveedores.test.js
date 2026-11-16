@@ -9,6 +9,7 @@ import {
   validarProveedor,
   vistaProveedor
 } from '../../../src/compras/proveedores.js';
+import { listarEventos } from '../../../src/compras/trazabilidad.js';
 import { cargarDatos, USUARIOS } from './helpers.js';
 
 const DATOS_BASE = Object.freeze({
@@ -101,11 +102,47 @@ describe('proveedores', () => {
     expect(vistaComprador.rut_visible).toBe('98.***.***-3');
     expect(vistaComprador.datos_bancarios_visibles).toBe(false);
     expect(vistaComprador.cuenta_visible).toBe('****4333');
+    expect(vistaComprador.taxId).toBe('98.***.***-3');
+    expect(vistaComprador.numero_cuenta).toBe('****4333');
+
+    const vistaJefe = vistaProveedor(natural, 'jefe_compras');
+    expect(vistaJefe.rut_visible).toBe('9.876.543-3');
+    expect(vistaJefe.cuenta_visible).toBe('555444333');
+    expect(vistaJefe.datos_bancarios_visibles).toBe(true);
+    expect(vistaJefe.puede_editar_banco).toBe(false);
 
     const vistaAdmin = vistaProveedor(natural, 'admin_ti');
     expect(vistaAdmin.rut_visible).toBe('9.876.543-3');
     expect(vistaAdmin.datos_bancarios_visibles).toBe(true);
     expect(vistaAdmin.cuenta_visible).toBe('555444333');
+    expect(vistaAdmin.puede_editar_banco).toBe(true);
+  });
+
+  it('muestra "No registrado" cuando el proveedor no tiene cuenta bancaria', () => {
+    const proveedor = crearProveedor(DATOS_BASE, USUARIOS.comprador);
+    const vista = vistaProveedor(proveedor, 'comprador');
+    expect(vista.cuenta_visible).toBe('No registrado');
+    expect(vista.datos_bancarios_visibles).toBe(false);
+  });
+
+  it('registra los cambios bancarios con el valor enmascarado', () => {
+    const proveedor = crearProveedor(
+      { ...DATOS_BASE, banco: 'Banco X', numero_cuenta: '123456' },
+      USUARIOS.admin
+    );
+    actualizarProveedor(proveedor.id, { numero_cuenta: '999999' }, USUARIOS.admin);
+
+    const eventos = listarEventos({
+      entidad: 'proveedor',
+      entidad_id: proveedor.entity_id,
+      accion: 'cambio_datos_bancarios'
+    });
+    expect(eventos).toHaveLength(2);
+    expect(eventos[0].usuario_id).toBe('u-admin-1');
+    expect(eventos[0].detalle).toBe('Cuenta ****3456');
+    expect(eventos[1].detalle).toBe('Cuenta ****9999');
+    expect(eventos.every((e) => !e.detalle.includes('123456'))).toBe(true);
+    expect(eventos.every((e) => !e.detalle.includes('999999'))).toBe(true);
   });
 
   it('no elimina proveedores con órdenes de compra', () => {

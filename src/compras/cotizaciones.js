@@ -9,7 +9,8 @@ import {
   redondearPromedio
 } from './reglas.js';
 import { obtenerSolicitud, moverSolicitud } from './solicitudes.js';
-import { obtenerProveedor } from './proveedores.js';
+import { obtenerProveedor, vistaProveedor } from './proveedores.js';
+import { registrarEvento } from './trazabilidad.js';
 
 export function listarCotizaciones({ solicitud_id, proveedor_id } = {}) {
   return leer('cotizaciones')
@@ -115,24 +116,39 @@ export function registrarCotizacion(datos, usuario = getUsuarioActivo()) {
   const lista = leer('cotizaciones');
   lista.push(cotizacion);
   guardar('cotizaciones', lista);
+  registrarEvento('cotizacion', cotizacion.id, 'registro', {
+    usuario,
+    nuevo: cotizacion.estado,
+    detalle: `Proveedor ${cotizacion.proveedor_id}`
+  });
   if (solicitud.estado === 'aprobada') {
     moverSolicitud(solicitud.id, 'en_cotizacion', { fecha_inicio_cotizacion: ahora }, usuario);
   }
   return cotizacion;
 }
 
-export function marcarVencidas(hoy = hoyISO()) {
+export function marcarVencidas(hoy = hoyISO(), usuario = getUsuarioActivo()) {
   const lista = leer('cotizaciones');
-  let cambios = 0;
+  const vencidas = [];
   for (const c of lista) {
     if (c.estado === 'recibida' && c.fecha_validez && c.fecha_validez < hoy) {
       c.estado = 'vencida';
       c.updatedAt = new Date().toISOString();
-      cambios += 1;
+      vencidas.push(c);
     }
   }
-  if (cambios > 0) guardar('cotizaciones', lista);
-  return cambios;
+  if (vencidas.length > 0) {
+    guardar('cotizaciones', lista);
+    for (const c of vencidas) {
+      registrarEvento('cotizacion', c.id, 'vencimiento', {
+        usuario,
+        anterior: 'recibida',
+        nuevo: 'vencida',
+        detalle: `Validez ${c.fecha_validez}`
+      });
+    }
+  }
+  return vencidas.length;
 }
 
 export function descartarCotizacion(id, motivo, usuario = getUsuarioActivo()) {
@@ -152,6 +168,12 @@ export function descartarCotizacion(id, motivo, usuario = getUsuarioActivo()) {
     updatedAt: new Date().toISOString()
   };
   guardar('cotizaciones', lista);
+  registrarEvento('cotizacion', id, 'descarte', {
+    usuario,
+    anterior: cotizacion.estado,
+    nuevo: 'descartada',
+    detalle: lista[idx].motivo_descarte
+  });
   return lista[idx];
 }
 
@@ -188,12 +210,14 @@ export function seleccionarCotizacion(
     );
   }
   const ahora = new Date().toISOString();
+  const descartadas = [];
   for (const c of lista) {
     if (c.solicitud_id !== solicitud.id || c.id === id) continue;
     if (c.estado === 'recibida') {
       c.estado = 'descartada';
       c.motivo_descarte = 'Otra cotización fue seleccionada';
       c.updatedAt = ahora;
+      descartadas.push(c);
     }
   }
   lista[idx] = {
@@ -206,6 +230,20 @@ export function seleccionarCotizacion(
     updatedAt: ahora
   };
   guardar('cotizaciones', lista);
+  registrarEvento('cotizacion', id, 'seleccion', {
+    usuario,
+    anterior: 'recibida',
+    nuevo: 'seleccionada',
+    detalle: lista[idx].motivo_seleccion
+  });
+  for (const c of descartadas) {
+    registrarEvento('cotizacion', c.id, 'descarte_automatico', {
+      usuario,
+      anterior: 'recibida',
+      nuevo: 'descartada',
+      detalle: c.motivo_descarte
+    });
+  }
   moverSolicitud(
     solicitud.id,
     'en_cotizacion',
@@ -218,13 +256,13 @@ export function seleccionarCotizacion(
   return lista[idx];
 }
 
-export function compararCotizaciones(solicitudId) {
-  marcarVencidas();
+export function compararCotizaciones(solicitudId, usuario = getUsuarioActivo()) {
+  marcarVencidas(hoyISO(), usuario);
   return listarCotizaciones({ solicitud_id: solicitudId }).map((c) => {
     const proveedor = obtenerProveedor(c.proveedor_id);
     return {
       ...c,
-      proveedor,
+      proveedor: proveedor ? vistaProveedor(proveedor, usuario.rol) : proveedor,
       evaluacion_promedio: promedioProveedor(c.proveedor_id)
     };
   });

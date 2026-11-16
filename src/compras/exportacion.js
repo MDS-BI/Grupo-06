@@ -1,6 +1,6 @@
 import { getUsuarioActivo } from './almacenamiento.js';
 import { listarSolicitudes } from './solicitudes.js';
-import { listarProveedores } from './proveedores.js';
+import { listarProveedores, vistaProveedor } from './proveedores.js';
 import { listarOrdenes } from './ordenes-compra.js';
 import { listarRecepciones } from './recepciones.js';
 import { listarFacturas } from './facturas.js';
@@ -61,7 +61,7 @@ export function exportarListado(nombre, filas, columnas, { descargar = true } = 
 const COLUMNAS_PROVEEDORES = [
   { key: 'code', header: 'Código' },
   { key: 'name', header: 'Razón social' },
-  { key: 'taxId', header: 'RUT' },
+  { key: 'rut_visible', header: 'RUT' },
   { key: 'tipo_persona', header: 'Tipo de persona' },
   { key: 'giro', header: 'Giro' },
   { key: 'region', header: 'Región' },
@@ -109,17 +109,21 @@ const COLUMNAS_FACTURAS = [
   { key: 'total', header: 'Total' }
 ];
 
-export function exportarProveedores({ filas, filtro = '', descargar = true } = {}) {
+export function exportarProveedores(
+  { filas, filtro = '', descargar = true, usuario = getUsuarioActivo() } = {}
+) {
   const q = String(filtro ?? '').toLowerCase();
-  const lista = (filas || listarProveedores()).filter(
-    (p) =>
-      !q ||
-      [p.name, p.code, p.taxId].some((v) =>
-        String(v ?? '')
-          .toLowerCase()
-          .includes(q)
-      )
-  );
+  const lista = (filas || listarProveedores())
+    .filter(
+      (p) =>
+        !q ||
+        [p.name, p.code, p.taxId].some((v) =>
+          String(v ?? '')
+            .toLowerCase()
+            .includes(q)
+        )
+    )
+    .map((p) => vistaProveedor(p, usuario.rol));
   return exportarListado('proveedores', lista, COLUMNAS_PROVEEDORES, { descargar });
 }
 

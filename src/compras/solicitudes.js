@@ -7,6 +7,7 @@ import {
   hoyISO
 } from './reglas.js';
 import { precioReferenciaVigente } from './catalogo.js';
+import { registrarEvento } from './trazabilidad.js';
 
 export function productosActivos() {
   return leer('productos').filter((p) => p.activo !== false);
@@ -127,6 +128,11 @@ export function crearSolicitud(datos, usuario = getUsuarioActivo()) {
   const lista = leer('solicitudes');
   lista.push(solicitud);
   guardar('solicitudes', lista);
+  registrarEvento('solicitud', solicitud.id, 'creacion', {
+    usuario,
+    nuevo: solicitud.estado,
+    detalle: solicitud.justificacion
+  });
   return solicitud;
 }
 
@@ -183,6 +189,12 @@ function cambiarEstado(id, nuevoEstado, extra = {}, usuario = getUsuarioActivo()
     updatedAt: new Date().toISOString()
   };
   guardar('solicitudes', lista);
+  registrarEvento('solicitud', id, 'cambio_estado', {
+    usuario,
+    anterior: solicitud.estado,
+    nuevo: nuevoEstado,
+    detalle: extra.motivo_rechazo || extra.motivo_anulacion || extra.justificacion_proveedor_unico
+  });
   return lista[idx];
 }
 
@@ -241,6 +253,7 @@ export function anularSolicitud(id, usuario = getUsuarioActivo(), motivo = '') {
     usuario.rol === 'jefe_compras' ||
     (usuario.rol === 'solicitante' && solicitud.solicitante_id === usuario.id);
   if (!autorizado) throw new Error('No puedes anular esta solicitud');
+  if (!String(motivo ?? '').trim()) throw new Error('La anulación exige un motivo');
   return cambiarEstado(
     id,
     'anulada',

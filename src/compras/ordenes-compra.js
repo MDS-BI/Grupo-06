@@ -12,6 +12,7 @@ import {
 import { obtenerSolicitud, moverSolicitud } from './solicitudes.js';
 import { obtenerCotizacion } from './cotizaciones.js';
 import { obtenerProveedor, proveedorAprobado } from './proveedores.js';
+import { registrarEvento } from './trazabilidad.js';
 
 export function listarOrdenes({ estado, proveedor_id, solicitud_id } = {}) {
   return leer('ordenes')
@@ -176,6 +177,11 @@ export function emitirOrdenCompra(datos, usuario = getUsuarioActivo()) {
   const lista = leer('ordenes');
   lista.push(orden);
   guardar('ordenes', lista);
+  registrarEvento('orden', orden.id, 'emision', {
+    usuario,
+    nuevo: orden.estado,
+    detalle: `Proveedor ${orden.proveedor_id}`
+  });
   moverSolicitud(
     solicitud.id,
     'adjudicada',
@@ -196,6 +202,7 @@ export function anularOrdenCompra(id, usuario = getUsuarioActivo(), motivo = '')
     throw new Error('No se puede anular una OC con recepciones registradas');
   if (!puedeTransicionar('orden', orden.estado, 'anulada'))
     throw new Error(`No se puede anular una OC en estado "${orden.estado}"`);
+  if (!String(motivo ?? '').trim()) throw new Error('La anulación exige un motivo');
   const hoy = hoyISO();
   lista[idx] = {
     ...orden,
@@ -206,6 +213,12 @@ export function anularOrdenCompra(id, usuario = getUsuarioActivo(), motivo = '')
     updatedAt: new Date().toISOString()
   };
   guardar('ordenes', lista);
+  registrarEvento('orden', id, 'anulacion', {
+    usuario,
+    anterior: orden.estado,
+    nuevo: 'anulada',
+    detalle: lista[idx].motivo_anulacion
+  });
   if (orden.solicitud_id) {
     const solicitud = obtenerSolicitud(orden.solicitud_id);
     if (solicitud) {

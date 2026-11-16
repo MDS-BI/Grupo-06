@@ -9,6 +9,7 @@ import {
 import { obtenerOrden, valorRecibidoNeto } from './ordenes-compra.js';
 import { obtenerProveedor, cuentaCambiadaRecientemente } from './proveedores.js';
 import { cerrarSiSaldada } from './devoluciones.js';
+import { registrarEvento } from './trazabilidad.js';
 
 const TIPOS = ['factura', 'nota_credito'];
 
@@ -106,7 +107,12 @@ export function registrarFactura(datos, usuario = getUsuarioActivo()) {
   const lista = leer('facturas');
   lista.push(factura);
   guardar('facturas', lista);
-  if (tipo === 'nota_credito') cerrarSiSaldada(orden.id);
+  registrarEvento('factura', factura.id, 'registro', {
+    usuario,
+    nuevo: factura.estado,
+    detalle: `${tipo} folio ${folio}`
+  });
+  if (tipo === 'nota_credito') cerrarSiSaldada(orden.id, usuario);
   return factura;
 }
 
@@ -162,6 +168,12 @@ export function conciliarFactura(id, usuario = getUsuarioActivo()) {
     updatedAt: new Date().toISOString()
   };
   guardar('facturas', lista);
+  registrarEvento('factura', id, 'conciliacion', {
+    usuario,
+    anterior: factura.estado,
+    nuevo: resultado.estado,
+    detalle: `Diferencia ${resultado.diferencia}`
+  });
   return lista[idx];
 }
 
@@ -191,6 +203,12 @@ export function aprobarPago(id, usuario = getUsuarioActivo()) {
     updatedAt: new Date().toISOString()
   };
   guardar('facturas', lista);
+  registrarEvento('factura', id, 'aprobacion_pago', {
+    usuario,
+    anterior: factura.estado,
+    nuevo: 'aprobada_pago',
+    detalle: alerta ? 'Alerta de posible fraude por cambio de cuenta' : ''
+  });
   return lista[idx];
 }
 
@@ -200,6 +218,7 @@ export function rechazarFactura(id, motivo, usuario = getUsuarioActivo()) {
   const lista = leer('facturas');
   const idx = lista.findIndex((f) => f.id === id);
   if (idx === -1) throw new Error('Factura no encontrada');
+  const anterior = lista[idx].estado;
   lista[idx] = {
     ...lista[idx],
     estado: 'rechazada',
@@ -207,6 +226,12 @@ export function rechazarFactura(id, motivo, usuario = getUsuarioActivo()) {
     updatedAt: new Date().toISOString()
   };
   guardar('facturas', lista);
+  registrarEvento('factura', id, 'rechazo', {
+    usuario,
+    anterior,
+    nuevo: 'rechazada',
+    detalle: lista[idx].motivo_rechazo
+  });
   return lista[idx];
 }
 

@@ -1,6 +1,7 @@
 import { leer, guardar, generarId, exigirPermiso, getUsuarioActivo } from './almacenamiento.js';
 import { generarNumero, siguienteSecuencia, hoyISO, calcularLinea } from './reglas.js';
 import { obtenerOrden, valorRecibidoNeto, lineasPendientes } from './ordenes-compra.js';
+import { registrarEvento } from './trazabilidad.js';
 
 export function listarDevoluciones({ orden_id, estado } = {}) {
   return leer('devoluciones')
@@ -54,7 +55,7 @@ function registrarRecepcionDe(ordenId) {
     .map((r) => r.registrada_por);
 }
 
-function cerrarSiSaldada(ordenId) {
+function cerrarSiSaldada(ordenId, usuario = getUsuarioActivo()) {
   const saldo = saldoPendienteNeto(ordenId);
   const lista = leer('ordenes');
   const idx = lista.findIndex((o) => o.id === ordenId);
@@ -64,6 +65,7 @@ function cerrarSiSaldada(ordenId) {
     lista[idx].estado !== 'cerrada' &&
     lista[idx].estado !== 'anulada'
   ) {
+    const anterior = lista[idx].estado;
     lista[idx] = {
       ...lista[idx],
       estado: 'cerrada',
@@ -71,6 +73,12 @@ function cerrarSiSaldada(ordenId) {
       updatedAt: new Date().toISOString()
     };
     guardar('ordenes', lista);
+    registrarEvento('orden', ordenId, 'cierre', {
+      usuario,
+      anterior,
+      nuevo: 'cerrada',
+      detalle: 'Saldo pendiente en cero'
+    });
   }
   if (saldo <= 0) {
     const facturas = leer('facturas');
@@ -177,7 +185,12 @@ export function registrarDevolucion(datos, usuario = getUsuarioActivo()) {
   const lista = leer('devoluciones');
   lista.push(devolucion);
   guardar('devoluciones', lista);
-  if (estado === 'aprobada') cerrarSiSaldada(orden.id);
+  registrarEvento('devolucion', devolucion.id, 'registro', {
+    usuario,
+    nuevo: devolucion.estado,
+    detalle: `OC ${orden.numero}`
+  });
+  if (estado === 'aprobada') cerrarSiSaldada(orden.id, usuario);
   return devolucion;
 }
 
@@ -204,7 +217,12 @@ export function aprobarDevolucion(id, usuario = getUsuarioActivo()) {
     updatedAt: new Date().toISOString()
   };
   guardar('devoluciones', lista);
-  cerrarSiSaldada(devolucion.orden_id);
+  registrarEvento('devolucion', id, 'aprobacion', {
+    usuario,
+    anterior: devolucion.estado,
+    nuevo: 'aprobada'
+  });
+  cerrarSiSaldada(devolucion.orden_id, usuario);
   return lista[idx];
 }
 
@@ -216,6 +234,7 @@ export function rechazarDevolucion(id, motivo, usuario = getUsuarioActivo()) {
   if (idx === -1) throw new Error('Devolución no encontrada');
   if (lista[idx].estado !== 'pendiente_aprobacion')
     throw new Error('La devolución no está pendiente de aprobación');
+  const anterior = lista[idx].estado;
   lista[idx] = {
     ...lista[idx],
     estado: 'rechazada',
@@ -223,6 +242,12 @@ export function rechazarDevolucion(id, motivo, usuario = getUsuarioActivo()) {
     updatedAt: new Date().toISOString()
   };
   guardar('devoluciones', lista);
+  registrarEvento('devolucion', id, 'rechazo', {
+    usuario,
+    anterior,
+    nuevo: 'rechazada',
+    detalle: lista[idx].motivo_rechazo
+  });
   return lista[idx];
 }
 

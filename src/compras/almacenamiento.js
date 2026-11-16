@@ -16,8 +16,18 @@ export const COLECCIONES = Object.freeze([
   'facturas',
   'devoluciones',
   'catalogo',
-  'evaluaciones'
+  'evaluaciones',
+  'trazabilidad'
 ]);
+
+const ENTIDAD_POR_COLECCION = Object.freeze({
+  solicitudes: 'solicitud',
+  cotizaciones: 'cotizacion',
+  ordenes: 'orden',
+  recepciones: 'recepcion',
+  facturas: 'factura',
+  devoluciones: 'devolucion'
+});
 
 function storage() {
   try {
@@ -93,7 +103,20 @@ export function actualizar(nombre, id, cambios) {
   return lista[idx];
 }
 
+export function puedeEliminar(nombre, id) {
+  const entidad = ENTIDAD_POR_COLECCION[nombre];
+  if (!entidad) return true;
+  return !leer('trazabilidad').some((e) => e.entidad === entidad && e.entidad_id === id);
+}
+
 export function eliminar(nombre, id) {
+  if (!puedeEliminar(nombre, id)) {
+    const error = new Error(
+      'No se puede eliminar un documento con historial; debes anularlo con un motivo registrado'
+    );
+    error.codigo = 'DOCUMENTO_CON_HISTORIAL';
+    throw error;
+  }
   const lista = leer(nombre);
   const nueva = lista.filter((item) => item.id !== id && item.entity_id !== id);
   guardar(nombre, nueva);

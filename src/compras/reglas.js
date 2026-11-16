@@ -121,7 +121,7 @@ export function formatearRut(rut) {
 }
 
 export function enmascararRut(rut, rol) {
-  if (rol === 'admin_ti') return formatearRut(rut);
+  if (rol === 'admin_ti' || rol === 'jefe_compras') return formatearRut(rut);
   const limpio = normalizarRut(rut);
   if (!validarRut(limpio)) return '***';
   const partes = limpio.includes('-') ? limpio.split('-') : [limpio.slice(0, -1), limpio.slice(-1)];
@@ -130,9 +130,12 @@ export function enmascararRut(rut, rol) {
 }
 
 export function enmascararCuenta(cuenta, rol) {
-  if (rol === 'admin_ti') return String(cuenta ?? '');
   const limpio = String(cuenta ?? '').replace(/\s/g, '');
+  if (rol === 'admin_ti' || rol === 'jefe_compras') return limpio;
   if (!limpio) return '';
+  if (limpio.length <= 4) {
+    return `${'*'.repeat(Math.max(0, limpio.length - 2))}${limpio.slice(-2)}`;
+  }
   return `****${limpio.slice(-4)}`;
 }
 

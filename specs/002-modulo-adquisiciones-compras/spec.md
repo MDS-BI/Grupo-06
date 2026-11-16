@@ -271,7 +271,7 @@ Como Jefe de Compras, necesito registrar devoluciones y notas de crédito contra
 
 ## Requisitos *(obligatorio)*
 
-### Requisitos Funcionales
+C:\Users\Franco\Desktop\Universidad\MDS\GITHUB\Grupo-06C:\Users\Franco\Desktop\Universidad\MDS\GITHUB\Grupo-06### Requisitos Funcionales
 
 - **FR-001**: El sistema DEBE permitir crear, editar, buscar y cambiar de estado proveedores, validando RUT (formato y dígito verificador) y su unicidad.
 - **FR-002**: El sistema DEBE impedir una condición de pago mayor a 30 días si el proveedor no tiene registrado un acuerdo de plazo mayor (Ley 21.131).

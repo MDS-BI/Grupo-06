@@ -23,7 +23,7 @@ El trabajo se divide en iteraciones semanales; cada una termina con una versión
 **Tipo de Proyecto**: Aplicación web de una página, solo frontend  
 **Objetivos de Rendimiento**: Listas y búsquedas instantáneas con hasta 500 registros por colección (mismo objetivo del template)  
 **Restricciones**: Sin backend, sin autenticación real, sin conexión con el SII; no modificar el comportamiento del módulo base salvo donde se justifica en "Seguimiento de Complejidad"  
-**Escala/Alcance**: 16 entidades lógicas (ver `data-model.md`), 10 historias de usuario, 5 roles simulados
+**Escala/Alcance**: 18 entidades lógicas (ver `data-model.md`), 11 historias de usuario, 5 roles simulados
 
 ## Verificación de la Constitución
 
@@ -125,6 +125,10 @@ src/
     ├── recepciones.js
     ├── facturas.js
     ├── devoluciones.js     (devoluciones y notas de crédito)
+    ├── proveedores.js      (alta/edición, visibilidad de datos sensibles, cambio bancario auditado)
+    ├── vista.js            (pantallas de compras y cadena documental)
+    ├── exportacion.js      (CSV con BOM y permisos por rol)
+    ├── trazabilidad.js     (historial de eventos y cadena documental)
     ├── catalogo.js
     ├── evaluaciones.js
     ├── panel.js            (indicadores y alertas)
