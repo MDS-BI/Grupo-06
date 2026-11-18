@@ -58,6 +58,10 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 - Q: ¿Qué formato CSV deben usar las exportaciones para abrirse correctamente en Excel en español? (FR-024) → A: La codificación y el separador definidos en `plan.md` (UTF-8 con BOM y separador `;`).
 - Q: ¿Qué roles pueden usar la exportación CSV? (FR-024) → A: Heredan el permiso de la vista; cada rol exporta solo los listados que ya puede ver.
 
+### Session 2026-11-17
+
+- Q: ¿Deben escribirse todas las historias de usuario de la funcionalidad 002 en un mismo formato conservando toda la información existente en `spec.md`? → A: Sí; normalizar US1-US11 al formato canónico de `**Como/necesito/para**`, `**Por qué esta prioridad**`, `**Prueba Independiente**` y `**Escenarios de Aceptación**` con pasos **Dado/Cuando/Entonces**, sin eliminar contenido.
+
 ## Escenarios de Usuario y Pruebas *(obligatorio)*
 
 *Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo utiliza identificadores únicos (`id_producto`, `id_proveedor`, `id_usuario`) que conectan con los módulos de Inventario, Contabilidad y RR.HH. Los roles de acceso definen qué información es visible (ej. enmascaramiento de datos bancarios para roles no administrativos).*
@@ -128,16 +132,16 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 ---
 
 ### Historia de Usuario 5 - Panel de pendientes y alertas por rol (Prioridad: P1)
-Como usuario del módulo (solicitante, comprador, jefe de compras o bodega), necesito ver al ingresar solo lo que me corresponde atender y lo que está por vencer, para priorizar mi trabajo diario y no dejar pasar plazos legales ni solicitudes detenidas.
-Por qué esta prioridad: Es la pantalla de entrada del módulo y convierte el registro pasivo de datos en trabajo accionable. Sin ella, cada rol debe revisar listas completas para descubrir qué le toca; con ella se cumple el requisito de alertas de vencimiento (FR-017) y el criterio de éxito SC-005.
-Prueba Independiente: Un jefe de compras con dos solicitudes enviada y una factura que vence en 3 días abre el panel, ve esos tres pendientes con acceso directo y, al aprobar una solicitud, el contador baja sin recargar la página.
-Escenarios de Aceptación:
-1. Dado un usuario con un rol activo, cuando abre el panel de inicio, entonces ve solo los pendientes que su rol puede atender (solicitudes por aprobar, OC sin recepción, recepciones por registrar o facturas por conciliar) con su contador y un acceso directo a cada registro.
-2. Dada una factura no aprobada que vence en 5 días o menos, cuando el usuario abre el panel, entonces aparece una alerta destacada con el proveedor, el folio y los días restantes.
-3. Dado un solicitante, cuando revisa el panel, entonces solo ve sus propias solicitudes y no los pendientes de otros usuarios ni datos de otras áreas (acceso restringido).
-4. Dadas órdenes de compra emitidas sin recepción registrada por más de 7 días, cuando el encargado de bodega o el comprador abre el panel, entonces el sistema las lista como pendientes de seguimiento.
-5. Dado un período seleccionado (mes actual), cuando el panel carga, entonces muestra indicadores de monto comprometido en OC, órdenes abiertas y facturas aprobadas para pago, calculados con los datos existentes.
-6. Dado que no hay pendientes para el rol, cuando el usuario abre el panel, entonces ve un estado vacío claro que lo invita a crear una solicitud u orden según corresponda.
+**Como** usuario del módulo (solicitante, comprador, jefe de compras o bodega), **necesito** ver al ingresar solo lo que me corresponde atender y lo que está por vencer, **para** priorizar mi trabajo diario y no dejar pasar plazos legales ni solicitudes detenidas.
+**Por qué esta prioridad**: Es la pantalla de entrada del módulo y convierte el registro pasivo de datos en trabajo accionable. Sin ella, cada rol debe revisar listas completas para descubrir qué le toca; con ella se cumple el requisito de alertas de vencimiento (FR-017) y el criterio de éxito SC-005.
+**Prueba Independiente**: Un jefe de compras con dos solicitudes enviada y una factura que vence en 3 días abre el panel, ve esos tres pendientes con acceso directo y, al aprobar una solicitud, el contador baja sin recargar la página.
+**Escenarios de Aceptación**:
+1. **Dado** un usuario con un rol activo, **cuando** abre el panel de inicio, **entonces** ve solo los pendientes que su rol puede atender (solicitudes por aprobar, OC sin recepción, recepciones por registrar o facturas por conciliar) con su contador y un acceso directo a cada registro.
+2. **Dada** una factura no aprobada que vence en 5 días o menos, **cuando** el usuario abre el panel, **entonces** aparece una alerta destacada con el proveedor, el folio y los días restantes.
+3. **Dado** un solicitante, **cuando** revisa el panel, **entonces** solo ve sus propias solicitudes y no los pendientes de otros usuarios ni datos de otras áreas (acceso restringido).
+4. **Dadas** órdenes de compra emitidas sin recepción registrada por más de 7 días, **cuando** el encargado de bodega o el comprador abre el panel, **entonces** el sistema las lista como pendientes de seguimiento.
+5. **Dado** un período seleccionado (mes actual), **cuando** el panel carga, **entonces** muestra indicadores de monto comprometido en OC, órdenes abiertas y facturas aprobadas para pago, calculados con los datos existentes.
+6. **Dado** que no hay pendientes para el rol, **cuando** el usuario abre el panel, **entonces** ve un estado vacío claro que lo invita a crear una solicitud u orden según corresponda.
 
 ---
 
@@ -223,7 +227,7 @@ Escenarios de Aceptación:
 ---
 
 ### Historia de Usuario 11 - Registrar devoluciones y notas de crédito (Prioridad: P2)
-Como Jefe de Compras, necesito registrar devoluciones y notas de crédito contra una Orden de Compra ya recibida y facturada, para descontar de lo facturado aquello que no cumple y no pagar de más al proveedor.
+**Como** Jefe de Compras, **necesito** registrar devoluciones y notas de crédito contra una Orden de Compra ya recibida y facturada, **para** descontar de lo facturado aquello que no cumple y no pagar de más al proveedor.
 
 **Por qué esta prioridad**: Cierra el hueco entre la recepción (US4) y la conciliación de facturas (US7). El caso límite de la nota de crédito no tiene flujo definido; sin esta historia, una devolución posterior a la recepción no se refleja en el saldo por pagar. Depende de que existan OC con recepciones y facturas registradas.
 
