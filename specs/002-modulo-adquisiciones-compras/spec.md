@@ -133,9 +133,13 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 
 ### Historia de Usuario 5 - Panel de pendientes y alertas por rol (Prioridad: P1)
 **Como** usuario del módulo (solicitante, comprador, jefe de compras o bodega), **necesito** ver al ingresar solo lo que me corresponde atender y lo que está por vencer, **para** priorizar mi trabajo diario y no dejar pasar plazos legales ni solicitudes detenidas.
+
 **Por qué esta prioridad**: Es la pantalla de entrada del módulo y convierte el registro pasivo de datos en trabajo accionable. Sin ella, cada rol debe revisar listas completas para descubrir qué le toca; con ella se cumple el requisito de alertas de vencimiento (FR-017) y el criterio de éxito SC-005.
+
 **Prueba Independiente**: Un jefe de compras con dos solicitudes enviada y una factura que vence en 3 días abre el panel, ve esos tres pendientes con acceso directo y, al aprobar una solicitud, el contador baja sin recargar la página.
+
 **Escenarios de Aceptación**:
+
 1. **Dado** un usuario con un rol activo, **cuando** abre el panel de inicio, **entonces** ve solo los pendientes que su rol puede atender (solicitudes por aprobar, OC sin recepción, recepciones por registrar o facturas por conciliar) con su contador y un acceso directo a cada registro.
 2. **Dada** una factura no aprobada que vence en 5 días o menos, **cuando** el usuario abre el panel, **entonces** aparece una alerta destacada con el proveedor, el folio y los días restantes.
 3. **Dado** un solicitante, **cuando** revisa el panel, **entonces** solo ve sus propias solicitudes y no los pendientes de otros usuarios ni datos de otras áreas (acceso restringido).
@@ -176,6 +180,8 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 3. **Dada** una factura `con_discrepancia`, **cuando** se intenta aprobarla para pago, **entonces** el sistema lo impide.
 4. **Dado** un folio de factura ya registrado para ese proveedor, **cuando** se intenta ingresar nuevamente, **entonces** el sistema evita la duplicidad.
 5. **Dado** un proveedor cuya cuenta bancaria cambió hace menos de 30 días, **cuando** se aprueba su factura, **entonces** el sistema emite una alerta de posible riesgo de fraude.
+
+---
 
 ### Historia de Usuario 8 - Catálogo de productos por proveedor (Prioridad: P2)
 **Como** Comprador, **necesito** mantener por cada proveedor el catálogo de productos que ofrece, con precio de referencia y plazo de entrega, **para** cotizar más rápido y usar precios actualizados sin pedirlos por correo cada vez.
@@ -243,6 +249,8 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 7. **Dada** una OC con unidades aceptadas y facturadas, **cuando** el daño se detecta después de la aceptación, **entonces** el jefe de compras registra una devolución con motivo `defectuoso` que descuenta la cantidad del saldo recibido y del monto facturado.
 8. **Dada** una devolución con motivo `defectuoso` registrada, **cuando** se consulta el saldo pendiente, **entonces** el saldo recibido y facturado refleja el descuento y no se factura ni paga lo devuelto.
 
+---
+
 ### Casos Límite
 
 **Privacidad y enmascaramiento**
@@ -275,7 +283,7 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 
 ## Requisitos *(obligatorio)*
 
-C:\Users\Franco\Desktop\Universidad\MDS\GITHUB\Grupo-06C:\Users\Franco\Desktop\Universidad\MDS\GITHUB\Grupo-06### Requisitos Funcionales
+### Requisitos Funcionales
 
 - **FR-001**: El sistema DEBE permitir crear, editar, buscar y cambiar de estado proveedores, validando RUT (formato y dígito verificador) y su unicidad.
 - **FR-002**: El sistema DEBE impedir una condición de pago mayor a 30 días si el proveedor no tiene registrado un acuerdo de plazo mayor (Ley 21.131).
