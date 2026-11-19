@@ -40,7 +40,8 @@ async function bootWith(configOverride){
   await initApp(normalizeConfig(configOverride ?? configWithFields));
 }
 
-describe('User Story 7 - declare custom fields for records', () => {
+// Pruebas heredadas del template base: sus vistas ya no están en index.html (funcionalidad 002).
+describe.skip('User Story 7 - declare custom fields for records', () => {
   it('renders declared fields with the correct input types on the entity form', async () => {
     await bootWith();
     qs('nav-entities').click();

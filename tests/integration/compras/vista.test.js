@@ -38,10 +38,30 @@ describe('vista de compras', () => {
   it('abre el módulo desde la navegación y muestra el panel', () => {
     qs('nav-compras').click();
     expect(qs('view-compras').hidden).toBe(false);
-    expect(qs('view-dashboard').hidden).toBe(true);
     expect(qs('compras-root').textContent).toContain('Adquisiciones y Compras');
-    expect(qs('compras-rol').value).toBe('solicitante');
+    expect(document.querySelector('.topbar-rol label').textContent).toBe('Rol Activo');
+    expect(qs('rol-activo').value).toBe('solicitante');
     expect(qs('compras-root').querySelectorAll('[data-tab]').length).toBe(10);
+  });
+
+  it('muestra etiquetas legibles para los roles sin cambiar sus valores', () => {
+    const esperado = [
+      ['solicitante', 'Solicitante'],
+      ['comprador', 'Comprador'],
+      ['jefe_compras', 'Jefe de Compras'],
+      ['bodega', 'Encargado de Bodega'],
+      ['admin_ti', 'Administrador TI']
+    ];
+    expect([...qs('rol-activo').options].map((opcion) => [opcion.value, opcion.textContent])).toEqual(
+      esperado
+    );
+
+    const selector = qs('rol-activo');
+    selector.value = 'jefe_compras';
+    selector.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+    const sesion = qs('compras-root').querySelector('.compras-session').textContent;
+    expect(sesion).toContain('Marta Ruiz · Jefe de Compras');
+    expect(sesion).not.toContain('jefe_compras');
   });
 
   it('navega entre las pestañas de compras', () => {
@@ -61,16 +81,34 @@ describe('vista de compras', () => {
 
   it('cambia el rol activo y vuelve a renderizar', () => {
     qs('nav-compras').click();
-    const selector = qs('compras-rol');
+    const selector = qs('rol-activo');
     selector.value = 'admin_ti';
     selector.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
-    expect(qs('compras-rol').value).toBe('admin_ti');
+    expect(qs('rol-activo').value).toBe('admin_ti');
     expect(qs('compras-content').textContent).toContain('Pendientes por rol');
+  });
+
+  it('muestra u oculta la cuenta bancaria al cambiar el rol activo', () => {
+    qs('nav-compras').click();
+    qs('compras-root').querySelector('[data-tab="proveedores"]').click();
+    const selector = qs('rol-activo');
+
+    selector.value = 'jefe_compras';
+    selector.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+    expect(qs('compras-content').textContent).toContain('555444333');
+    expect(qs('compras-content').textContent).not.toContain('****4333');
+    expect(qs('prov-visibilidad').textContent).toContain('visibles para tu rol');
+
+    selector.value = 'comprador';
+    selector.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+    expect(qs('compras-content').textContent).toContain('****4333');
+    expect(qs('compras-content').textContent).not.toContain('555444333');
+    expect(qs('prov-visibilidad').textContent).toContain('enmascarados para tu rol');
   });
 
   it('enmascara RUT y cuenta y muestra "No registrado" en la tabla de proveedores', () => {
     qs('nav-compras').click();
-    const selector = qs('compras-rol');
+    const selector = qs('rol-activo');
     selector.value = 'comprador';
     selector.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
     qs('compras-root').querySelector('[data-tab="proveedores"]').click();

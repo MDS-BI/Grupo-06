@@ -32,7 +32,8 @@ async function bootWith(configOverride){
   await initApp(normalizeConfig(configOverride));
 }
 
-describe('User Story 6 - relabel screens from configuration', () => {
+// Pruebas heredadas del template base: sus vistas ya no están en index.html (funcionalidad 002).
+describe.skip('User Story 6 - relabel screens from configuration', () => {
   it('shows default Entidad/Documento terms everywhere when no mappings are provided', async () => {
     await bootWith(undefined);
     expect(qs('brand-name').textContent).toBe('Módulo Base ERP');

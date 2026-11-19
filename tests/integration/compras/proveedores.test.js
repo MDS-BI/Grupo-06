@@ -104,6 +104,12 @@ describe('proveedores', () => {
     expect(vistaComprador.cuenta_visible).toBe('****4333');
     expect(vistaComprador.taxId).toBe('98.***.***-3');
     expect(vistaComprador.numero_cuenta).toBe('****4333');
+    expect(vistaComprador.puede_editar_banco).toBe(false);
+
+    const vistaBodega = vistaProveedor(natural, 'bodega');
+    expect(vistaBodega.cuenta_visible).toBe('****4333');
+    expect(vistaBodega.datos_bancarios_visibles).toBe(false);
+    expect(vistaBodega.puede_editar_banco).toBe(false);
 
     const vistaJefe = vistaProveedor(natural, 'jefe_compras');
     expect(vistaJefe.rut_visible).toBe('9.876.543-3');

@@ -75,6 +75,70 @@ h2 { font-size: 1.05rem; margin: 0 0 12px; }
 .logo-mark { display: inline-flex; }
 .logo-mark svg { display: block; border-radius: 8px; }
 
+.topbar-rol {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 7px 5px 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: #f8fafc;
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.topbar-rol label {
+  color: var(--muted);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.topbar-rol select {
+  appearance: none;
+  -webkit-appearance: none;
+  min-width: 190px;
+  padding: 6px 30px 6px 12px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background-color: var(--surface);
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='12'%20height='8'%20viewBox='0%200%2012%208'%3E%3Cpath%20d='M1%201.5%206%206.5l5-5'%20fill='none'%20stroke='%2364748b'%20stroke-width='1.8'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 11px center;
+  background-size: 12px 8px;
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.topbar-rol:hover {
+  background: var(--surface);
+  border-color: #cbd5e1;
+  box-shadow: var(--shadow);
+}
+
+.topbar-rol:focus-within {
+  background: var(--surface);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.topbar-rol select:hover {
+  border-color: #cbd5e1;
+}
+
+.topbar-rol select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
 .sidebar {
   background: var(--sidebar-bg);
   color: var(--sidebar-text);
@@ -462,4 +526,6 @@ button.danger:hover { background: #fae3df; }
   .field-row { grid-template-columns: 1fr; }
   .toolbar input, .toolbar select { width: 100%; }
   .compras-content { overflow-x: auto; }
+  .topbar-rol { gap: 6px; padding: 4px 6px 4px 10px; }
+  .topbar-rol select { min-width: 150px; font-size: 0.85rem; }
 }

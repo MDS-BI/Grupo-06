@@ -5,10 +5,11 @@
 
 ## Resumen
 
-Construir el módulo Adquisiciones y Compras **sobre el módulo base ERP del curso** (`specs/001-erp-base-module`), sin reemplazar su código central. El módulo base ofrece un tipo de dato maestro (Entidad) y un tipo de documento (Documento) que se adaptan desde `src/module-config.js`. El plan aprovecha eso en dos niveles:
+Construir el módulo Adquisiciones y Compras **sobre el módulo base ERP del curso** (`specs/001-erp-base-module`), sin reemplazar ni modificar su código central: `src/storage.js` y sus pruebas permanecen intactos. La interfaz final es **exclusiva del módulo**: `index.html` solo expone `#view-compras`, `#compras-root` y el selector de roles; no se muestran las vistas genéricas de Entidades, Documentos ni Búsqueda del template, conforme a FR-032 y SC-014.
 
-1. **Por configuración**: Proveedor se monta sobre la Entidad y Orden de Compra sobre el Documento. Esto entrega rápido una **versión integrada de prueba** que corre dentro del template, como pidió el profesor en el feedback del 26-10-2026.
-2. **Por extensión**: solicitudes, cotizaciones, recepciones, facturas, devoluciones, catálogo, evaluaciones y el historial de trazabilidad necesitan colecciones propias, que se agregan en `src/compras/` siguiendo el mismo contrato de almacenamiento del template (`specs/001-erp-base-module/contracts/entity-storage.md`).
+Los proveedores reutilizan el contrato de Entidad del módulo base desde `src/compras/proveedores.js` sin tocar `src/storage.js`. El resto de documentos del ciclo (solicitudes, cotizaciones, OC, recepciones, facturas, devoluciones, catálogo, evaluaciones y trazabilidad) viven en colecciones propias `erp_compras:*` gestionadas desde `src/compras/almacenamiento.js`, siguiendo el mismo contrato de almacenamiento del template (`specs/001-erp-base-module/contracts/entity-storage.md`).
+
+`src/module-config.js` conserva `userConfig = null`. La constante `COMPRAS_CONFIG` queda como configuración opcional de referencia histórica, pero **no se activa**: el enfoque de integrar Proveedor y OC en las vistas genéricas del template quedó descartado porque FR-032 exige que toda la navegación y el contenido visible pertenezcan a Adquisiciones y Compras.
 
 El trabajo se divide en iteraciones semanales; cada una termina con una versión que corre y con avance visible en el repositorio.
 
@@ -21,85 +22,45 @@ El trabajo se divide en iteraciones semanales; cada una termina con una versión
 **Pruebas**: Vitest con jsdom (ya configurado en `vitest.config.mjs`)  
 **Plataforma Objetivo**: Navegadores modernos de escritorio  
 **Tipo de Proyecto**: Aplicación web de una página, solo frontend  
-**Objetivos de Rendimiento**: Listas y búsquedas instantáneas con hasta 500 registros por colección (mismo objetivo del template)  
+**Objetivos de Rendimiento**: listas y búsquedas en menos de 2 segundos con hasta 500 registros por colección, medidos con `performance.now()` en `tests/integration/compras/rendimiento.test.js` (SC-006)  
 **Restricciones**: Sin backend, sin autenticación real, sin conexión con el SII; no modificar el comportamiento del módulo base salvo donde se justifica en "Seguimiento de Complejidad"  
 **Escala/Alcance**: 19 entidades lógicas (ver `data-model.md`), 11 historias de usuario, 5 roles simulados
 
 ## Verificación de la Constitución
 
-*Según `.specify/memory/constitution.md` v1.0.0.*
+_Según `.specify/memory/constitution.md` v1.0.0._
 
 - **I. Calidad del código**: la lógica de negocio (cálculos, validaciones y transiciones de estado) vive en funciones puras en `src/compras/reglas.js`, separada de la interfaz y del almacenamiento.
 - **II. Pruebas primero**: cada regla de la sección 5 de `data-model.md` tiene prueba unitaria antes o junto con su implementación; cada historia P1 tiene al menos una prueba de integración de su flujo.
 - **III. Experiencia de usuario consistente**: todas las pantallas nuevas usan el marco del template (barra superior, barra lateral, tokens de `styles.css`), mensajes de validación en español y estados vacíos.
 - **IV. Rendimiento**: las colecciones se leen una vez por pantalla y se filtran en memoria; el objetivo de 500 registros se verifica con los datos semilla ampliados.
-- **Estándares de calidad**: antes de la entrega el código pasa `npm run lint` (ESLint) y `npm run format:check` (Prettier) sin errores, y se corrigen las advertencias que afecten la corrección o la mantenibilidad (tarea T107 de `tasks.md`).
+- **Estándares de calidad**: antes de la entrega se ejecutan `npm run lint` (ESLint) y `npm run format:check` (Prettier). El alcance de formato permitido es `src/compras/` y `specs/`; el chequeo global sigue reportando archivos del núcleo y de tooling fuera de ese alcance, por lo que T107 permanece como deuda conocida documentada. Lint termina sin errores, con 6 advertencias preexistentes en `src/storage.js` y `tests/unit/storage.test.js`, que no se modifican por el aislamiento del núcleo.
 
-Resultado: **pasa**, con las desviaciones justificadas abajo.
+Resultado: **conforme con deuda documentada**. Los incumplimientos materiales quedan registrados en la sección «Deuda conocida» y en T107 de `tasks.md`; no se afirma que `format:check` esté en verde.
 
-## Correspondencia con el template
+## Arquitectura del módulo (`src/compras/`)
 
-### Nivel 1: configuración (`src/module-config.js`)
+La interfaz final no usa las vistas genéricas del template: toda la navegación ocurre dentro de `#view-compras` y `#compras-root`, con el selector de roles simulados, según FR-032 y SC-014. `src/module-config.js` mantiene `userConfig = null` y su `COMPRAS_CONFIG` solo como referencia de la iteración descartada por configuración.
 
-| Concepto del template | En Compras | Mapeo de campos base |
-|---|---|---|
-| Entidad | Proveedor | `name` = razón social · `code` = código interno (`PRV-001`) · `taxId` = RUT · `email` · `phone` · `address` · `category` = rubro · `paymentTerms` = condición de pago |
-| Documento | Orden de compra | `series` = `OC` · `folio` = correlativo · `startDate` = fecha de emisión · `endDate` = fecha de entrega esperada · `subtotal`, `discount`, `taxAmount` (IVA), `totalAmount` · `currency` = `CLP` · `paymentTerms` · `status` |
-
-Configuración propuesta para la iteración 1 (las claves de campos personalizados no chocan con los nombres base del template):
-
-```javascript
-export const userConfig = {
-  moduleName: "Adquisiciones y Compras",
-  labels: {
-    entity: "Proveedor", entities: "Proveedores",
-    document: "Orden de Compra", documents: "Órdenes de Compra",
-  },
-  customFields: [
-    { target: "entity", key: "giro", label: "Giro", type: "text", required: true },
-    { target: "entity", key: "region", label: "Región", type: "text", required: true },
-    { target: "entity", key: "tamanoEmpresa", label: "Tamaño de empresa", type: "select",
-      options: ["micro", "pequena", "mediana", "grande"] },
-    { target: "entity", key: "estadoProveedor", label: "Estado del proveedor", type: "select",
-      required: true, options: ["potencial", "aprobado", "bloqueado"] },
-    { target: "document", key: "numeroSolicitud", label: "N° de solicitud", type: "text", required: true },
-    { target: "document", key: "comprador", label: "Comprador", type: "text", required: true },
-  ],
-  statusLifecycle: {
-    statuses: ["borrador", "emitida", "recibida_parcial", "recibida_total", "cerrada", "anulada"],
-    transitions: {
-      borrador: ["emitida", "anulada"],
-      emitida: ["recibida_parcial", "recibida_total", "anulada"],
-      recibida_parcial: ["recibida_total"],
-      recibida_total: ["cerrada"],
-      cerrada: [],
-      anulada: [],
-    },
-  },
-  theme: { accentColor: "#0f766e" },
-};
-```
-
-Lo que la configuración **no** cubre y queda para el nivel 2: líneas de detalle por producto, cálculo automático de IVA, datos bancarios enmascarados, bloqueo de eliminación de proveedores con OC y validación de RUT.
-
-### Nivel 2: extensión (`src/compras/`)
+| Concepto del MER          | Almacenamiento físico real                                                                         | Observación                                                                                  |
+| ------------------------- | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| PROVEEDOR                 | Entidad del módulo base (`erp_base_module:entities`) gestionada desde `src/compras/proveedores.js` | `src/storage.js` permanece sin cambios; la vista genérica de Entidades no se expone (FR-032) |
+| ORDEN_COMPRA + DETALLE_OC | `erp_compras:ordenes`, con `lineas`                                                                | No se mapea al Documento del template: sus estados y reglas son propias                      |
 
 Cada colección nueva implementa las mismas operaciones del contrato del template (`load…`, `save…`, `add…`, `update…`, `delete…`) sobre su propia clave de `localStorage`. Las tablas de detalle del MER se guardan como arreglo `lineas` dentro de su documento padre, conservando su identificador para que la recepción pueda apuntar a una línea específica de la OC.
 
-| Entidad lógica (MER) | Almacenamiento físico |
-|---|---|
-| PROVEEDOR | Entidad del template (`erp_base_module:entities`) + campos personalizados |
-| ORDEN_COMPRA + DETALLE_OC | Documento del template (`erp_base_module:documents`) + `lineas` |
-| SOLICITUD_COMPRA + DETALLE_SOLICITUD | `erp_compras:solicitudes`, con `lineas` |
-| COTIZACION_PROVEEDOR + DETALLE_COTIZACION | `erp_compras:cotizaciones`, con `lineas` |
-| RECEPCION + DETALLE_RECEPCION | `erp_compras:recepciones`, con `lineas` |
-| FACTURA_PROVEEDOR | `erp_compras:facturas` |
-| DEVOLUCION + DETALLE_DEVOLUCION | `erp_compras:devoluciones`, con `lineas` |
-| PROVEEDOR_PRODUCTO | `erp_compras:catalogo` |
-| EVALUACION_PROVEEDOR | `erp_compras:evaluaciones` |
-| CONTACTO_PROVEEDOR | `erp_compras:contactos` |
-| USUARIO, CENTRO_COSTO, PRODUCTO | `erp_compras:usuarios`, `erp_compras:centros_costo`, `erp_compras:productos` (datos semilla hasta conectar RR.HH., Contabilidad e Inventario) |
-| HISTORIAL_TRAZABILIDAD | `erp_compras:trazabilidad` (eventos inmutables: quién, cuándo, qué acción; cambios bancarios con valor enmascarado) |
+| Entidad lógica (MER)                      | Almacenamiento físico                                                                                                                         |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| SOLICITUD_COMPRA + DETALLE_SOLICITUD      | `erp_compras:solicitudes`, con `lineas`                                                                                                       |
+| COTIZACION_PROVEEDOR + DETALLE_COTIZACION | `erp_compras:cotizaciones`, con `lineas`                                                                                                      |
+| RECEPCION + DETALLE_RECEPCION             | `erp_compras:recepciones`, con `lineas`                                                                                                       |
+| FACTURA_PROVEEDOR                         | `erp_compras:facturas`                                                                                                                        |
+| DEVOLUCION + DETALLE_DEVOLUCION           | `erp_compras:devoluciones`, con `lineas`                                                                                                      |
+| PROVEEDOR_PRODUCTO                        | `erp_compras:catalogo`                                                                                                                        |
+| EVALUACION_PROVEEDOR                      | `erp_compras:evaluaciones`                                                                                                                    |
+| CONTACTO_PROVEEDOR                        | `erp_compras:contactos`                                                                                                                       |
+| USUARIO, CENTRO_COSTO, PRODUCTO           | `erp_compras:usuarios`, `erp_compras:centros_costo`, `erp_compras:productos` (datos semilla hasta conectar RR.HH., Contabilidad e Inventario) |
+| HISTORIAL_TRAZABILIDAD                    | `erp_compras:trazabilidad` (eventos inmutables: quién, cuándo, qué acción; cambios bancarios con valor enmascarado)                           |
 
 ## Estructura del Proyecto
 
@@ -109,8 +70,13 @@ Cada colección nueva implementa las mismas operaciones del contrato del templat
 specs/002-modulo-adquisiciones-compras/
 ├── spec.md          (historias de usuario y requisitos)
 ├── plan.md          (este archivo)
-├── data-model.md    (MER, diccionario de datos, reglas)
-├── tasks.md         (tareas de implementación)
+├── research.md      (Fase 0: decisiones técnicas y alternativas)
+├── data-model.md    (Fase 1: MER, diccionario de datos, reglas)
+├── quickstart.md    (Fase 1: guion de validación de extremo a extremo)
+├── contracts/       (Fase 1: contratos de almacenamiento e interfaces)
+│   ├── almacenamiento-compras.md
+│   └── exportacion-e-integracion.md
+├── tasks.md         (Fase 2: tareas de implementación)
 └── checklists/
     └── requirements.md  (verificación de calidad de la especificación)
 ```
@@ -119,7 +85,7 @@ specs/002-modulo-adquisiciones-compras/
 
 ```text
 src/
-├── module-config.js        (nivel 1: Proveedor y Orden de Compra)
+├── module-config.js        (configuración base sin activar: COMPRAS_PARAMETROS y COMPRAS_CONFIG de referencia)
 ├── ...                     (archivos del módulo base, sin cambios salvo lo justificado)
 └── compras/
     ├── reglas.js           (cálculos de montos, validación de RUT, transiciones, conciliación, nota de plazo)
@@ -149,13 +115,13 @@ tests/
 
 ## Iteraciones (avances semanales)
 
-| Iteración | Fechas | Historias | Resultado esperado |
-|---|---|---|---|
-| 0. Base corriendo | 28-oct al 1-nov | — | El template se ejecuta con `npm run dev` y pasan sus pruebas (ver dependencia crítica) |
-| 1. Versión integrada de prueba | 2 al 8-nov | US1, US3 simplificada, US5 básico | Proveedores y OC operando solo por configuración (el n° de solicitud se ingresa como texto, sin validarlo); panel con conteos |
-| 2. Ciclo operativo | 9 al 15-nov | US2, US4, US3 completa | Solicitud → OC → recepción; la OC se valida contra la solicitud aprobada, con líneas e IVA calculado |
-| 3. Adquisiciones y cierre del ciclo | 16 al 22-nov | US6, US7, US8 | Cotizaciones, conciliación de facturas, catálogo; demo del ciclo completo |
-| 4. Calidad | 23 al 26-nov | US9, US10, US11, trazabilidad transversal (FR-027 a FR-030), indicadores | Evaluación, devoluciones/notas de crédito, CSV, historial de auditoría y cadena documental, README final; congelamiento del repositorio el 26-nov |
+| Iteración                           | Fechas          | Historias                                                                | Resultado esperado                                                                                                                                                           |
+| ----------------------------------- | --------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0. Base corriendo                   | 28-oct al 1-nov | —                                                                        | El template se ejecuta con `npm run dev` y pasan sus pruebas (ver dependencia crítica)                                                                                       |
+| 1. Versión integrada de prueba      | 2 al 8-nov      | US1, US3 simplificada, US5 básico                                        | Proveedores y OC operando en pantallas propias de `#view-compras`, sin vistas genéricas del template; el enfoque por configuración se descartó por FR-032; panel con conteos |
+| 2. Ciclo operativo                  | 9 al 15-nov     | US2, US4, US3 completa                                                   | Solicitud → OC → recepción; la OC se valida contra la solicitud aprobada, con líneas e IVA calculado                                                                         |
+| 3. Adquisiciones y cierre del ciclo | 16 al 22-nov    | US6, US7, US8                                                            | Cotizaciones, conciliación de facturas, catálogo; demo del ciclo completo                                                                                                    |
+| 4. Calidad                          | 23 al 26-nov    | US9, US10, US11, trazabilidad transversal (FR-027 a FR-030), indicadores | Evaluación, devoluciones/notas de crédito, CSV, historial de auditoría y cadena documental, README final; congelamiento del repositorio el 26-nov                            |
 
 Cada historia se asigna a un responsable en un Issue de GitHub con la etiqueta de su iteración; los acuerdos de cada semana se registran en un Issue de seguimiento.
 
@@ -163,11 +129,27 @@ Cada historia se asigna a un responsable en un Issue de GitHub con la etiqueta d
 
 **Resuelta.** La carpeta `src/` (módulo base) se restauró desde el historial (`git checkout 501e9c6 -- src index.html`) y hoy está versionada en `HEAD` junto con `src/compras/`. Las pruebas del template (`tests/unit/storage.test.js`, entre otras) vuelven a encontrar sus dependencias.
 
+## Deuda conocida
+
+Las siguientes tareas quedan deliberadamente abiertas y se documentan también en `tasks.md`. No son regresiones: son decisiones o validaciones pendientes que el congelamiento no debe ocultar. El núcleo base (`src/storage.js` y `tests/unit/storage.test.js`) no se modifica ni se formatea por la regla de aislamiento.
+
+| Tarea | Estado  | Justificación                                                                                                                                                                                                                                                                                                                                       | Referencia                          |
+| ----- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| T101  | Abierta | La prueba de cierre con saldo pendiente pasa, pero `cerrarSiSaldada()` muta el estado directamente; falta declarar `recibida_parcial → cerrada` en `TRANSICIONES`.                                                                                                                                                                                  | `data-model.md` §10, pendiente 3    |
+| T104  | Abierta | Bloqueo de eliminación y anulación de OC verificados; falta `motivo_anulacion` en facturas y devoluciones.                                                                                                                                                                                                                                          | FR-029, T118                        |
+| T107  | Abierta | Deuda de calidad: el formato se aplicó solo a `src/compras/` y `specs/`; `npm run format:check` global sigue reportando 92 archivos base y de tooling fuera del alcance permitido, incluidos `src/storage.js` y `tests/unit/storage.test.js`, que no se formatean por aislamiento. Lint sin errores, con 6 advertencias preexistentes en el núcleo. | Constitución, Estándares de Calidad |
+| T108  | Abierta | No se completó la revisión de accesibilidad pantalla por pantalla ni la verificación de contraste 4,5:1.                                                                                                                                                                                                                                            | SC-013                              |
+| T109  | Abierta | Solo la solicitud guarda `motivo_anulacion`; faltan cotizaciones y recepciones.                                                                                                                                                                                                                                                                     | FR-029, T118                        |
+| T110  | Abierta | `credito_a_favor` no está implementado ni mostrado en factura/cadena documental.                                                                                                                                                                                                                                                                    | FR-026, SC-011                      |
+| T117  | Abierta | Pendiente 1 de `data-model.md` §10: nombre del estado inicial de factura sin unificar.                                                                                                                                                                                                                                                              | FR-015                              |
+| T118  | Abierta | Pendiente 2 de `data-model.md` §10: estados de devolución y anulación con motivo incompletos.                                                                                                                                                                                                                                                       | FR-029                              |
+| T119  | Abierta | Pendiente 4 de `data-model.md` §10: estado `borrador` de OC sin decidir.                                                                                                                                                                                                                                                                            | FR-010                              |
+
 ## Plan de Pruebas
 
 - **Unitarias** (`tests/unit/compras/`): cálculo de neto, IVA y total con redondeo; validación de RUT; transiciones permitidas y prohibidas de cada estado; regla de 3 cotizaciones; tope de recepción por línea; conciliación con y sin discrepancia; nota de plazo según días de atraso; plazo de pago máximo sin acuerdo.
 - **Integración** (`tests/integration/compras/`): un flujo por historia P1 y P2 siguiendo sus escenarios de aceptación de `spec.md`, y una prueba de auditoría de punta a punta (SC-012) en `trazabilidad.test.js`.
-- **Manual**: guion de la demo de 5 minutos del criterio SC-002.
+- **Manual**: guion de la demo de 5 minutos del criterio SC-002 y escenarios de validación por historia, documentados en [quickstart.md](quickstart.md).
 
 ## Datos Semilla
 
@@ -184,8 +166,8 @@ Todos ficticios: 4 centros de costo, 6 usuarios (uno por rol y un segundo solici
 
 ## Seguimiento de Complejidad
 
-| Desviación del módulo base | Por qué es necesaria | Alternativa más simple descartada |
-|---|---|---|
-| Colecciones adicionales fuera de Entidad/Documento | El ciclo de compras tiene 6 documentos encadenados; el template solo modela uno | Forzar todo como Documento con un campo "tipo" mezclaría estados y reglas incompatibles |
-| Bloquear la eliminación en cascada de proveedores con OC | El template borra los documentos de una entidad eliminada; en compras eso destruiría la trazabilidad de órdenes y facturas | Advertir y borrar igual: inaceptable para auditoría |
-| Líneas de detalle dentro de la OC | El template no tiene partidas; su propio data-model las señala como punto de extensión | Una OC por producto: no refleja cómo compra una empresa |
+| Desviación del módulo base                               | Por qué es necesaria                                                                                                       | Alternativa más simple descartada                                                       |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Colecciones adicionales fuera de Entidad/Documento       | El ciclo de compras tiene 6 documentos encadenados; el template solo modela uno                                            | Forzar todo como Documento con un campo "tipo" mezclaría estados y reglas incompatibles |
+| Bloquear la eliminación en cascada de proveedores con OC | El template borra los documentos de una entidad eliminada; en compras eso destruiría la trazabilidad de órdenes y facturas | Advertir y borrar igual: inaceptable para auditoría                                     |
+| Líneas de detalle dentro de la OC                        | El template no tiene partidas; su propio data-model las señala como punto de extensión                                     | Una OC por producto: no refleja cómo compra una empresa                                 |

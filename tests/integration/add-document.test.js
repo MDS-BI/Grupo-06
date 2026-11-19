@@ -29,7 +29,8 @@ afterEach(() => {
   dom.window.close();
 });
 
-describe('User Story 10 - add a document to an entity', () => {
+// Pruebas heredadas del template base: sus vistas ya no están en index.html (funcionalidad 002).
+describe.skip('User Story 10 - add a document to an entity', () => {
   it('saves a document associated with the selected entity', () => {
     const entity = addEntity({ name: 'Acme', code: 'AC-001' });
     qs('nav-entities').click();

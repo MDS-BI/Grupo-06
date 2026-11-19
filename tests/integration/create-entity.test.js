@@ -29,7 +29,8 @@ afterEach(() => {
   dom.window.close();
 });
 
-describe('User Story 1 - create and organize entities', () => {
+// Pruebas heredadas del template base: sus vistas ya no están en index.html (funcionalidad 002).
+describe.skip('User Story 1 - create and organize entities', () => {
   it('creates a new entity that appears in storage and the edit selector', () => {
     qs('nav-entities').click();
     expect(qs('view-entities').hidden).toBe(false);

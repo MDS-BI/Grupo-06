@@ -1,13 +1,27 @@
 import { describe, expect, it } from 'vitest';
-import { COMPRAS_CONFIG, COMPRAS_PARAMETROS, normalizeConfig } from '../../../src/module-config.js';
+import {
+  COMPRAS_CONFIG,
+  COMPRAS_PARAMETROS,
+  normalizeConfig,
+  puedeEditarDatosBancarios,
+  puedeVerDatosBancarios
+} from '../../../src/module-config.js';
 
 describe('configuración de compras', () => {
   it('expone los parámetros definitivos', () => {
     expect(COMPRAS_PARAMETROS).toEqual({
       iva: 0.19,
       umbralCotizaciones: 1000000,
-      toleranciaConciliacion: 0.01
+      toleranciaConciliacion: 0.01,
+      datosBancarios: {
+        rolesVisibles: ['admin_ti', 'jefe_compras'],
+        rolesEdicion: ['admin_ti']
+      }
     });
+    expect(puedeVerDatosBancarios('jefe_compras')).toBe(true);
+    expect(puedeVerDatosBancarios('comprador')).toBe(false);
+    expect(puedeEditarDatosBancarios('jefe_compras')).toBe(false);
+    expect(puedeEditarDatosBancarios('admin_ti')).toBe(true);
   });
 
   it('es una configuración válida para el template base', () => {

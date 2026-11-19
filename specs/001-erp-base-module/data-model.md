@@ -4,59 +4,59 @@
 
 Representa el dato maestro central del módulo (p. ej., cliente, proveedor, artículo) con su identidad fiscal, contacto y condiciones comerciales.
 
-| Campo | Tipo | Descripción | Restricciones |
-|---|---|---|---|
-| id | string | Identificador interno único del registro de entidad | Obligatorio, generado automáticamente |
-| entity_id | string | Identificador público usado para vincular documentos a esta entidad | Obligatorio, generado automáticamente, único |
-| name | string | Nombre o razón social de la entidad | Obligatorio, no vacío |
-| code | string | Código o clave de negocio que identifica la entidad | Obligatorio, no vacío |
-| taxId | string | Identificación fiscal de la entidad (p. ej., RFC, NIT, CUIT) | Opcional; se almacena recortada cuando se proporciona |
-| email | string | Correo electrónico principal de contacto | Opcional; debe tener formato de correo válido si se proporciona |
-| phone | string | Teléfono de contacto | Opcional |
-| address | string | Dirección fiscal o comercial | Opcional |
-| category | string | Clasificación opcional como tipo, grupo o clase | Opcional |
-| description | string | Descripción corta o notas | Opcional |
-| targetDate | string | Fecha objetivo opcional en formato YYYY-MM-DD; los módulos personalizados definen su significado (p. ej., fecha de vencimiento, fecha de revisión) | Opcional, debe ser una fecha de calendario válida si se proporciona |
-| creditLimit | number | Límite de crédito extendido a la entidad en la moneda configurada | Opcional, debe ser un número no negativo |
-| paymentTerms | string | Condiciones de pago acordadas (p. ej., contado, neto 30) | Opcional |
-| createdAt | string | Marca de tiempo de cuándo se creó la entidad | Obligatorio |
-| updatedAt | string | Marca de tiempo de la última actualización de la entidad | Obligatorio |
+| Campo        | Tipo   | Descripción                                                                                                                                        | Restricciones                                                       |
+| ------------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| id           | string | Identificador interno único del registro de entidad                                                                                                | Obligatorio, generado automáticamente                               |
+| entity_id    | string | Identificador público usado para vincular documentos a esta entidad                                                                                | Obligatorio, generado automáticamente, único                        |
+| name         | string | Nombre o razón social de la entidad                                                                                                                | Obligatorio, no vacío                                               |
+| code         | string | Código o clave de negocio que identifica la entidad                                                                                                | Obligatorio, no vacío                                               |
+| taxId        | string | Identificación fiscal de la entidad (p. ej., RFC, NIT, CUIT)                                                                                       | Opcional; se almacena recortada cuando se proporciona               |
+| email        | string | Correo electrónico principal de contacto                                                                                                           | Opcional; debe tener formato de correo válido si se proporciona     |
+| phone        | string | Teléfono de contacto                                                                                                                               | Opcional                                                            |
+| address      | string | Dirección fiscal o comercial                                                                                                                       | Opcional                                                            |
+| category     | string | Clasificación opcional como tipo, grupo o clase                                                                                                    | Opcional                                                            |
+| description  | string | Descripción corta o notas                                                                                                                          | Opcional                                                            |
+| targetDate   | string | Fecha objetivo opcional en formato YYYY-MM-DD; los módulos personalizados definen su significado (p. ej., fecha de vencimiento, fecha de revisión) | Opcional, debe ser una fecha de calendario válida si se proporciona |
+| creditLimit  | number | Límite de crédito extendido a la entidad en la moneda configurada                                                                                  | Opcional, debe ser un número no negativo                            |
+| paymentTerms | string | Condiciones de pago acordadas (p. ej., contado, neto 30)                                                                                           | Opcional                                                            |
+| createdAt    | string | Marca de tiempo de cuándo se creó la entidad                                                                                                       | Obligatorio                                                         |
+| updatedAt    | string | Marca de tiempo de la última actualización de la entidad                                                                                           | Obligatorio                                                         |
 
 ## Entidad: Document (registro transaccional)
 
 Representa un documento transaccional vinculado a una entidad (p. ej., pedido, factura, contrato), identificado por serie y folio y con desglose económico.
 
-| Campo | Tipo | Descripción | Restricciones |
-|---|---|---|---|
-| id | string | Identificador único del documento | Obligatorio, generado automáticamente |
-| entity_id | string | Identificador de la entidad a la que pertenece este documento | Obligatorio, debe referenciar el entity_id de una entidad existente |
-| series | string | Serie del documento (p. ej., FAC, A, NV) que agrupa folios consecutivos | Opcional |
-| folio | number | Folio consecutivo que, junto con la serie, forma el número oficial del documento | Obligatorio, debe ser un entero positivo |
-| startDate | string | Fecha de inicio en formato YYYY-MM-DD | Obligatorio, debe ser una fecha de calendario válida |
-| endDate | string | Fecha de fin en formato YYYY-MM-DD | Obligatorio, debe ser una fecha de calendario válida, debe ser igual o posterior a startDate |
-| quantity | number | Cantidad asociada al documento | Opcional, debe ser un entero positivo |
-| subtotal | number | Importe antes de descuentos e impuestos | Opcional, debe ser un número no negativo |
-| discount | number | Descuento aplicado sobre el subtotal | Opcional, debe ser un número no negativo y no puede superar el subtotal |
-| taxAmount | number | Impuesto calculado para el documento | Opcional, debe ser un número no negativo |
-| totalAmount | number | Importe total del documento en la moneda configurada | Opcional, debe ser un número no negativo |
-| currency | string | Código de moneda para los importes del documento (p. ej., MXN, USD, EUR) | Opcional |
-| paymentTerms | string | Condiciones de pago del documento (p. ej., contado, neto 30) | Opcional |
-| notes | string | Notas u observaciones libres del documento | Opcional |
-| status | string | Estado del documento como borrador, pendiente, aprobado o cancelado | Opcional |
-| createdAt | string | Marca de tiempo de cuándo se creó el documento | Obligatorio |
-| updatedAt | string | Marca de tiempo de la última actualización del documento | Obligatorio |
+| Campo        | Tipo   | Descripción                                                                      | Restricciones                                                                                |
+| ------------ | ------ | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| id           | string | Identificador único del documento                                                | Obligatorio, generado automáticamente                                                        |
+| entity_id    | string | Identificador de la entidad a la que pertenece este documento                    | Obligatorio, debe referenciar el entity_id de una entidad existente                          |
+| series       | string | Serie del documento (p. ej., FAC, A, NV) que agrupa folios consecutivos          | Opcional                                                                                     |
+| folio        | number | Folio consecutivo que, junto con la serie, forma el número oficial del documento | Obligatorio, debe ser un entero positivo                                                     |
+| startDate    | string | Fecha de inicio en formato YYYY-MM-DD                                            | Obligatorio, debe ser una fecha de calendario válida                                         |
+| endDate      | string | Fecha de fin en formato YYYY-MM-DD                                               | Obligatorio, debe ser una fecha de calendario válida, debe ser igual o posterior a startDate |
+| quantity     | number | Cantidad asociada al documento                                                   | Opcional, debe ser un entero positivo                                                        |
+| subtotal     | number | Importe antes de descuentos e impuestos                                          | Opcional, debe ser un número no negativo                                                     |
+| discount     | number | Descuento aplicado sobre el subtotal                                             | Opcional, debe ser un número no negativo y no puede superar el subtotal                      |
+| taxAmount    | number | Impuesto calculado para el documento                                             | Opcional, debe ser un número no negativo                                                     |
+| totalAmount  | number | Importe total del documento en la moneda configurada                             | Opcional, debe ser un número no negativo                                                     |
+| currency     | string | Código de moneda para los importes del documento (p. ej., MXN, USD, EUR)         | Opcional                                                                                     |
+| paymentTerms | string | Condiciones de pago del documento (p. ej., contado, neto 30)                     | Opcional                                                                                     |
+| notes        | string | Notas u observaciones libres del documento                                       | Opcional                                                                                     |
+| status       | string | Estado del documento como borrador, pendiente, aprobado o cancelado              | Opcional                                                                                     |
+| createdAt    | string | Marca de tiempo de cuándo se creó el documento                                   | Obligatorio                                                                                  |
+| updatedAt    | string | Marca de tiempo de la última actualización del documento                         | Obligatorio                                                                                  |
 
 ## Entidad: ModuleConfig
 
 Objeto de configuración cargado al arrancar que adapta el módulo base en un módulo específico.
 
-| Campo | Tipo | Descripción | Restricciones |
-|---|---|---|---|
-| moduleName | string | Nombre visible del módulo adaptado | Obligatorio, no vacío |
-| labels | object | Mapeos de términos como `{ entity: "Cliente", entities: "Clientes", document: "Pedido de Venta", documents: "Pedidos de Venta" }` | Opcional; retrocede a Entidad/Documento |
-| customFields | array | Definiciones de campos por tipo de registro: `{ target: "entity"\|"document", key, label, type: "text"\|"number"\|"date"\|"select", required: boolean, options?: string[] }` | Opcional; las claves NO DEBEN chocar con nombres de campos base |
-| statusLifecycle | object | Estados ordenados y transiciones permitidas para documentos, p. ej., `{ statuses: ["cotización", "pedido", "facturado"], transitions: { cotización: ["pedido"], pedido: ["facturado"], facturado: [] } }` | Opcional |
-| theme | object | Opciones de marca, p. ej., `{ accentColor: "#0f62fe" }`; aplicado como propiedad personalizada de CSS en todo el marco del espacio de trabajo | Opcional; accentColor debe ser un color CSS válido o retrocede al predeterminado |
+| Campo           | Tipo   | Descripción                                                                                                                                                                                               | Restricciones                                                                    |
+| --------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| moduleName      | string | Nombre visible del módulo adaptado                                                                                                                                                                        | Obligatorio, no vacío                                                            |
+| labels          | object | Mapeos de términos como `{ entity: "Cliente", entities: "Clientes", document: "Pedido de Venta", documents: "Pedidos de Venta" }`                                                                         | Opcional; retrocede a Entidad/Documento                                          |
+| customFields    | array  | Definiciones de campos por tipo de registro: `{ target: "entity"\|"document", key, label, type: "text"\|"number"\|"date"\|"select", required: boolean, options?: string[] }`                              | Opcional; las claves NO DEBEN chocar con nombres de campos base                  |
+| statusLifecycle | object | Estados ordenados y transiciones permitidas para documentos, p. ej., `{ statuses: ["cotización", "pedido", "facturado"], transitions: { cotización: ["pedido"], pedido: ["facturado"], facturado: [] } }` | Opcional                                                                         |
+| theme           | object | Opciones de marca, p. ej., `{ accentColor: "#0f62fe" }`; aplicado como propiedad personalizada de CSS en todo el marco del espacio de trabajo                                                             | Opcional; accentColor debe ser un color CSS válido o retrocede al predeterminado |
 
 ## Reglas de ModuleConfig
 

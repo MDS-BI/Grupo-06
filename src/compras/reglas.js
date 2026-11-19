@@ -1,4 +1,10 @@
-import { COMPRAS_PARAMETROS } from '../module-config.js';
+import {
+  COMPRAS_PARAMETROS,
+  puedeVerDatosBancarios,
+  puedeEditarDatosBancarios
+} from '../module-config.js';
+
+export { puedeVerDatosBancarios, puedeEditarDatosBancarios };
 
 export const IVA = COMPRAS_PARAMETROS.iva;
 export const UMBRAL_COTIZACIONES = COMPRAS_PARAMETROS.umbralCotizaciones;
@@ -9,6 +15,13 @@ export const DIAS_CUENTA_RECIENTE = 30;
 export const DIAS_CATALOGO_DESACTUALIZADO = 90;
 
 export const ROLES = ['solicitante', 'comprador', 'jefe_compras', 'bodega', 'admin_ti'];
+
+export function validarVisibilidadDatosBancarios(rol) {
+  return {
+    visible: puedeVerDatosBancarios(rol),
+    editable: puedeEditarDatosBancarios(rol)
+  };
+}
 
 export const TRANSICIONES = Object.freeze({
   solicitud: {
@@ -121,7 +134,7 @@ export function formatearRut(rut) {
 }
 
 export function enmascararRut(rut, rol) {
-  if (rol === 'admin_ti' || rol === 'jefe_compras') return formatearRut(rut);
+  if (puedeVerDatosBancarios(rol)) return formatearRut(rut);
   const limpio = normalizarRut(rut);
   if (!validarRut(limpio)) return '***';
   const partes = limpio.includes('-') ? limpio.split('-') : [limpio.slice(0, -1), limpio.slice(-1)];
@@ -131,7 +144,7 @@ export function enmascararRut(rut, rol) {
 
 export function enmascararCuenta(cuenta, rol) {
   const limpio = String(cuenta ?? '').replace(/\s/g, '');
-  if (rol === 'admin_ti' || rol === 'jefe_compras') return limpio;
+  if (puedeVerDatosBancarios(rol)) return limpio;
   if (!limpio) return '';
   if (limpio.length <= 4) {
     return `${'*'.repeat(Math.max(0, limpio.length - 2))}${limpio.slice(-2)}`;

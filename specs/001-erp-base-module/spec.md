@@ -9,9 +9,10 @@
 
 Este proyecto sirve como módulo base reutilizable para construir módulos ERP personalizados. Establece los patrones comunes que todo módulo ERP necesita: gestionar registros de datos maestros (**Entidades**) y sus **Documentos** transaccionales asociados, con navegación, validación, persistencia y búsqueda ya implementadas, de modo que los módulos personalizados solo necesiten definir sus campos y reglas específicos del dominio.
 
-## Escenarios de Usuario y Pruebas *(obligatorio)*
+## Escenarios de Usuario y Pruebas _(obligatorio)_
 
 ### Historia de Usuario 1 - Crear y organizar entidades (Prioridad: P1)
+
 Como usuario de negocio, quiero crear entradas de entidad con detalles claros para poder construir y mantener los datos maestros del módulo.
 
 **Por qué esta prioridad**: Este es el valor central del producto porque, sin crear entidades, el resto de la experiencia no puede aportar valor.
@@ -26,6 +27,7 @@ Como usuario de negocio, quiero crear entradas de entidad con detalles claros pa
 ---
 
 ### Historia de Usuario 2 - Editar y eliminar entidades (Prioridad: P1)
+
 Como usuario de negocio, quiero actualizar o eliminar entidades cuando cambien los datos maestros para que los registros se mantengan precisos.
 
 **Por qué esta prioridad**: Mantener los registros actualizados es esencial para la confianza en la herramienta y para soportar las operaciones comerciales diarias.
@@ -132,6 +134,7 @@ Como desarrollador de módulos, quiero declarar campos adicionales para entidade
 ---
 
 ### Historia de Usuario 8 - Buscar y encontrar entidades rápidamente (Prioridad: P2)
+
 Como usuario de negocio, quiero buscar mis entidades por detalles clave para encontrar rápidamente el registro que necesito.
 
 **Por qué esta prioridad**: La recuperación rápida mejora la utilidad cuando el conjunto de datos crece más allá de un pequeño número de entradas.
@@ -147,6 +150,7 @@ Como usuario de negocio, quiero buscar mis entidades por detalles clave para enc
 ---
 
 ### Historia de Usuario 9 - Registrar una fecha objetivo (Prioridad: P2)
+
 Como usuario de negocio, quiero adjuntar una fecha objetivo opcional a una entidad para planificar y ordenar los registros según cuándo vence algo.
 
 **Por qué esta prioridad**: La planificación consciente de fechas mejora el valor central cuando el conjunto de datos crece, pero no es necesaria para la gestión básica.
@@ -162,6 +166,7 @@ Como usuario de negocio, quiero adjuntar una fecha objetivo opcional a una entid
 ---
 
 ### Historia de Usuario 10 - Registrar los detalles de documentos de una entidad (Prioridad: P2)
+
 Como usuario de negocio, quiero registrar detalles de documentos para una entidad, para mantener la actividad transaccional organizada junto a cada registro de datos maestros.
 
 **Por qué esta prioridad**: Los documentos aportan valor operativo práctico una vez que las entidades están gestionadas, pero no son necesarios para la gestión central.
@@ -249,7 +254,7 @@ Como usuario de negocio, quiero un espacio de trabajo estilo ERP consistente, co
 - ¿Qué ocurre cuando el color de acento configurado no es un valor de color válido?
 - ¿Cómo mantiene la barra lateral contraída las etiquetas de módulo accesibles en ventanas gráficas estrechas?
 
-## Requisitos *(obligatorio)*
+## Requisitos _(obligatorio)_
 
 ### Requisitos Funcionales
 
@@ -293,7 +298,7 @@ Como usuario de negocio, quiero un espacio de trabajo estilo ERP consistente, co
 - **FR-038**: La configuración PUEDE definir un color de acento; el sistema DEBE aplicarlo consistentemente en todo el marco y retroceder de forma segura a los valores integrados cuando esté ausente o sea inválido.
 - **FR-039**: En ventanas gráficas estrechas, la barra lateral DEBE contraerse a una columna de iconos manteniéndose operable.
 
-### Requisitos de Extensibilidad *(obligaciones del módulo base)*
+### Requisitos de Extensibilidad _(obligaciones del módulo base)_
 
 Los módulos personalizados construidos sobre esta base DEBEN poder:
 
@@ -303,13 +308,13 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - **XR-004**: Apoyarse en el módulo base para generación de identidad, marcas de tiempo, integridad referencial entre entidades y documentos, y eliminación en cascada.
 - **XR-005**: Remarcar el espacio de trabajo —nombre del módulo, logotipo derivado y color de acento— únicamente mediante configuración.
 
-### Entidades Clave *(incluir si la funcionalidad implica datos)*
+### Entidades Clave _(incluir si la funcionalidad implica datos)_
 
 - **Entidad**: Un registro de datos maestros gestionado por el módulo, que incluye su nombre, código de negocio, detalles descriptivos, categoría de clasificación, una fecha objetivo opcional y un entity_id autogenerado. Los módulos personalizados definen qué representa una Entidad en el mundo real (p. ej., cliente, producto, activo).
 - **Documento**: Detalles transaccionales adjuntos a una entidad, vinculados a ella por el entity_id de la entidad. Los módulos personalizados definen qué representa un Documento (p. ej., pedido, factura, contrato).
 - **ModuleConfig**: El objeto de adaptación cargado al arrancar que define el nombre del módulo, las etiquetas de terminología, las definiciones de campos personalizados y el ciclo de vida de estados de documentos. Consulte data-model.md para su forma completa.
 
-## Criterios de Éxito *(obligatorio)*
+## Criterios de Éxito _(obligatorio)_
 
 ### Resultados Medibles
 
@@ -340,4 +345,3 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - Los datos siguen persistiéndose en el localStorage del navegador y no se ven afectados por la navegación entre pantallas.
 - La pantalla de búsqueda se centra en encontrar y ver entidades; la edición permanece en la pantalla de gestión.
 - El contenido del usuario introducido por el usuario (nombres, descripciones, notas de documentos) DEBE sanitizarse antes de renderizarse en el DOM para prevenir ataques de inyección de scripts (XSS). El módulo base DEBE escapar HTML y atributos de eventos al mostrar datos de localStorage.
-

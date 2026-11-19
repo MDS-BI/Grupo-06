@@ -15,17 +15,8 @@ export function renderLogo(container){
 }
 
 export function applyShellLabels(){
-  const labels = {
-    'nav-dashboard-label': 'Panel',
-    'nav-compras-label': 'Compras',
-    'nav-entities-label': getConfig().labels.entities,
-    'nav-documents-label': getConfig().labels.documents,
-    'nav-search-label': 'Búsqueda'
-  };
-  Object.entries(labels).forEach(([id, text]) => {
-    const el = document.getElementById(id);
-    if(el) el.textContent = text;
-  });
+  const etiqueta = document.getElementById('nav-compras-label');
+  if(etiqueta) etiqueta.textContent = 'Compras';
 }
 
 export function setActiveModule(name){

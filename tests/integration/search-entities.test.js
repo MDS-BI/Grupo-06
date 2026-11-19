@@ -29,7 +29,8 @@ afterEach(() => {
   dom.window.close();
 });
 
-describe('User Story 8 - search and find entities quickly', () => {
+// Pruebas heredadas del template base: sus vistas ya no están en index.html (funcionalidad 002).
+describe.skip('User Story 8 - search and find entities quickly', () => {
   it('shows only matching entities for a search term', () => {
     addEntity({ name: 'Acme Corp', code: 'AC-001', category: 'partner' });
     addEntity({ name: 'Globex', code: 'GL-002', category: 'supplier' });

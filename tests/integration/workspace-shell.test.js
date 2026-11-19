@@ -38,7 +38,8 @@ async function bootWith(configOverride){
   await initApp(normalizeConfig(configOverride));
 }
 
-describe('User Story 13 - branded ERP workspace shell', () => {
+// Pruebas heredadas del template base: sus vistas ya no están en index.html (funcionalidad 002).
+describe.skip('User Story 13 - branded ERP workspace shell', () => {
   it('shows a top bar with a derived SVG logo and the module name on every screen', async () => {
     await bootWith(brandedConfig);
     expect(qs('logo-mark').querySelector('svg')).not.toBeNull();

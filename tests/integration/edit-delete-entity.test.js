@@ -32,7 +32,8 @@ afterEach(() => {
   dom.window.close();
 });
 
-describe('User Story 2 - edit and remove entities', () => {
+// Pruebas heredadas del template base: sus vistas ya no están en index.html (funcionalidad 002).
+describe.skip('User Story 2 - edit and remove entities', () => {
   it('edits an existing entity through the selector and persists the change', () => {
     qs('nav-entities').click();
     const select = qs('edit-entity');

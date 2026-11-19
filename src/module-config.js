@@ -24,8 +24,21 @@ export const userConfig = null;
 export const COMPRAS_PARAMETROS = Object.freeze({
   iva: 0.19,
   umbralCotizaciones: 1000000,
-  toleranciaConciliacion: 0.01
+  toleranciaConciliacion: 0.01,
+  // FR-004 / FR-025: regla única de visibilidad de datos sensibles de proveedores.
+  datosBancarios: Object.freeze({
+    rolesVisibles: Object.freeze(['admin_ti', 'jefe_compras']),
+    rolesEdicion: Object.freeze(['admin_ti'])
+  })
 });
+
+export function puedeVerDatosBancarios(rol) {
+  return COMPRAS_PARAMETROS.datosBancarios.rolesVisibles.includes(rol);
+}
+
+export function puedeEditarDatosBancarios(rol) {
+  return COMPRAS_PARAMETROS.datosBancarios.rolesEdicion.includes(rol);
+}
 
 // Configuración opcional para reutilizar el template base con Compras:
 // Proveedor como Entidad y Orden de Compra como Documento.
@@ -76,7 +89,7 @@ export const COMPRAS_CONFIG = Object.freeze({
 // ---------------------------------------------------------------------------
 
 export const DEFAULT_CONFIG = Object.freeze({
-  moduleName: 'Módulo Base ERP',
+  moduleName: 'Adquisiciones y Compras',
   labels: Object.freeze({
     entity: 'Entidad',
     entities: 'Entidades',

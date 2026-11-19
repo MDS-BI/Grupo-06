@@ -299,272 +299,286 @@ erDiagram
 Convenciones: **PK** = clave primaria, **FK** = clave foránea, **UK** = valor único, **(S)** = dato personal o sensible (ver sección 6). Montos en pesos chilenos (CLP), enteros, sin decimales.
 
 ### 3.1 CENTRO_COSTO
+
 Área de la empresa a la que se imputa una compra (p. ej., Administración, Producción, Ventas).
 
-| Atributo | Tipo | Restricción | Descripción |
-|---|---|---|---|
-| id_centro_costo | int | PK | |
-| codigo | string | UK, obligatorio | Ej.: `CC-ADM` |
-| nombre | string | obligatorio | |
-| activo | bool | default `true` | Un centro inactivo no puede recibir solicitudes nuevas |
+| Atributo        | Tipo   | Restricción     | Descripción                                            |
+| --------------- | ------ | --------------- | ------------------------------------------------------ |
+| id_centro_costo | int    | PK              |                                                        |
+| codigo          | string | UK, obligatorio | Ej.: `CC-ADM`                                          |
+| nombre          | string | obligatorio     |                                                        |
+| activo          | bool   | default `true`  | Un centro inactivo no puede recibir solicitudes nuevas |
 
 ### 3.2 USUARIO
+
 Persona interna que opera el módulo. Su ficha maestra pertenece a RR.HH.
 
-| Atributo | Tipo | Restricción | Descripción |
-|---|---|---|---|
-| id_usuario | int | PK | |
-| nombre | string | obligatorio | (S) |
-| email | string | UK, obligatorio | Correo corporativo |
-| rol | enum | `solicitante`, `comprador`, `jefe_compras`, `bodega`, `admin_ti` | Define qué acciones puede hacer (ver regla 8, segregación de funciones) |
-| id_centro_costo | int | FK → CENTRO_COSTO | Área a la que pertenece |
-| activo | bool | default `true` | |
+| Atributo        | Tipo   | Restricción                                                      | Descripción                                                             |
+| --------------- | ------ | ---------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| id_usuario      | int    | PK                                                               |                                                                         |
+| nombre          | string | obligatorio                                                      | (S)                                                                     |
+| email           | string | UK, obligatorio                                                  | Correo corporativo                                                      |
+| rol             | enum   | `solicitante`, `comprador`, `jefe_compras`, `bodega`, `admin_ti` | Define qué acciones puede hacer (ver regla 8, segregación de funciones) |
+| id_centro_costo | int    | FK → CENTRO_COSTO                                                | Área a la que pertenece                                                 |
+| activo          | bool   | default `true`                                                   |                                                                         |
 
 ### 3.3 PROVEEDOR
+
 Persona natural o empresa que vende bienes o servicios a la organización. Es el dato maestro central de **adquisiciones**.
 
-| Atributo | Tipo | Restricción | Descripción |
-|---|---|---|---|
-| id_proveedor | int | PK | |
-| rut | string | UK, formato `12345678-9`, dígito verificador válido | (S si es persona natural) |
-| razon_social | string | obligatorio | (S si es persona natural) |
-| tipo_persona | enum | `natural`, `juridica` | |
-| giro | string | obligatorio | Giro comercial según SII |
-| email, telefono | string | al menos uno obligatorio | Contacto general (S si es persona natural) |
-| direccion, comuna, region | string | `region` obligatoria | |
-| tamano_empresa | enum | `micro`, `pequena`, `mediana`, `grande` | Permite medir cuánto se compra a pymes (ver sesgos, sección 6) |
-| estado | enum | `potencial`, `aprobado`, `bloqueado` | Solo un proveedor `aprobado` puede recibir órdenes de compra |
-| condicion_pago_dias | int | default 30; > 30 solo si `acuerdo_plazo_mayor = true` | Plazo de pago acordado, contado desde la recepción de la factura |
-| acuerdo_plazo_mayor | bool | default `false` | `true` solo si existe un acuerdo escrito de plazo mayor a 30 días inscrito según la Ley 21.131 |
-| banco, tipo_cuenta, numero_cuenta | string | opcional | Datos para el pago (S). Se muestran completos solo a `admin_ti` y `jefe_compras`; enmascarados para los demás roles. Solo `admin_ti` puede editarlos |
-| fecha_cambio_cuenta | date | se actualiza al modificar datos bancarios | Permite alertar pagos a cuentas recién cambiadas (ver sección 6) |
-| fecha_registro | date | obligatorio | |
+| Atributo                          | Tipo   | Restricción                                           | Descripción                                                                                                                                          |
+| --------------------------------- | ------ | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| id_proveedor                      | int    | PK                                                    |                                                                                                                                                      |
+| rut                               | string | UK, formato `12345678-9`, dígito verificador válido   | (S si es persona natural)                                                                                                                            |
+| razon_social                      | string | obligatorio                                           | (S si es persona natural)                                                                                                                            |
+| tipo_persona                      | enum   | `natural`, `juridica`                                 |                                                                                                                                                      |
+| giro                              | string | obligatorio                                           | Giro comercial según SII                                                                                                                             |
+| email, telefono                   | string | al menos uno obligatorio                              | Contacto general (S si es persona natural)                                                                                                           |
+| direccion, comuna, region         | string | `region` obligatoria                                  |                                                                                                                                                      |
+| tamano_empresa                    | enum   | `micro`, `pequena`, `mediana`, `grande`               | Permite medir cuánto se compra a pymes (ver sesgos, sección 6)                                                                                       |
+| estado                            | enum   | `potencial`, `aprobado`, `bloqueado`                  | Solo un proveedor `aprobado` puede recibir órdenes de compra                                                                                         |
+| condicion_pago_dias               | int    | default 30; > 30 solo si `acuerdo_plazo_mayor = true` | Plazo de pago acordado, contado desde la recepción de la factura                                                                                     |
+| acuerdo_plazo_mayor               | bool   | default `false`                                       | `true` solo si existe un acuerdo escrito de plazo mayor a 30 días inscrito según la Ley 21.131                                                       |
+| banco, tipo_cuenta, numero_cuenta | string | opcional                                              | Datos para el pago (S). Se muestran completos solo a `admin_ti` y `jefe_compras`; enmascarados para los demás roles. Solo `admin_ti` puede editarlos |
+| fecha_cambio_cuenta               | date   | se actualiza al modificar datos bancarios             | Permite alertar pagos a cuentas recién cambiadas (ver sección 6)                                                                                     |
+| fecha_registro                    | date   | obligatorio                                           |                                                                                                                                                      |
 
 ### 3.4 CONTACTO_PROVEEDOR
+
 Persona de contacto dentro de un proveedor.
 
-| Atributo | Tipo | Restricción | Descripción |
-|---|---|---|---|
-| id_contacto | int | PK | |
-| id_proveedor | int | FK → PROVEEDOR | |
-| nombre, cargo | string | `nombre` obligatorio | (S) |
-| email, telefono | string | al menos uno obligatorio | (S) |
-| es_principal | bool | máximo uno `true` por proveedor | |
+| Atributo        | Tipo   | Restricción                     | Descripción |
+| --------------- | ------ | ------------------------------- | ----------- |
+| id_contacto     | int    | PK                              |             |
+| id_proveedor    | int    | FK → PROVEEDOR                  |             |
+| nombre, cargo   | string | `nombre` obligatorio            | (S)         |
+| email, telefono | string | al menos uno obligatorio        | (S)         |
+| es_principal    | bool   | máximo uno `true` por proveedor |             |
 
 ### 3.5 PRODUCTO
+
 Bien o servicio que se compra. **Entidad compartida** con el módulo de Inventario: Compras solo la lee.
 
-| Atributo | Tipo | Restricción | Descripción |
-|---|---|---|---|
-| id_producto | int | PK | |
-| sku | string | UK | Código del producto |
-| nombre, categoria | string | obligatorio | |
-| unidad | string | obligatorio | `unidad`, `caja`, `kg`, `hora`, etc. |
-| activo | bool | default `true` | Un producto inactivo no se puede solicitar |
+| Atributo          | Tipo   | Restricción    | Descripción                                |
+| ----------------- | ------ | -------------- | ------------------------------------------ |
+| id_producto       | int    | PK             |                                            |
+| sku               | string | UK             | Código del producto                        |
+| nombre, categoria | string | obligatorio    |                                            |
+| unidad            | string | obligatorio    | `unidad`, `caja`, `kg`, `hora`, etc.       |
+| activo            | bool   | default `true` | Un producto inactivo no se puede solicitar |
 
 ### 3.6 PROVEEDOR_PRODUCTO
+
 Catálogo de lo que ofrece cada proveedor, con su precio de referencia. Resuelve la relación N:M entre PROVEEDOR y PRODUCTO.
 
-| Atributo | Tipo | Restricción | Descripción |
-|---|---|---|---|
-| id_proveedor_producto | int | PK | |
-| id_proveedor | int | FK → PROVEEDOR | |
-| id_producto | int | FK → PRODUCTO | |
-| precio_referencia | decimal | > 0 | Precio neto conocido o negociado |
-| plazo_entrega_dias | int | ≥ 0 | Plazo habitual de entrega |
-| fecha_actualizacion | date | obligatorio | Un precio con más de 90 días sin actualizar se marca como desactualizado |
+| Atributo              | Tipo    | Restricción    | Descripción                                                              |
+| --------------------- | ------- | -------------- | ------------------------------------------------------------------------ |
+| id_proveedor_producto | int     | PK             |                                                                          |
+| id_proveedor          | int     | FK → PROVEEDOR |                                                                          |
+| id_producto           | int     | FK → PRODUCTO  |                                                                          |
+| precio_referencia     | decimal | > 0            | Precio neto conocido o negociado                                         |
+| plazo_entrega_dias    | int     | ≥ 0            | Plazo habitual de entrega                                                |
+| fecha_actualizacion   | date    | obligatorio    | Un precio con más de 90 días sin actualizar se marca como desactualizado |
 
 Restricción: la combinación (`id_proveedor`, `id_producto`) es única.
 
 ### 3.7 SOLICITUD_COMPRA y DETALLE_SOLICITUD
+
 Necesidad interna formal. Es el punto de partida obligatorio de toda compra.
 
-| Atributo | Tipo | Restricción | Descripción |
-|---|---|---|---|
-| id_solicitud | int | PK | |
-| numero | string | UK, ej. `SC-2026-0001` | Correlativo visible |
-| id_solicitante | int | FK → USUARIO | Quien pide |
-| id_aprobador | int | FK → USUARIO, opcional | Se llena al aprobar o rechazar; debe ser distinto del solicitante |
-| id_centro_costo | int | FK → CENTRO_COSTO | Por defecto, el del solicitante |
-| fecha_solicitud | date | obligatorio | |
-| fecha_requerida | date | ≥ fecha_solicitud | Cuándo se necesita |
-| prioridad | enum | `normal`, `urgente` | |
-| justificacion | text | obligatorio, máx. 500 caracteres | Para qué se necesita |
-| estado | enum | `borrador`, `enviada`, `aprobada`, `rechazada`, `en_cotizacion`, `adjudicada`, `anulada` | Ver regla 2 |
-| fecha_aprobacion | date | obligatorio si `aprobada` o `rechazada` | |
-| motivo_rechazo | text | obligatorio si `rechazada` | |
-| motivo_anulacion | text | obligatorio si `anulada` | Quién anuló y cuándo queda en HISTORIAL_TRAZABILIDAD (FR-029) |
-| justificacion_proveedor_unico | text | opcional, máx. 500 caracteres | Permite seleccionar una cotización con menos de 3 ofertas sobre el umbral (regla 3) |
-| monto_estimado | decimal | calculado | ∑ subtotal_estimado |
+| Atributo                      | Tipo    | Restricción                                                                              | Descripción                                                                         |
+| ----------------------------- | ------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| id_solicitud                  | int     | PK                                                                                       |                                                                                     |
+| numero                        | string  | UK, ej. `SC-2026-0001`                                                                   | Correlativo visible                                                                 |
+| id_solicitante                | int     | FK → USUARIO                                                                             | Quien pide                                                                          |
+| id_aprobador                  | int     | FK → USUARIO, opcional                                                                   | Se llena al aprobar o rechazar; debe ser distinto del solicitante                   |
+| id_centro_costo               | int     | FK → CENTRO_COSTO                                                                        | Por defecto, el del solicitante                                                     |
+| fecha_solicitud               | date    | obligatorio                                                                              |                                                                                     |
+| fecha_requerida               | date    | ≥ fecha_solicitud                                                                        | Cuándo se necesita                                                                  |
+| prioridad                     | enum    | `normal`, `urgente`                                                                      |                                                                                     |
+| justificacion                 | text    | obligatorio, máx. 500 caracteres                                                         | Para qué se necesita                                                                |
+| estado                        | enum    | `borrador`, `enviada`, `aprobada`, `rechazada`, `en_cotizacion`, `adjudicada`, `anulada` | Ver regla 2                                                                         |
+| fecha_aprobacion              | date    | obligatorio si `aprobada` o `rechazada`                                                  |                                                                                     |
+| motivo_rechazo                | text    | obligatorio si `rechazada`                                                               |                                                                                     |
+| motivo_anulacion              | text    | obligatorio si `anulada`                                                                 | Quién anuló y cuándo queda en HISTORIAL_TRAZABILIDAD (FR-029)                       |
+| justificacion_proveedor_unico | text    | opcional, máx. 500 caracteres                                                            | Permite seleccionar una cotización con menos de 3 ofertas sobre el umbral (regla 3) |
+| monto_estimado                | decimal | calculado                                                                                | ∑ subtotal_estimado                                                                 |
 
-| Atributo (detalle) | Tipo | Restricción | Descripción |
-|---|---|---|---|
-| id_detalle | int | PK | |
-| id_solicitud | int | FK → SOLICITUD_COMPRA | |
-| id_producto | int | FK → PRODUCTO | |
-| cantidad | int | > 0 | |
-| precio_estimado | decimal | ≥ 0 | Se sugiere el menor `precio_referencia` del catálogo |
-| subtotal_estimado | decimal | calculado | cantidad × precio_estimado |
+| Atributo (detalle) | Tipo    | Restricción           | Descripción                                          |
+| ------------------ | ------- | --------------------- | ---------------------------------------------------- |
+| id_detalle         | int     | PK                    |                                                      |
+| id_solicitud       | int     | FK → SOLICITUD_COMPRA |                                                      |
+| id_producto        | int     | FK → PRODUCTO         |                                                      |
+| cantidad           | int     | > 0                   |                                                      |
+| precio_estimado    | decimal | ≥ 0                   | Se sugiere el menor `precio_referencia` del catálogo |
+| subtotal_estimado  | decimal | calculado             | cantidad × precio_estimado                           |
 
 ### 3.8 COTIZACION_PROVEEDOR y DETALLE_COTIZACION
+
 Oferta de un proveedor para una solicitud.
 
-| Atributo | Tipo | Restricción | Descripción |
-|---|---|---|---|
-| id_cotizacion | int | PK | |
-| numero | string | UK, ej. `CP-2026-0001` | Correlativo interno |
-| id_solicitud | int | FK → SOLICITUD_COMPRA | |
-| id_proveedor | int | FK → PROVEEDOR | Puede ser `potencial` o `aprobado`; no `bloqueado` |
-| fecha_recepcion | date | obligatorio | |
-| fecha_validez | date | ≥ fecha_recepcion | |
-| plazo_entrega_dias | int | ≥ 0 | Plazo ofrecido |
-| condicion_pago_dias | int | > 0 | Plazo de pago ofrecido |
-| estado | enum | `recibida`, `seleccionada`, `descartada`, `vencida`, `anulada` | Ver reglas 3 y 11 |
-| motivo_descarte | enum | obligatorio si `descartada`: `precio`, `plazo`, `calidad`, `condiciones`, `otro` | Deja trazabilidad de por qué no se eligió |
-| motivo_anulacion | text | obligatorio si `anulada` | Quién anuló y cuándo queda en HISTORIAL_TRAZABILIDAD (FR-029) |
-| neto, iva, total | decimal | calculados | |
+| Atributo            | Tipo    | Restricción                                                                      | Descripción                                                   |
+| ------------------- | ------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| id_cotizacion       | int     | PK                                                                               |                                                               |
+| numero              | string  | UK, ej. `CP-2026-0001`                                                           | Correlativo interno                                           |
+| id_solicitud        | int     | FK → SOLICITUD_COMPRA                                                            |                                                               |
+| id_proveedor        | int     | FK → PROVEEDOR                                                                   | Puede ser `potencial` o `aprobado`; no `bloqueado`            |
+| fecha_recepcion     | date    | obligatorio                                                                      |                                                               |
+| fecha_validez       | date    | ≥ fecha_recepcion                                                                |                                                               |
+| plazo_entrega_dias  | int     | ≥ 0                                                                              | Plazo ofrecido                                                |
+| condicion_pago_dias | int     | > 0                                                                              | Plazo de pago ofrecido                                        |
+| estado              | enum    | `recibida`, `seleccionada`, `descartada`, `vencida`, `anulada`                   | Ver reglas 3 y 11                                             |
+| motivo_descarte     | enum    | obligatorio si `descartada`: `precio`, `plazo`, `calidad`, `condiciones`, `otro` | Deja trazabilidad de por qué no se eligió                     |
+| motivo_anulacion    | text    | obligatorio si `anulada`                                                         | Quién anuló y cuándo queda en HISTORIAL_TRAZABILIDAD (FR-029) |
+| neto, iva, total    | decimal | calculados                                                                       |                                                               |
 
 Restricción: la combinación (`id_solicitud`, `id_proveedor`) es única; si el proveedor reenvía su oferta, se actualiza la existente.
 
-| Atributo (detalle) | Tipo | Restricción | Descripción |
-|---|---|---|---|
-| id_detalle | int | PK | |
-| id_cotizacion | int | FK → COTIZACION_PROVEEDOR | |
-| id_producto | int | FK → PRODUCTO | Debe estar en la solicitud |
-| cantidad | int | > 0 | |
-| precio_unitario | decimal | > 0 | Neto |
-| descuento_pct | decimal | 0 a 100 | |
-| subtotal | decimal | calculado | |
+| Atributo (detalle) | Tipo    | Restricción               | Descripción                |
+| ------------------ | ------- | ------------------------- | -------------------------- |
+| id_detalle         | int     | PK                        |                            |
+| id_cotizacion      | int     | FK → COTIZACION_PROVEEDOR |                            |
+| id_producto        | int     | FK → PRODUCTO             | Debe estar en la solicitud |
+| cantidad           | int     | > 0                       |                            |
+| precio_unitario    | decimal | > 0                       | Neto                       |
+| descuento_pct      | decimal | 0 a 100                   |                            |
+| subtotal           | decimal | calculado                 |                            |
 
 ### 3.9 ORDEN_COMPRA y DETALLE_OC
+
 Compromiso formal de compra con un proveedor.
 
-| Atributo | Tipo | Restricción | Descripción |
-|---|---|---|---|
-| id_orden | int | PK | |
-| numero | string | UK, ej. `OC-2026-0001` | |
-| id_solicitud | int | FK → SOLICITUD_COMPRA, obligatorio | Toda OC nace de una solicitud aprobada |
-| id_cotizacion | int | FK → COTIZACION_PROVEEDOR, opcional, **único** | Vacío en compras directas (regla 4). Una cotización genera como máximo una OC; como no hay backend, la unicidad la valida la aplicación |
-| id_proveedor | int | FK → PROVEEDOR | Si hay cotización, debe ser el mismo proveedor de la cotización |
-| id_comprador | int | FK → USUARIO | Rol `comprador` o `jefe_compras` |
-| fecha_emision | date | obligatorio | |
-| fecha_entrega_esperada | date | ≥ fecha_emision | |
-| condicion_pago_dias | int | > 0 | Por defecto la del proveedor |
-| estado | enum | `borrador`, `emitida`, `recibida_parcial`, `recibida_total`, `cerrada`, `anulada` | Ver regla 4 |
-| motivo_anulacion | text | obligatorio si `anulada` | Quién anuló y cuándo queda en HISTORIAL_TRAZABILIDAD (FR-029) |
-| neto, iva, total | decimal | calculados | |
+| Atributo               | Tipo    | Restricción                                                                       | Descripción                                                                                                                             |
+| ---------------------- | ------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| id_orden               | int     | PK                                                                                |                                                                                                                                         |
+| numero                 | string  | UK, ej. `OC-2026-0001`                                                            |                                                                                                                                         |
+| id_solicitud           | int     | FK → SOLICITUD_COMPRA, obligatorio                                                | Toda OC nace de una solicitud aprobada                                                                                                  |
+| id_cotizacion          | int     | FK → COTIZACION_PROVEEDOR, opcional, **único**                                    | Vacío en compras directas (regla 4). Una cotización genera como máximo una OC; como no hay backend, la unicidad la valida la aplicación |
+| id_proveedor           | int     | FK → PROVEEDOR                                                                    | Si hay cotización, debe ser el mismo proveedor de la cotización                                                                         |
+| id_comprador           | int     | FK → USUARIO                                                                      | Rol `comprador` o `jefe_compras`                                                                                                        |
+| fecha_emision          | date    | obligatorio                                                                       |                                                                                                                                         |
+| fecha_entrega_esperada | date    | ≥ fecha_emision                                                                   |                                                                                                                                         |
+| condicion_pago_dias    | int     | > 0                                                                               | Por defecto la del proveedor                                                                                                            |
+| estado                 | enum    | `borrador`, `emitida`, `recibida_parcial`, `recibida_total`, `cerrada`, `anulada` | Ver regla 4                                                                                                                             |
+| motivo_anulacion       | text    | obligatorio si `anulada`                                                          | Quién anuló y cuándo queda en HISTORIAL_TRAZABILIDAD (FR-029)                                                                           |
+| neto, iva, total       | decimal | calculados                                                                        |                                                                                                                                         |
 
-| Atributo (detalle) | Tipo | Restricción | Descripción |
-|---|---|---|---|
-| id_detalle_oc | int | PK | Lo referencia la recepción |
-| id_orden | int | FK → ORDEN_COMPRA | |
-| id_producto | int | FK → PRODUCTO | |
-| cantidad | int | > 0 | Cantidad comprometida |
-| precio_unitario | decimal | > 0 | Se copia desde la cotización (o se ingresa en compra directa) y no cambia después |
-| descuento_pct | decimal | 0 a 100 | |
-| subtotal | decimal | calculado | |
+| Atributo (detalle) | Tipo    | Restricción       | Descripción                                                                       |
+| ------------------ | ------- | ----------------- | --------------------------------------------------------------------------------- |
+| id_detalle_oc      | int     | PK                | Lo referencia la recepción                                                        |
+| id_orden           | int     | FK → ORDEN_COMPRA |                                                                                   |
+| id_producto        | int     | FK → PRODUCTO     |                                                                                   |
+| cantidad           | int     | > 0               | Cantidad comprometida                                                             |
+| precio_unitario    | decimal | > 0               | Se copia desde la cotización (o se ingresa en compra directa) y no cambia después |
+| descuento_pct      | decimal | 0 a 100           |                                                                                   |
+| subtotal           | decimal | calculado         |                                                                                   |
 
 ### 3.10 RECEPCION y DETALLE_RECEPCION
+
 Registro de lo que efectivamente llegó. Una OC puede recibirse en varias entregas.
 
-| Atributo | Tipo | Restricción | Descripción |
-|---|---|---|---|
-| id_recepcion | int | PK | |
-| numero | string | UK, ej. `RC-2026-0001` | |
-| id_orden | int | FK → ORDEN_COMPRA | La OC debe estar `emitida` o `recibida_parcial` |
-| id_receptor | int | FK → USUARIO | Rol `bodega`; distinto del comprador de la OC |
-| fecha_recepcion | date | obligatorio | |
-| numero_guia_despacho | string | opcional | Documento del proveedor que acompaña la entrega |
-| observaciones | text | máx. 500 caracteres | |
-| estado | enum | `registrada`, `anulada` | Una recepción anulada no cuenta para las cantidades recibidas ni para el valor recibido |
-| motivo_anulacion | text | obligatorio si `anulada` | Quién anuló y cuándo queda en HISTORIAL_TRAZABILIDAD (FR-029) |
+| Atributo             | Tipo   | Restricción              | Descripción                                                                             |
+| -------------------- | ------ | ------------------------ | --------------------------------------------------------------------------------------- |
+| id_recepcion         | int    | PK                       |                                                                                         |
+| numero               | string | UK, ej. `RC-2026-0001`   |                                                                                         |
+| id_orden             | int    | FK → ORDEN_COMPRA        | La OC debe estar `emitida` o `recibida_parcial`                                         |
+| id_receptor          | int    | FK → USUARIO             | Rol `bodega`; distinto del comprador de la OC                                           |
+| fecha_recepcion      | date   | obligatorio              |                                                                                         |
+| numero_guia_despacho | string | opcional                 | Documento del proveedor que acompaña la entrega                                         |
+| observaciones        | text   | máx. 500 caracteres      |                                                                                         |
+| estado               | enum   | `registrada`, `anulada`  | Una recepción anulada no cuenta para las cantidades recibidas ni para el valor recibido |
+| motivo_anulacion     | text   | obligatorio si `anulada` | Quién anuló y cuándo queda en HISTORIAL_TRAZABILIDAD (FR-029)                           |
 
-| Atributo (detalle) | Tipo | Restricción | Descripción |
-|---|---|---|---|
-| id_detalle_recepcion | int | PK | |
-| id_recepcion | int | FK → RECEPCION | |
-| id_detalle_oc | int | FK → DETALLE_OC | Línea de la OC que se está recibiendo |
-| cantidad_aceptada | int | ≥ 0 | Cuenta para completar la OC y para Inventario |
-| cantidad_rechazada | int | ≥ 0 | aceptada + rechazada > 0 |
-| motivo_rechazo | enum | obligatorio si rechazada > 0: `danado`, `no_corresponde`, `fuera_de_especificacion`, `otro` | |
+| Atributo (detalle)   | Tipo | Restricción                                                                                 | Descripción                                   |
+| -------------------- | ---- | ------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| id_detalle_recepcion | int  | PK                                                                                          |                                               |
+| id_recepcion         | int  | FK → RECEPCION                                                                              |                                               |
+| id_detalle_oc        | int  | FK → DETALLE_OC                                                                             | Línea de la OC que se está recibiendo         |
+| cantidad_aceptada    | int  | ≥ 0                                                                                         | Cuenta para completar la OC y para Inventario |
+| cantidad_rechazada   | int  | ≥ 0                                                                                         | aceptada + rechazada > 0                      |
+| motivo_rechazo       | enum | obligatorio si rechazada > 0: `danado`, `no_corresponde`, `fuera_de_especificacion`, `otro` |                                               |
 
 ### 3.11 FACTURA_PROVEEDOR
+
 Factura o nota de crédito emitida por el proveedor por una OC. **Entidad de interfaz** con el módulo de Contabilidad, que registra la cuenta por pagar y el pago.
 
-| Atributo | Tipo | Restricción | Descripción |
-|---|---|---|---|
-| id_factura | int | PK | |
-| id_proveedor | int | FK → PROVEEDOR | Debe coincidir con el proveedor de la OC. Se guarda porque el folio es único por proveedor |
-| id_orden | int | FK → ORDEN_COMPRA | La OC debe tener al menos una recepción |
-| tipo_documento | enum | `factura`, `nota_credito` | |
-| folio | int | > 0 | La combinación (`id_proveedor`, `tipo_documento`, `folio`) es única |
-| fecha_emision | date | obligatorio | |
-| fecha_recepcion | date | ≥ fecha_emision | Desde aquí se cuenta el plazo legal de pago |
-| fecha_vencimiento | date | calculado | fecha_recepcion + condicion_pago_dias de la OC |
-| neto, iva, total | decimal | obligatorios | Se ingresan tal como vienen en el documento |
-| estado | enum | `recibida`, `conciliada`, `con_discrepancia`, `aprobada_pago`, `rechazada`, `anulada` | Ver reglas 6 y 11 |
-| motivo_anulacion | text | obligatorio si `anulada` | Quién anuló y cuándo queda en HISTORIAL_TRAZABILIDAD (FR-029) |
-| saldada | bool | default `false` | `true` cuando devoluciones o notas de crédito reducen a cero el saldo pendiente de la factura; no pasa a `aprobada_pago` por el monto descontado |
-| credito_a_favor | decimal | ≥ 0, default 0 | Diferencia a favor de la empresa cuando se registra una devolución `defectuoso` sobre una factura ya `aprobada_pago`; queda pendiente de compensar con una nota de crédito |
+| Atributo          | Tipo    | Restricción                                                                           | Descripción                                                                                                                                                                |
+| ----------------- | ------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| id_factura        | int     | PK                                                                                    |                                                                                                                                                                            |
+| id_proveedor      | int     | FK → PROVEEDOR                                                                        | Debe coincidir con el proveedor de la OC. Se guarda porque el folio es único por proveedor                                                                                 |
+| id_orden          | int     | FK → ORDEN_COMPRA                                                                     | La OC debe tener al menos una recepción                                                                                                                                    |
+| tipo_documento    | enum    | `factura`, `nota_credito`                                                             |                                                                                                                                                                            |
+| folio             | int     | > 0                                                                                   | La combinación (`id_proveedor`, `tipo_documento`, `folio`) es única                                                                                                        |
+| fecha_emision     | date    | obligatorio                                                                           |                                                                                                                                                                            |
+| fecha_recepcion   | date    | ≥ fecha_emision                                                                       | Desde aquí se cuenta el plazo legal de pago                                                                                                                                |
+| fecha_vencimiento | date    | calculado                                                                             | fecha_recepcion + condicion_pago_dias de la OC                                                                                                                             |
+| neto, iva, total  | decimal | obligatorios                                                                          | Se ingresan tal como vienen en el documento                                                                                                                                |
+| estado            | enum    | `recibida`, `conciliada`, `con_discrepancia`, `aprobada_pago`, `rechazada`, `anulada` | Ver reglas 6 y 11                                                                                                                                                          |
+| motivo_anulacion  | text    | obligatorio si `anulada`                                                              | Quién anuló y cuándo queda en HISTORIAL_TRAZABILIDAD (FR-029)                                                                                                              |
+| saldada           | bool    | default `false`                                                                       | `true` cuando devoluciones o notas de crédito reducen a cero el saldo pendiente de la factura; no pasa a `aprobada_pago` por el monto descontado                           |
+| credito_a_favor   | decimal | ≥ 0, default 0                                                                        | Diferencia a favor de la empresa cuando se registra una devolución `defectuoso` sobre una factura ya `aprobada_pago`; queda pendiente de compensar con una nota de crédito |
 
 > En el MVP las facturas son **simuladas**: se ingresan a mano y no se conectan al SII.
 
 ### 3.12 EVALUACION_PROVEEDOR
+
 Evaluación del desempeño del proveedor en una OC ya recibida.
 
-| Atributo | Tipo | Restricción | Descripción |
-|---|---|---|---|
-| id_evaluacion | int | PK | |
-| id_orden | int | FK → ORDEN_COMPRA, **único** | Una evaluación por OC; el proveedor se obtiene desde la OC |
-| id_evaluador | int | FK → USUARIO | |
-| fecha | date | obligatorio | |
-| nota_calidad | int | 1 a 5 | Ingresada por el evaluador |
-| nota_plazo | int | 1 a 5, **calculada** | Según días de atraso (regla 7); no la ingresa el usuario |
-| nota_servicio | int | 1 a 5 | Ingresada por el evaluador |
-| comentario | text | máx. 500 caracteres | |
+| Atributo      | Tipo | Restricción                  | Descripción                                                |
+| ------------- | ---- | ---------------------------- | ---------------------------------------------------------- |
+| id_evaluacion | int  | PK                           |                                                            |
+| id_orden      | int  | FK → ORDEN_COMPRA, **único** | Una evaluación por OC; el proveedor se obtiene desde la OC |
+| id_evaluador  | int  | FK → USUARIO                 |                                                            |
+| fecha         | date | obligatorio                  |                                                            |
+| nota_calidad  | int  | 1 a 5                        | Ingresada por el evaluador                                 |
+| nota_plazo    | int  | 1 a 5, **calculada**         | Según días de atraso (regla 7); no la ingresa el usuario   |
+| nota_servicio | int  | 1 a 5                        | Ingresada por el evaluador                                 |
+| comentario    | text | máx. 500 caracteres          |                                                            |
 
 ### 3.13 DEVOLUCION y DETALLE_DEVOLUCION
+
 Devolución de unidades aceptadas en una recepción. Genera un documento con correlativo `DEV-AAAA-NNNN` y descuenta el saldo recibido. Las notas de crédito se siguen registrando como `FACTURA_PROVEEDOR` con `tipo_documento = nota_credito`.
 
-| Atributo | Tipo | Restricción | Descripción |
-|---|---|---|---|
-| id_devolucion | int | PK | |
-| numero | string | UK, ej. `DEV-2026-0001` | Correlativo interno |
-| id_orden | int | FK → ORDEN_COMPRA | La OC debe tener al menos una recepción |
-| id_factura | int | FK → FACTURA_PROVEEDOR, opcional | Obligatoria si la devolución descuenta una factura ya registrada |
-| id_receptor_original | int | FK → USUARIO | Quien registró la recepción; no puede registrar la devolución sin aprobación |
-| id_aprobador | int | FK → USUARIO, opcional | `jefe_compras` o `admin_ti` distinto del receptor cuando corresponda |
-| fecha | date | obligatorio | |
-| motivo | enum | `defectuoso`, `no_corresponde`, `fuera_de_especificacion`, `otro` | |
-| observaciones | text | máx. 500 caracteres | |
-| estado | enum | `registrada`, `aprobada`, `anulada` | Ver regla 10 |
-| motivo_anulacion | text | obligatorio si `anulada` | Quién anuló y cuándo queda en HISTORIAL_TRAZABILIDAD (FR-029) |
-| neto | decimal | calculado | ∑ subtotales de las líneas devueltas |
+| Atributo             | Tipo    | Restricción                                                       | Descripción                                                                  |
+| -------------------- | ------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| id_devolucion        | int     | PK                                                                |                                                                              |
+| numero               | string  | UK, ej. `DEV-2026-0001`                                           | Correlativo interno                                                          |
+| id_orden             | int     | FK → ORDEN_COMPRA                                                 | La OC debe tener al menos una recepción                                      |
+| id_factura           | int     | FK → FACTURA_PROVEEDOR, opcional                                  | Obligatoria si la devolución descuenta una factura ya registrada             |
+| id_receptor_original | int     | FK → USUARIO                                                      | Quien registró la recepción; no puede registrar la devolución sin aprobación |
+| id_aprobador         | int     | FK → USUARIO, opcional                                            | `jefe_compras` o `admin_ti` distinto del receptor cuando corresponda         |
+| fecha                | date    | obligatorio                                                       |                                                                              |
+| motivo               | enum    | `defectuoso`, `no_corresponde`, `fuera_de_especificacion`, `otro` |                                                                              |
+| observaciones        | text    | máx. 500 caracteres                                               |                                                                              |
+| estado               | enum    | `registrada`, `aprobada`, `anulada`                               | Ver regla 10                                                                 |
+| motivo_anulacion     | text    | obligatorio si `anulada`                                          | Quién anuló y cuándo queda en HISTORIAL_TRAZABILIDAD (FR-029)                |
+| neto                 | decimal | calculado                                                         | ∑ subtotales de las líneas devueltas                                         |
 
-| Atributo (detalle) | Tipo | Restricción | Descripción |
-|---|---|---|---|
-| id_detalle_devolucion | int | PK | |
-| id_devolucion | int | FK → DEVOLUCION | |
-| id_detalle_recepcion | int | FK → DETALLE_RECEPCION | Línea recibida que se devuelve |
-| cantidad | int | > 0 | No puede superar la cantidad aceptada pendiente de devolver |
-| precio_unitario | decimal | > 0 | Se copia desde la OC |
-| subtotal | decimal | calculado | |
+| Atributo (detalle)    | Tipo    | Restricción            | Descripción                                                 |
+| --------------------- | ------- | ---------------------- | ----------------------------------------------------------- |
+| id_detalle_devolucion | int     | PK                     |                                                             |
+| id_devolucion         | int     | FK → DEVOLUCION        |                                                             |
+| id_detalle_recepcion  | int     | FK → DETALLE_RECEPCION | Línea recibida que se devuelve                              |
+| cantidad              | int     | > 0                    | No puede superar la cantidad aceptada pendiente de devolver |
+| precio_unitario       | decimal | > 0                    | Se copia desde la OC                                        |
+| subtotal              | decimal | calculado              |                                                             |
 
 ### 3.14 HISTORIAL_TRAZABILIDAD
+
 Registro inmutable de quién, cuándo y qué acción se ejecutó sobre los documentos del ciclo y sobre los datos bancarios del proveedor (FR-027 a FR-030). Permite navegar la cadena documental y conserva las anulaciones con su motivo.
 
-| Atributo | Tipo | Restricción | Descripción |
-|---|---|---|---|
-| id_evento | int | PK | |
-| entidad | enum | `solicitud`, `cotizacion`, `orden_compra`, `recepcion`, `factura`, `devolucion`, `proveedor` | Tipo de registro afectado |
-| id_entidad | int | obligatorio | Identificador del registro afectado (referencia polimórfica según `entidad`) |
-| accion | string | obligatorio | Acción ejecutada (p. ej., `creacion`, `envio`, `aprobacion`, `rechazo`, `anulacion`, `cambio_bancario`) |
-| estado_anterior | string | opcional | Estado antes del cambio |
-| estado_nuevo | string | opcional | Estado después del cambio |
-| id_usuario | int | FK → USUARIO, obligatorio | Quién ejecutó la acción |
-| rol_usuario | enum | rol activo al momento de la acción | Se guarda porque el rol simulado puede cambiar |
-| detalle | text | opcional | Motivo de rechazo o anulación u otra observación. En cambios bancarios contiene solo el valor **enmascarado**, nunca el número completo (FR-030) |
-| fecha_hora | datetime | obligatorio | Cuándo ocurrió |
+| Atributo        | Tipo     | Restricción                                                                                  | Descripción                                                                                                                                      |
+| --------------- | -------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| id_evento       | int      | PK                                                                                           |                                                                                                                                                  |
+| entidad         | enum     | `solicitud`, `cotizacion`, `orden_compra`, `recepcion`, `factura`, `devolucion`, `proveedor` | Tipo de registro afectado                                                                                                                        |
+| id_entidad      | int      | obligatorio                                                                                  | Identificador del registro afectado (referencia polimórfica según `entidad`)                                                                     |
+| accion          | string   | obligatorio                                                                                  | Acción ejecutada (p. ej., `creacion`, `envio`, `aprobacion`, `rechazo`, `anulacion`, `cambio_bancario`)                                          |
+| estado_anterior | string   | opcional                                                                                     | Estado antes del cambio                                                                                                                          |
+| estado_nuevo    | string   | opcional                                                                                     | Estado después del cambio                                                                                                                        |
+| id_usuario      | int      | FK → USUARIO, obligatorio                                                                    | Quién ejecutó la acción                                                                                                                          |
+| rol_usuario     | enum     | rol activo al momento de la acción                                                           | Se guarda porque el rol simulado puede cambiar                                                                                                   |
+| detalle         | text     | opcional                                                                                     | Motivo de rechazo o anulación u otra observación. En cambios bancarios contiene solo el valor **enmascarado**, nunca el número completo (FR-030) |
+| fecha_hora      | datetime | obligatorio                                                                                  | Cuándo ocurrió                                                                                                                                   |
 
 Restricciones: los eventos no se editan ni se eliminan. Un documento con al menos un evento no puede eliminarse; solo puede anularse con motivo (FR-029). El historial se muestra con el mismo enmascaramiento que el resto de la aplicación (FR-025).
 
@@ -572,38 +586,38 @@ Restricciones: los eventos no se editan ni se eliminan. Un documento con al meno
 
 ## 4. Relaciones y cardinalidades
 
-| Relación | Cardinalidad | Justificación |
-|---|---|---|
-| CENTRO_COSTO – USUARIO | 1 : N | Cada usuario pertenece a un área |
-| CENTRO_COSTO – SOLICITUD_COMPRA | 1 : N | Toda compra se imputa a un centro de costo |
-| USUARIO (solicitante) – SOLICITUD_COMPRA | 1 : N | |
-| USUARIO (aprobador) – SOLICITUD_COMPRA | 0..1 : N | El aprobador se asigna recién al aprobar o rechazar |
-| PROVEEDOR – CONTACTO_PROVEEDOR | 1 : N (0..N) | Un proveedor persona natural puede no tener contactos adicionales |
-| PROVEEDOR – PRODUCTO | N : M | Resuelta por PROVEEDOR_PRODUCTO (catálogo con precio de referencia) |
-| SOLICITUD_COMPRA – DETALLE_SOLICITUD | 1 : 1..N | Una solicitud sin productos no es válida |
-| SOLICITUD_COMPRA – COTIZACION_PROVEEDOR | 1 : N (0..N) | Una compra directa no requiere cotizaciones |
-| PROVEEDOR – COTIZACION_PROVEEDOR | 1 : N | Máximo una cotización por proveedor y solicitud |
-| COTIZACION_PROVEEDOR – DETALLE_COTIZACION | 1 : 1..N | |
-| SOLICITUD_COMPRA – ORDEN_COMPRA | 1 : N (0..N) | Normalmente una; N permite anular una OC y reemitirla. Solo una OC no anulada por solicitud |
-| COTIZACION_PROVEEDOR – ORDEN_COMPRA | 0..1 : 0..1 | Una cotización seleccionada genera una OC; una compra directa no tiene cotización |
-| PROVEEDOR – ORDEN_COMPRA | 1 : N | |
-| USUARIO (comprador) – ORDEN_COMPRA | 1 : N | |
-| ORDEN_COMPRA – DETALLE_OC | 1 : 1..N | |
-| PRODUCTO – DETALLE_SOLICITUD / DETALLE_COTIZACION / DETALLE_OC | 1 : N | Relación N:M entre producto y cada documento, resuelta por la tabla de detalle |
-| ORDEN_COMPRA – RECEPCION | 1 : N (0..N) | Entregas parciales |
-| RECEPCION – DETALLE_RECEPCION | 1 : 1..N | |
-| DETALLE_OC – DETALLE_RECEPCION | 1 : N (0..N) | Permite controlar que no se reciba más de lo comprado |
-| USUARIO (receptor) – RECEPCION | 1 : N | |
-| ORDEN_COMPRA – FACTURA_PROVEEDOR | 1 : N (0..N) | Facturas parciales y notas de crédito |
-| PROVEEDOR – FACTURA_PROVEEDOR | 1 : N | Redundante con la OC a propósito: el folio es único por proveedor |
-| ORDEN_COMPRA – EVALUACION_PROVEEDOR | 1 : 0..1 | Una evaluación por OC recibida |
-| USUARIO (evaluador) – EVALUACION_PROVEEDOR | 1 : N | |
-| ORDEN_COMPRA – DEVOLUCION | 1 : N (0..N) | Una OC puede tener varias devoluciones parciales |
-| FACTURA_PROVEEDOR – DEVOLUCION | 0..1 : N | La devolución descuenta una factura ya registrada cuando corresponde |
-| DEVOLUCION – DETALLE_DEVOLUCION | 1 : 1..N | Una devolución siempre indica al menos una línea recibida |
-| DETALLE_RECEPCION – DETALLE_DEVOLUCION | 1 : N (0..N) | Controla que no se devuelva más de lo aceptado |
-| USUARIO (receptor original / aprobador) – DEVOLUCION | 1 : N | Registra quién recibió y quién aprobó la devolución |
-| USUARIO – HISTORIAL_TRAZABILIDAD | 1 : N | Cada evento registra quién ejecutó la acción |
+| Relación                                                                                                   | Cardinalidad | Justificación                                                                                 |
+| ---------------------------------------------------------------------------------------------------------- | ------------ | --------------------------------------------------------------------------------------------- |
+| CENTRO_COSTO – USUARIO                                                                                     | 1 : N        | Cada usuario pertenece a un área                                                              |
+| CENTRO_COSTO – SOLICITUD_COMPRA                                                                            | 1 : N        | Toda compra se imputa a un centro de costo                                                    |
+| USUARIO (solicitante) – SOLICITUD_COMPRA                                                                   | 1 : N        |                                                                                               |
+| USUARIO (aprobador) – SOLICITUD_COMPRA                                                                     | 0..1 : N     | El aprobador se asigna recién al aprobar o rechazar                                           |
+| PROVEEDOR – CONTACTO_PROVEEDOR                                                                             | 1 : N (0..N) | Un proveedor persona natural puede no tener contactos adicionales                             |
+| PROVEEDOR – PRODUCTO                                                                                       | N : M        | Resuelta por PROVEEDOR_PRODUCTO (catálogo con precio de referencia)                           |
+| SOLICITUD_COMPRA – DETALLE_SOLICITUD                                                                       | 1 : 1..N     | Una solicitud sin productos no es válida                                                      |
+| SOLICITUD_COMPRA – COTIZACION_PROVEEDOR                                                                    | 1 : N (0..N) | Una compra directa no requiere cotizaciones                                                   |
+| PROVEEDOR – COTIZACION_PROVEEDOR                                                                           | 1 : N        | Máximo una cotización por proveedor y solicitud                                               |
+| COTIZACION_PROVEEDOR – DETALLE_COTIZACION                                                                  | 1 : 1..N     |                                                                                               |
+| SOLICITUD_COMPRA – ORDEN_COMPRA                                                                            | 1 : N (0..N) | Normalmente una; N permite anular una OC y reemitirla. Solo una OC no anulada por solicitud   |
+| COTIZACION_PROVEEDOR – ORDEN_COMPRA                                                                        | 0..1 : 0..1  | Una cotización seleccionada genera una OC; una compra directa no tiene cotización             |
+| PROVEEDOR – ORDEN_COMPRA                                                                                   | 1 : N        |                                                                                               |
+| USUARIO (comprador) – ORDEN_COMPRA                                                                         | 1 : N        |                                                                                               |
+| ORDEN_COMPRA – DETALLE_OC                                                                                  | 1 : 1..N     |                                                                                               |
+| PRODUCTO – DETALLE_SOLICITUD / DETALLE_COTIZACION / DETALLE_OC                                             | 1 : N        | Relación N:M entre producto y cada documento, resuelta por la tabla de detalle                |
+| ORDEN_COMPRA – RECEPCION                                                                                   | 1 : N (0..N) | Entregas parciales                                                                            |
+| RECEPCION – DETALLE_RECEPCION                                                                              | 1 : 1..N     |                                                                                               |
+| DETALLE_OC – DETALLE_RECEPCION                                                                             | 1 : N (0..N) | Permite controlar que no se reciba más de lo comprado                                         |
+| USUARIO (receptor) – RECEPCION                                                                             | 1 : N        |                                                                                               |
+| ORDEN_COMPRA – FACTURA_PROVEEDOR                                                                           | 1 : N (0..N) | Facturas parciales y notas de crédito                                                         |
+| PROVEEDOR – FACTURA_PROVEEDOR                                                                              | 1 : N        | Redundante con la OC a propósito: el folio es único por proveedor                             |
+| ORDEN_COMPRA – EVALUACION_PROVEEDOR                                                                        | 1 : 0..1     | Una evaluación por OC recibida                                                                |
+| USUARIO (evaluador) – EVALUACION_PROVEEDOR                                                                 | 1 : N        |                                                                                               |
+| ORDEN_COMPRA – DEVOLUCION                                                                                  | 1 : N (0..N) | Una OC puede tener varias devoluciones parciales                                              |
+| FACTURA_PROVEEDOR – DEVOLUCION                                                                             | 0..1 : N     | La devolución descuenta una factura ya registrada cuando corresponde                          |
+| DEVOLUCION – DETALLE_DEVOLUCION                                                                            | 1 : 1..N     | Una devolución siempre indica al menos una línea recibida                                     |
+| DETALLE_RECEPCION – DETALLE_DEVOLUCION                                                                     | 1 : N (0..N) | Controla que no se devuelva más de lo aceptado                                                |
+| USUARIO (receptor original / aprobador) – DEVOLUCION                                                       | 1 : N        | Registra quién recibió y quién aprobó la devolución                                           |
+| USUARIO – HISTORIAL_TRAZABILIDAD                                                                           | 1 : N        | Cada evento registra quién ejecutó la acción                                                  |
 | Documento (solicitud, cotización, OC, recepción, factura, devolución) o PROVEEDOR – HISTORIAL_TRAZABILIDAD | 1 : N (0..N) | Referencia polimórfica mediante `entidad` + `id_entidad`; por eso no se dibuja en el diagrama |
 
 ---
@@ -628,14 +642,14 @@ Restricciones: los eventos no se editan ni se eliminan. Un documento con al meno
 
 ## 6. Datos sensibles, riesgos y sesgos
 
-| Dato o proceso | Riesgo | Medida en el MVP |
-|---|---|---|
-| RUT, nombre, correo y teléfono de proveedores personas naturales y de contactos | Datos personales | El RUT de personas naturales se ve completo solo para `admin_ti` y `jefe_compras`; para los demás roles se enmascara (`12.***.***-9`) en el origen de los datos: ficha, listados, búsquedas, comparativa, panel, historial y CSV (FR-004, FR-025) |
-| Datos bancarios del proveedor | Fraude por cambio de cuenta (alguien suplanta al proveedor y pide pagar a otra cuenta) | Solo `admin_ti` puede editarlos; la cuenta se ve completa solo para `admin_ti` y `jefe_compras`. Las cuentas de 4 dígitos o menos conservan solo los 2 últimos; sin cuenta se muestra "No registrado". Cada cambio se registra en el historial con el valor enmascarado (FR-030). Se guarda `fecha_cambio_cuenta` y se alerta si una factura se aprueba dentro de los 30 días siguientes a un cambio |
-| Precios negociados y cotizaciones | Información comercial confidencial | Visibles solo para `comprador`, `jefe_compras` y `admin_ti` |
-| Aprobación, compra y recepción | Fraude interno si una sola persona controla todo el ciclo | Segregación de funciones (regla 8) |
-| Texto libre (justificación, observaciones, comentarios) | Registro de información sensible no estructurada | Aviso en el formulario y límite de caracteres |
-| Datos semilla | Exposición de personas o empresas reales | Todos los datos del MVP son **ficticios** |
+| Dato o proceso                                                                  | Riesgo                                                                                 | Medida en el MVP                                                                                                                                                                                                                                                                                                                                                                                     |
+| ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| RUT, nombre, correo y teléfono de proveedores personas naturales y de contactos | Datos personales                                                                       | El RUT de personas naturales se ve completo solo para `admin_ti` y `jefe_compras`; para los demás roles se enmascara (`12.***.***-9`) en el origen de los datos: ficha, listados, búsquedas, comparativa, panel, historial y CSV (FR-004, FR-025)                                                                                                                                                    |
+| Datos bancarios del proveedor                                                   | Fraude por cambio de cuenta (alguien suplanta al proveedor y pide pagar a otra cuenta) | Solo `admin_ti` puede editarlos; la cuenta se ve completa solo para `admin_ti` y `jefe_compras`. Las cuentas de 4 dígitos o menos conservan solo los 2 últimos; sin cuenta se muestra "No registrado". Cada cambio se registra en el historial con el valor enmascarado (FR-030). Se guarda `fecha_cambio_cuenta` y se alerta si una factura se aprueba dentro de los 30 días siguientes a un cambio |
+| Precios negociados y cotizaciones                                               | Información comercial confidencial                                                     | Visibles solo para `comprador`, `jefe_compras` y `admin_ti`                                                                                                                                                                                                                                                                                                                                          |
+| Aprobación, compra y recepción                                                  | Fraude interno si una sola persona controla todo el ciclo                              | Segregación de funciones (regla 8)                                                                                                                                                                                                                                                                                                                                                                   |
+| Texto libre (justificación, observaciones, comentarios)                         | Registro de información sensible no estructurada                                       | Aviso en el formulario y límite de caracteres                                                                                                                                                                                                                                                                                                                                                        |
+| Datos semilla                                                                   | Exposición de personas o empresas reales                                               | Todos los datos del MVP son **ficticios**                                                                                                                                                                                                                                                                                                                                                            |
 
 **Sesgos asociados al uso de los datos** (a profundizar en `spec.md`):
 
@@ -646,6 +660,7 @@ Restricciones: los eventos no se editan ni se eliminan. Un documento con al meno
 - **Sesgo contra proveedores pequeños**: `tamano_empresa` permite medir qué parte del gasto va a micro y pequeñas empresas, que son las más afectadas por pagos tardíos.
 
 **Marco normativo de referencia**:
+
 - Ley 19.628 sobre protección de la vida privada y Ley 21.719, que la modifica. La Ley 21.719 entra en vigor el 1 de diciembre de 2026; en septiembre de 2026 se ingresó al Senado un proyecto que propone postergarla al 1 de diciembre de 2027.
 - Ley 21.131 (pago a 30 días): las facturas deben pagarse dentro de 30 días corridos desde su recepción; un plazo mayor exige acuerdo escrito, firmado e inscrito en el registro del Ministerio de Economía.
 - Las compras del Estado (Ley 19.886, Mercado Público) quedan **fuera de alcance**: el cliente es una pyme privada.
@@ -654,13 +669,13 @@ Restricciones: los eventos no se editan ni se eliminan. Un documento con al meno
 
 ## 7. Integración con otros módulos del ERP
 
-| Entidad | Módulo relacionado | Tipo de vínculo |
-|---|---|---|
-| PRODUCTO | Inventario | Catálogo compartido; Compras solo lo lee |
-| DETALLE_RECEPCION | Inventario | La `cantidad_aceptada` aumenta el stock |
-| SOLICITUD_COMPRA | Inventario | A futuro, Inventario podrá generar solicitudes de reposición automáticas |
-| FACTURA_PROVEEDOR | Contabilidad | Una factura `aprobada_pago` genera la cuenta por pagar; el pago lo registra Contabilidad |
-| USUARIO, CENTRO_COSTO | RR.HH. y Contabilidad | Fichas maestras externas; Compras las lee |
+| Entidad               | Módulo relacionado    | Tipo de vínculo                                                                          |
+| --------------------- | --------------------- | ---------------------------------------------------------------------------------------- |
+| PRODUCTO              | Inventario            | Catálogo compartido; Compras solo lo lee                                                 |
+| DETALLE_RECEPCION     | Inventario            | La `cantidad_aceptada` aumenta el stock                                                  |
+| SOLICITUD_COMPRA      | Inventario            | A futuro, Inventario podrá generar solicitudes de reposición automáticas                 |
+| FACTURA_PROVEEDOR     | Contabilidad          | Una factura `aprobada_pago` genera la cuenta por pagar; el pago lo registra Contabilidad |
+| USUARIO, CENTRO_COSTO | RR.HH. y Contabilidad | Fichas maestras externas; Compras las lee                                                |
 
 Los identificadores de estas entidades deben coincidir con los que use el template del curso para permitir la interconexión entre módulos.
 
@@ -668,39 +683,39 @@ Los identificadores de estas entidades deben coincidir con los que use el templa
 
 ## 8. Indicadores que habilita el modelo
 
-| Indicador | Cálculo |
-|---|---|
-| Gasto del período | ∑ neto de ORDEN_COMPRA emitidas y no anuladas, por centro de costo, proveedor o categoría |
-| Tiempo de ciclo de compra | promedio de (fecha_emision de la OC − fecha_solicitud) en días |
-| Entregas a tiempo | OC `recibida_total` cuya última recepción fue en o antes de `fecha_entrega_esperada` / OC `recibida_total` |
-| Tasa de rechazo en recepción | ∑ cantidad_rechazada / ∑ (cantidad_aceptada + cantidad_rechazada) |
-| Cumplimiento de cotizaciones | OC sobre el umbral con ≥ 3 cotizaciones / OC sobre el umbral |
-| Ahorro respecto de lo estimado | (monto_estimado de la solicitud − neto de su OC) / monto_estimado, promediado sobre las OC del período |
-| Facturas con discrepancia | facturas `con_discrepancia` / facturas registradas |
-| Facturas en riesgo de pago tardío | facturas no `aprobada_pago` con fecha_vencimiento ≤ hoy + 5 días |
-| Gasto en micro y pequeñas empresas | ∑ neto de OC a proveedores `micro` o `pequena` / gasto del período |
-| Evaluación promedio por proveedor | promedio de (nota_calidad + nota_plazo + nota_servicio)/3, junto con el n° de evaluaciones |
+| Indicador                          | Cálculo                                                                                                    |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Gasto del período                  | ∑ neto de ORDEN_COMPRA emitidas y no anuladas, por centro de costo, proveedor o categoría                  |
+| Tiempo de ciclo de compra          | promedio de (fecha_emision de la OC − fecha_solicitud) en días                                             |
+| Entregas a tiempo                  | OC `recibida_total` cuya última recepción fue en o antes de `fecha_entrega_esperada` / OC `recibida_total` |
+| Tasa de rechazo en recepción       | ∑ cantidad_rechazada / ∑ (cantidad_aceptada + cantidad_rechazada)                                          |
+| Cumplimiento de cotizaciones       | OC sobre el umbral con ≥ 3 cotizaciones / OC sobre el umbral                                               |
+| Ahorro respecto de lo estimado     | (monto_estimado de la solicitud − neto de su OC) / monto_estimado, promediado sobre las OC del período     |
+| Facturas con discrepancia          | facturas `con_discrepancia` / facturas registradas                                                         |
+| Facturas en riesgo de pago tardío  | facturas no `aprobada_pago` con fecha_vencimiento ≤ hoy + 5 días                                           |
+| Gasto en micro y pequeñas empresas | ∑ neto de OC a proveedores `micro` o `pequena` / gasto del período                                         |
+| Evaluación promedio por proveedor  | promedio de (nota_calidad + nota_plazo + nota_servicio)/3, junto con el n° de evaluaciones                 |
 
 ---
 
 ## 9. Registro de cambios
 
-| Versión | Fecha | Cambio |
-|---|---|---|
-| v0.1 – v0.2 | 20 – 21-10-2026 | Borrador del módulo Ventas / CRM (`specs/002-modulo-ventas-crm/`), subido por error: el módulo asignado al grupo es Adquisiciones y Compras |
-| v1.0 | 27-10-2026 | Nuevo modelo para Adquisiciones y Compras. Se elimina la carpeta de Ventas / CRM y se reemplazan `docs/mer.png`, `docs/mer.dot` y `docs/plan-de-trabajo.md` |
-| v1.1 | 03-11-2026 | Se alinea el rol `admin_ti` con `spec.md`, se fijan los parámetros acordados (1.000.000 CLP neto y 1 %) y se agrega `DEVOLUCION` / `DETALLE_DEVOLUCION` para US11 |
-| v1.2 | 19-11-2026 | Se agrega HISTORIAL_TRAZABILIDAD (FR-027 a FR-030); DEVOLUCION y DETALLE_DEVOLUCION en el diagrama; `motivo_anulacion` y estado `anulada` en los seis documentos (FR-029); `saldada` y `credito_a_favor` en la factura; se alinean el enmascaramiento con FR-004 y FR-025, la conciliación con las devoluciones de US11 y la recepción con FR-026 |
+| Versión     | Fecha           | Cambio                                                                                                                                                                                                                                                                                                                                            |
+| ----------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| v0.1 – v0.2 | 20 – 21-10-2026 | Borrador del módulo Ventas / CRM (`specs/002-modulo-ventas-crm/`), subido por error: el módulo asignado al grupo es Adquisiciones y Compras                                                                                                                                                                                                       |
+| v1.0        | 27-10-2026      | Nuevo modelo para Adquisiciones y Compras. Se elimina la carpeta de Ventas / CRM y se reemplazan `docs/mer.png`, `docs/mer.dot` y `docs/plan-de-trabajo.md`                                                                                                                                                                                       |
+| v1.1        | 03-11-2026      | Se alinea el rol `admin_ti` con `spec.md`, se fijan los parámetros acordados (1.000.000 CLP neto y 1 %) y se agrega `DEVOLUCION` / `DETALLE_DEVOLUCION` para US11                                                                                                                                                                                 |
+| v1.2        | 19-11-2026      | Se agrega HISTORIAL_TRAZABILIDAD (FR-027 a FR-030); DEVOLUCION y DETALLE_DEVOLUCION en el diagrama; `motivo_anulacion` y estado `anulada` en los seis documentos (FR-029); `saldada` y `credito_a_favor` en la factura; se alinean el enmascaramiento con FR-004 y FR-025, la conciliación con las devoluciones de US11 y la recepción con FR-026 |
 
 ---
 
 ## 10. Pendientes
 
-Diferencias detectadas entre `src/compras/reglas.js` (constante `TRANSICIONES`) y la spec / este modelo. Se dejan registradas para revisarlas con el grupo; el código no se modificó.
+Diferencias detectadas entre `src/compras/reglas.js` (constante `TRANSICIONES`) y la spec / este modelo. Se mantienen como **deuda conocida**, con tarea asignada en `tasks.md` (Fase 15) y réplica en `plan.md`. El código no se modificó en esta auditoría.
 
-| # | Tema | Código actual (`reglas.js`) | Spec / data-model | Decisión pendiente |
-|---|---|---|---|---|
-| 1 | Estado inicial de la factura | `registrada` | `recibida` (sección 3.11, regla 6) | Unificar el nombre del estado inicial en código o en el modelo |
-| 2 | Estados de la devolución | `pendiente_aprobacion`, `aprobada`, `rechazada` | `registrada`, `aprobada`, `anulada` (sección 3.13; FR-029 exige anulación con motivo) | Alinear los estados y agregar `anulada` con `motivo_anulacion` |
-| 3 | Cierre de OC con saldo pendiente | `recibida_parcial` solo puede pasar a `recibida_total` | `recibida_parcial → cerrada` permitido cuando el proveedor no repone (regla 4, caso límite de productos dañados) | Agregar la transición en el código |
-| 4 | Estado `borrador` de la OC | `orden` parte en `emitida`; no existe `borrador` | `borrador → emitida` (sección 3.9, regla 4; ciclo de vida en `plan.md`, Nivel 1). La spec (US3) solo menciona `emitida` | Agregar `borrador` al código o quitarlo del modelo y del plan |
+| #   | Tema                             | Código actual (`reglas.js`)                            | Spec / data-model                                                                                                                      | Decisión pendiente                                                                      | Tarea en `tasks.md` |
+| --- | -------------------------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ------------------- |
+| 1   | Estado inicial de la factura     | `registrada`                                           | `recibida` (sección 3.11, regla 6)                                                                                                     | Unificar el nombre del estado inicial en código o en el modelo                          | T117                |
+| 2   | Estados de la devolución         | `pendiente_aprobacion`, `aprobada`, `rechazada`        | `registrada`, `aprobada`, `anulada` (sección 3.13; FR-029 exige anulación con motivo)                                                  | Alinear los estados y agregar `anulada` con `motivo_anulacion`                          | T109, T118          |
+| 3   | Cierre de OC con saldo pendiente | `recibida_parcial` solo puede pasar a `recibida_total` | `recibida_parcial → cerrada` permitido cuando el proveedor no repone (regla 4, caso límite de productos dañados)                       | Agregar la transición en el código; hoy `cerrarSiSaldada()` muta el estado directamente | T101                |
+| 4   | Estado `borrador` de la OC       | `orden` parte en `emitida`; no existe `borrador`       | `borrador → emitida` (sección 3.9, regla 4). La spec (US3) solo menciona `emitida` y el plan ya no describe el ciclo por configuración | Agregar `borrador` al código o quitarlo del modelo                                      | T119                |

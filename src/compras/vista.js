@@ -1,5 +1,5 @@
-import { getUsuarioActivo, setRolActivo, asegurarSemilla, leer, puede } from './almacenamiento.js';
-import { hoyISO, UMBRAL_COTIZACIONES, ROLES } from './reglas.js';
+import { getUsuarioActivo, asegurarSemilla, leer, puede } from './almacenamiento.js';
+import { hoyISO, UMBRAL_COTIZACIONES, validarVisibilidadDatosBancarios } from './reglas.js';
 import {
   listarProveedores,
   buscarProveedores,
@@ -71,6 +71,28 @@ import {
   exportarRecepciones,
   exportarFacturas
 } from './exportacion.js';
+
+/** Etiquetas legibles de los roles; las claves internas se mantienen intactas. */
+export const ETIQUETAS_ROL = Object.freeze({
+  solicitante: 'Solicitante',
+  comprador: 'Comprador',
+  jefe_compras: 'Jefe de Compras',
+  bodega: 'Encargado de Bodega',
+  admin_ti: 'Administrador TI'
+});
+
+/** Devuelve la etiqueta legible de un rol, sin exponer guiones bajos. */
+export function etiquetaRol(rol) {
+  const clave = String(rol ?? '');
+  if (ETIQUETAS_ROL[clave]) return ETIQUETAS_ROL[clave];
+  return (
+    clave
+      .split('_')
+      .filter(Boolean)
+      .map((parte) => parte.charAt(0).toUpperCase() + parte.slice(1))
+      .join(' ') || 'Sin rol'
+  );
+}
 
 const TABS = [
   { id: 'panel', label: 'Panel' },
@@ -180,10 +202,9 @@ export function renderComprasView() {
         <h1>Adquisiciones y Compras</h1>
         <p class="muted">Ciclo completo de compra: solicitud, cotización, OC, recepción, factura y devolución.</p>
       </div>
-      <div class="compras-session">
-        <label for="compras-rol">Usuario y rol activo</label>
-        <select id="compras-rol">${ROLES.map((rol) => `<option value="${rol}"${rol === usuario.rol ? ' selected' : ''}>${rol}</option>`).join('')}</select>
-        <span class="muted">${esc(usuario.nombre)} · ${esc(usuario.rol)}</span>
+      <div class="compras-session" aria-live="polite">
+        <span class="muted">Sesión activa</span>
+        <strong>${esc(usuario.nombre)} · ${esc(etiquetaRol(usuario.rol))}</strong>
       </div>
     </div>
     <nav class="compras-tabs" role="tablist" aria-label="Secciones de compras">
@@ -191,10 +212,6 @@ export function renderComprasView() {
     </nav>
     <div id="compras-content" class="compras-content"></div>
   `;
-  qs('compras-rol').addEventListener('change', (ev) => {
-    setRolActivo(ev.target.value);
-    renderComprasView();
-  });
   root.querySelectorAll('[data-tab]').forEach((btn) =>
     btn.addEventListener('click', () => {
       tab = btn.dataset.tab;
@@ -275,9 +292,9 @@ function renderTrazaCadena() {
     traza = null;
     renderComprasView();
   });
-  card.querySelectorAll('[data-traza-ir]').forEach((btn) =>
-    btn.addEventListener('click', () => irA(btn.dataset.trazaIr))
-  );
+  card
+    .querySelectorAll('[data-traza-ir]')
+    .forEach((btn) => btn.addEventListener('click', () => irA(btn.dataset.trazaIr)));
 }
 
 function renderPanel() {
@@ -351,12 +368,11 @@ function renderPanel() {
 
 function renderProveedores() {
   const usuario = getUsuarioActivo();
+  const visibilidad = validarVisibilidadDatosBancarios(usuario.rol);
   const lista = (provFiltro ? buscarProveedores(provFiltro) : listarProveedores()).map((p) =>
     vistaProveedor(p, usuario.rol)
   );
-  const editando = provEditId
-    ? vistaProveedor(obtenerProveedor(provEditId), usuario.rol)
-    : null;
+  const editando = provEditId ? vistaProveedor(obtenerProveedor(provEditId), usuario.rol) : null;
   const content = qs('compras-content');
   content.innerHTML = `
     <div class="card">
@@ -378,8 +394,8 @@ function renderProveedores() {
         <div class="field-row"><div><label>Teléfono</label><input id="prov-telefono" value="${esc(editando?.phone || '')}" /></div><div><label>Correo</label><input id="prov-email" value="${esc(editando?.email || '')}" /></div></div>
         <div class="field-row"><div><label>Categoría</label><input id="prov-categoria" value="${esc(editando?.category || '')}" /></div><div><label>Tamaño</label><select id="prov-tamano">${opciones(['micro', 'pequeña', 'mediana', 'grande'], editando?.tamano_empresa)}</select></div></div>
         <div class="field-row"><div><label>Condición de pago (días) *</label><input id="prov-dias" type="number" min="0" step="1" value="${esc(editando?.condicion_pago_dias ?? 30)}" /></div><div><label>Acuerdo de plazo mayor</label><input id="prov-acuerdo" value="${esc(editando?.acuerdo_plazo_mayor || '')}" placeholder="Obligatorio si supera 30 días" /></div></div>
-        <div class="field-row"><div><label>Banco</label><input id="prov-banco" value="${esc(editando?.banco || '')}" ${usuario.rol === 'admin_ti' ? '' : 'disabled'} /></div><div><label>Número de cuenta</label><input id="prov-cuenta" value="${esc(editando?.numero_cuenta || '')}" ${usuario.rol === 'admin_ti' ? '' : 'disabled'} /></div></div>
-        ${usuario.rol !== 'admin_ti' ? '<p class="muted">Los datos bancarios solo pueden ser editados por admin_ti.</p>' : ''}
+        <div class="field-row"><div><label>Banco</label><input id="prov-banco" value="${esc(editando?.banco || '')}" ${visibilidad.editable ? '' : 'disabled'} /></div><div><label>Número de cuenta</label><input id="prov-cuenta" value="${esc(editando?.numero_cuenta || '')}" ${visibilidad.editable ? '' : 'disabled'} /></div></div>
+        ${visibilidad.editable ? '' : '<p class="muted">Los datos bancarios solo pueden ser editados por admin_ti.</p>'}
         <div class="form-actions"><button type="submit" class="primary">Guardar</button><button type="button" id="prov-cancelar" class="secondary">Cancelar</button></div>
       </form>`
           : ''
@@ -387,6 +403,7 @@ function renderProveedores() {
     </div>
     <div class="card">
       <h2>Proveedores</h2>
+      <p class="muted" id="prov-visibilidad">${visibilidad.visible ? 'RUT y cuenta visibles para tu rol.' : 'RUT y cuenta enmascarados para tu rol.'}${visibilidad.editable ? '' : ' Solo admin_ti puede editar datos bancarios.'}</p>
       ${
         lista.length === 0
           ? '<div class="empty">No hay proveedores que coincidan.</div>'
@@ -451,7 +468,7 @@ function renderProveedores() {
         banco: qs('prov-banco').value,
         numero_cuenta: qs('prov-cuenta').value
       };
-      if (usuario.rol !== 'admin_ti') {
+      if (!visibilidad.editable) {
         delete datos.banco;
         delete datos.numero_cuenta;
       }
@@ -460,7 +477,7 @@ function renderProveedores() {
         String(editando.tipo_persona || '')
           .toLowerCase()
           .startsWith('natural') &&
-        !['admin_ti', 'jefe_compras'].includes(usuario.rol)
+        !visibilidad.visible
       ) {
         delete datos.rut;
       }

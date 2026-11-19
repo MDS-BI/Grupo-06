@@ -31,18 +31,20 @@ Cada paso exige al anterior (no hay orden de compra sin solicitud aprobada, no h
 Para asegurar el control de acceso y la integración fluida con otros módulos del ERP (Inventario, Contabilidad, RR.HH.), el módulo define las siguientes claves y niveles de acceso:
 
 **Claves de Integración (Keys):**
-* `id_producto`: Vincula con el **Módulo de Inventario**.
-* `id_proveedor`: Vincula con el **Módulo de Contabilidad/Finanzas**.
-* `id_usuario`: Vincula con el **Módulo de RRHH/Usuarios**.
+
+- `id_producto`: Vincula con el **Módulo de Inventario**.
+- `id_proveedor`: Vincula con el **Módulo de Contabilidad/Finanzas**.
+- `id_usuario`: Vincula con el **Módulo de RRHH/Usuarios**.
 
 **Roles en el sistema:**
-| Usuario | Rol técnico | Nivel de Acceso y Propósito |
-| :--- | :--- | :--- |
-| Solicitante (cualquier área) | `solicitante` | **Restringido:** Solo ve y crea sus propias solicitudes. |
-| Comprador | `comprador` | **Ejecutor:** Cotiza, emite Órdenes de Compra (OC) y mantiene el catálogo de proveedores. No ve datos bancarios completos. |
-| Jefe de compras | `jefe_compras` | **Aprobador:** Autoriza solicitudes, aprueba facturas y gestiona excepciones comerciales. Ve datos bancarios completos, pero no los edita. |
-| Encargado de bodega | `bodega` | **Restringido (Físico):** Solo interactúa con el registro de recepciones de una OC emitida. |
-| Administrador | `admin_ti` | **Acceso total:** Puede auditar logs, desbloquear proveedores y ver datos sensibles (ej. cuentas bancarias completas sin enmascarar). |
+
+| Usuario                      | Rol técnico    | Nivel de Acceso y Propósito                                                                                                                |
+| :--------------------------- | :------------- | :----------------------------------------------------------------------------------------------------------------------------------------- |
+| Solicitante (cualquier área) | `solicitante`  | **Restringido:** Solo ve y crea sus propias solicitudes.                                                                                   |
+| Comprador                    | `comprador`    | **Ejecutor:** Cotiza, emite Órdenes de Compra (OC) y mantiene el catálogo de proveedores. No ve datos bancarios completos.                 |
+| Jefe de compras              | `jefe_compras` | **Aprobador:** Autoriza solicitudes, aprueba facturas y gestiona excepciones comerciales. Ve datos bancarios completos, pero no los edita. |
+| Encargado de bodega          | `bodega`       | **Restringido (Físico):** Solo interactúa con el registro de recepciones de una OC emitida.                                                |
+| Administrador                | `admin_ti`     | **Acceso total:** Puede auditar logs, desbloquear proveedores y ver datos sensibles (ej. cuentas bancarias completas sin enmascarar).      |
 
 ### Fuera de alcance
 
@@ -52,21 +54,27 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 
 ### Session 2026-11-03
 
-- Q: ¿Qué monto neto debe usarse como `UMBRAL_COTIZACIONES` para exigir tres cotizaciones o una justificación de proveedor único? (FR-021) → A: 1.000.000 CLP neto.
-- Q: ¿Cómo debe definirse `TOLERANCIA_CONCILIACION` para clasificar una factura como conciliada o con discrepancia? (FR-022) → A: 1 % del neto.
-- Q: ¿Qué roles deben poder ver sin enmascarar los datos bancarios de un proveedor? (FR-004) → A: `admin_ti` y `jefe_compras`.
-- Q: ¿Qué formato CSV deben usar las exportaciones para abrirse correctamente en Excel en español? (FR-024) → A: La codificación y el separador definidos en `plan.md` (UTF-8 con BOM y separador `;`).
+- Q: ¿Qué monto neto debe usarse como `UMBRAL_COTIZACIONES` para exigir tres cotizaciones o una justificación de proveedor único? (FR-021) → A: **1.000.000 CLP neto**. Una solicitud con monto estimado igual o superior a ese valor exige tres cotizaciones o la justificación de proveedor único antes de seleccionar una oferta y emitir la orden de compra (FR-008, US6, escenario 4).
+- Q: ¿Cómo debe definirse `TOLERANCIA_CONCILIACION` para clasificar una factura como conciliada o con discrepancia? (FR-022) → A: **1 % del neto** de la factura. Una diferencia dentro de ese margen clasifica la factura como `conciliada` y por sobre él como `con_discrepancia`.
+- Q: ¿Qué roles deben poder ver sin enmascarar los datos bancarios de un proveedor? (FR-004) → A: **Solo `admin_ti` y `jefe_compras`**. Los demás roles (`solicitante`, `comprador` y `bodega`) ven el RUT de personas naturales y el número de cuenta enmascarados; únicamente `admin_ti` puede editarlos y cada cambio actualiza `fecha_cambio_cuenta`.
+- Q: ¿Qué formato CSV deben usar las exportaciones para abrirse correctamente en Excel en español? (FR-024) → A: **UTF-8 con marca de orden de bytes (BOM) al inicio y separador de columnas `;`**. Así se conservan tildes, eñes y símbolos y no se juntan las columnas (US10, escenario 6; SC-010). El detalle técnico se mantiene en `plan.md`.
 - Q: ¿Qué roles pueden usar la exportación CSV? (FR-024) → A: Heredan el permiso de la vista; cada rol exporta solo los listados que ya puede ver.
 
 ### Session 2026-11-17
 
 - Q: ¿Deben escribirse todas las historias de usuario de la funcionalidad 002 en un mismo formato conservando toda la información existente en `spec.md`? → A: Sí; normalizar US1-US11 al formato canónico de `**Como/necesito/para**`, `**Por qué esta prioridad**`, `**Prueba Independiente**` y `**Escenarios de Aceptación**` con pasos **Dado/Cuando/Entonces**, sin eliminar contenido.
 
-## Escenarios de Usuario y Pruebas *(obligatorio)*
+### Session 2026-11-19
 
-*Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo utiliza identificadores únicos (`id_producto`, `id_proveedor`, `id_usuario`) que conectan con los módulos de Inventario, Contabilidad y RR.HH. Los roles de acceso definen qué información es visible (ej. enmascaramiento de datos bancarios para roles no administrativos).*
+- Q: ¿Cuál es el flujo completo acordado para productos dañados, devoluciones y su protección de datos y auditoría? (FR-025 a FR-030) → A: Las unidades dañadas detectadas al recibir se registran como rechazadas con motivo `danado`: no cuentan como recibidas, no entran al valor a facturar y quedan pendientes en la OC para reposición (US4, escenarios 5 y 6). Si el daño se detecta después de aceptar, se registra una devolución con motivo `defectuoso` que descuenta el saldo recibido y el monto facturado y, cuando corresponda, genera una nota de crédito; nunca se paga lo dañado (US11, escenarios 7 y 8). En todo el flujo el enmascaramiento se aplica en el origen (FR-025), cada cambio de estado queda trazable con usuario, fecha y acción (FR-027), la cadena solicitud → cotización → OC → recepción → factura → devolución es navegable (FR-028), los documentos con historial se anulan con motivo sin borrarse (FR-029) y los cambios bancarios se registran solo enmascarados (FR-030).
+- Q: ¿Qué vistas debe exponer la aplicación y qué ocurre con las vistas genéricas del template base? (FR-032) → A: La aplicación debe mostrar exclusivamente las vistas del módulo de Adquisiciones y Compras: Panel, Proveedores, Solicitudes, Cotizaciones, Órdenes de compra, Recepciones, Facturas, Devoluciones, Catálogo y Evaluaciones. Las vistas genéricas del template base —Entidades, Documentos y Búsqueda— no se muestran, no se enlazan desde la navegación y no son accesibles desde ninguna acción del módulo.
+
+## Escenarios de Usuario y Pruebas _(obligatorio)_
+
+_Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo utiliza identificadores únicos (`id_producto`, `id_proveedor`, `id_usuario`) que conectan con los módulos de Inventario, Contabilidad y RR.HH. Los roles de acceso definen qué información es visible (ej. enmascaramiento de datos bancarios para roles no administrativos)._
 
 ### Historia de Usuario 1 - Gestionar proveedores (Prioridad: P1)
+
 **Como** Administrador o Comprador, **necesito** mantener un registro único, validado y seguro de nuestros proveedores, **para** tener la tranquilidad de que estamos haciendo negocios con entidades legales formales y evitar fraudes o pagos a cuentas incorrectas.
 
 **Por qué esta prioridad**: Sin proveedores no se puede cotizar ni emitir órdenes de compra. Es el dato maestro del módulo y genera el `id_proveedor`.
@@ -74,6 +82,7 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 **Prueba Independiente**: Un usuario crea un proveedor con RUT válido, lo encuentra en la búsqueda, cambia su estado a `aprobado` y luego a `bloqueado`.
 
 **Escenarios de Aceptación**:
+
 1. **Dado** que el usuario está en la lista de proveedores, **cuando** crea un proveedor con RUT, razón social, giro y región, **entonces** el proveedor se guarda en estado `potencial` y aparece en la lista generando un `id_proveedor`.
 2. **Dado** que el usuario ingresa un RUT con dígito verificador inválido o ya registrado, **cuando** intenta guardar, **entonces** el sistema lo impide y sugiere usar el registro existente.
 3. **Dado** un proveedor con condición de pago de 45 días, **cuando** no tiene marcado `acuerdo_plazo_mayor`, **entonces** el sistema no permite guardar (cumplimiento Ley 21.131).
@@ -83,6 +92,7 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 ---
 
 ### Historia de Usuario 2 - Crear y aprobar solicitudes de compra (Prioridad: P1)
+
 **Como** Solicitante de cualquier área, **necesito** pedir los materiales que me faltan indicando cantidad y justificación, y que mi jefatura pueda revisarlos, **para** que las compras nazcan de una necesidad real y no se atrasen por correos perdidos.
 
 **Por qué esta prioridad**: La solicitud aprobada es la puerta de entrada y el principal control contra compras no autorizadas. Vincula el `id_producto` y el `id_usuario`.
@@ -90,6 +100,7 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 **Prueba Independiente**: Un solicitante crea y envía una solicitud con dos productos; el jefe de compras la aprueba; la solicitud queda en estado `aprobada`.
 
 **Escenarios de Aceptación**:
+
 1. **Dado** que el solicitante crea una solicitud con al menos un producto activo, **cuando** la envía, **entonces** queda en estado `enviada` con correlativo `SC-AAAA-NNNN` y monto estimado.
 2. **Dada** una solicitud `enviada`, **cuando** el jefe de compras la aprueba, **entonces** queda `aprobada` registrando su nombre y fecha.
 3. **Dada** una solicitud `enviada`, **cuando** el jefe de compras la rechaza, **entonces** el sistema exige escribir un motivo de rechazo.
@@ -99,6 +110,7 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 ---
 
 ### Historia de Usuario 3 - Emitir órdenes de compra (Prioridad: P1)
+
 **Como** Comprador, **necesito** transformar una solicitud aprobada en un documento formal de compra (OC) de manera automática, **para** comprometer precios y plazos con el proveedor sin transcribir datos a mano.
 
 **Por qué esta prioridad**: La OC es el documento central del módulo. Integra la solicitud con el `id_proveedor`.
@@ -106,6 +118,7 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 **Prueba Independiente**: Con una solicitud aprobada bajo monto, el comprador emite una OC; aparece con número `OC-AAAA-NNNN`, neto, IVA y total, y la solicitud pasa a `adjudicada`.
 
 **Escenarios de Aceptación**:
+
 1. **Dada** una solicitud `aprobada` bajo el umbral de cotizaciones, **cuando** el comprador emite una OC directa, **entonces** la OC queda `emitida` (con IVA=19%) y la solicitud pasa a `adjudicada`.
 2. **Dada** una solicitud sobre el umbral sin cotización seleccionada, **cuando** el comprador intenta emitir OC directa, **entonces** el sistema exige cotizaciones previas.
 3. **Dado** un proveedor en estado `bloqueado`, **cuando** el comprador intenta emitirle una OC, **entonces** el sistema cancela la operación por riesgo.
@@ -115,6 +128,7 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 ---
 
 ### Historia de Usuario 4 - Registrar recepciones (Bodega) (Prioridad: P1)
+
 **Como** Encargado de Bodega, **necesito** contrastar físicamente lo que trae el camión contra la Orden de Compra, **para** asegurar que paguemos solo lo recibido y alertar al inventario.
 
 **Por qué esta prioridad**: Es el control físico del ciclo. Genera el evento para actualizar el Módulo de Inventario mediante el `id_producto` y la cantidad aceptada.
@@ -122,6 +136,7 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 **Prueba Independiente**: Sobre una OC de 10 unidades, se registran 6 aceptadas; la OC queda `recibida_parcial`. Luego 4 unidades más la dejan `recibida_total`.
 
 **Escenarios de Aceptación**:
+
 1. **Dada** una OC `emitida`, **cuando** bodega registra una recepción parcial, **entonces** la OC pasa a `recibida_parcial` mostrando lo pendiente.
 2. **Dada** una línea con 4 unidades pendientes, **cuando** bodega intenta aceptar 5, **entonces** el sistema lo impide.
 3. **Dada** una recepción con rechazos, **cuando** el bodeguero no indica el motivo, **entonces** el sistema lo exige obligatoriamente.
@@ -132,6 +147,7 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 ---
 
 ### Historia de Usuario 5 - Panel de pendientes y alertas por rol (Prioridad: P1)
+
 **Como** usuario del módulo (solicitante, comprador, jefe de compras o bodega), **necesito** ver al ingresar solo lo que me corresponde atender y lo que está por vencer, **para** priorizar mi trabajo diario y no dejar pasar plazos legales ni solicitudes detenidas.
 
 **Por qué esta prioridad**: Es la pantalla de entrada del módulo y convierte el registro pasivo de datos en trabajo accionable. Sin ella, cada rol debe revisar listas completas para descubrir qué le toca; con ella se cumple el requisito de alertas de vencimiento (FR-017) y el criterio de éxito SC-005.
@@ -146,10 +162,12 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 4. **Dadas** órdenes de compra emitidas sin recepción registrada por más de 7 días, **cuando** el encargado de bodega o el comprador abre el panel, **entonces** el sistema las lista como pendientes de seguimiento.
 5. **Dado** un período seleccionado (mes actual), **cuando** el panel carga, **entonces** muestra indicadores de monto comprometido en OC, órdenes abiertas y facturas aprobadas para pago, calculados con los datos existentes.
 6. **Dado** que no hay pendientes para el rol, **cuando** el usuario abre el panel, **entonces** ve un estado vacío claro que lo invita a crear una solicitud u orden según corresponda.
+7. **Dado** que la aplicación se abre en un navegador, **cuando** se revisan la navegación lateral y el contenido principal, **entonces** solo aparecen las vistas del módulo de Adquisiciones y Compras (Panel, Proveedores, Solicitudes, Cotizaciones, Órdenes de compra, Recepciones, Facturas, Devoluciones, Catálogo y Evaluaciones) y no se muestran ni se puede navegar a las vistas genéricas Entidades, Documentos ni Búsqueda del template base.
 
 ---
 
 ### Historia de Usuario 6 - Cotizaciones y comparativa side-by-side (Prioridad: P1)
+
 **Como** Comprador, **necesito** registrar las cotizaciones de distintos proveedores para una solicitud aprobada y compararlas lado a lado, **para** elegir de forma justificada y auditable la mejor oferta antes de emitir la orden de compra.
 
 **Por qué esta prioridad**: Es el mecanismo de control de precios y la antesala obligatoria de la OC sobre el umbral. Sin cotizaciones no se puede demostrar por qué se eligió a un proveedor. Vincula el `id_proveedor` y el `id_producto` de la solicitud y alimenta la emisión de OC de US3.
@@ -157,6 +175,7 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 **Prueba Independiente**: Sobre una solicitud aprobada, el comprador registra tres cotizaciones de proveedores distintos, las ve comparadas lado a lado y selecciona una, dejando las demás descartadas con su motivo.
 
 **Escenarios de Aceptación**:
+
 1. **Dada** una solicitud `aprobada`, **cuando** el comprador registra una cotización de un proveedor, **entonces** se guarda con precios, plazo, condición de pago y fecha de validez, y la solicitud pasa a `en_cotizacion`.
 2. **Dado** que ya existe una cotización para esa solicitud y proveedor, **cuando** se intenta registrar otra, **entonces** el sistema lo impide (una cotización por proveedor y solicitud).
 3. **Dadas** varias cotizaciones, **cuando** el comprador abre la comparativa, **entonces** ve de forma side-by-side el precio, plazo de entrega, condición de pago y la evaluación promedio de cada proveedor.
@@ -168,6 +187,7 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 ---
 
 ### Historia de Usuario 7 - Registrar y conciliar facturas (Prioridad: P2)
+
 **Como** Jefe de Compras, **necesito** cruzar la factura del proveedor con la Orden y lo recibido en Bodega, **para** autorizar el pago a Contabilidad solo si los montos coinciden y hacerlo en plazo.
 
 **Por qué esta prioridad**: Cierra el ciclo de compras y prepara el pase de datos hacia el Módulo de Contabilidad.
@@ -175,6 +195,7 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 **Prueba Independiente**: Sobre una OC recibida de 10.000 CLP neto, una factura por igual valor queda `conciliada`; una por 15.000 CLP queda `con_discrepancia`.
 
 **Escenarios de Aceptación**:
+
 1. **Dada** una OC con recepciones, **cuando** se registra una factura que coincide con el valor recibido, **entonces** queda `conciliada` y se calcula su fecha de vencimiento legal.
 2. **Dada** una factura cuyo cobro excede la tolerancia, **cuando** se registra, **entonces** queda bloqueada en `con_discrepancia`.
 3. **Dada** una factura `con_discrepancia`, **cuando** se intenta aprobarla para pago, **entonces** el sistema lo impide.
@@ -184,6 +205,7 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 ---
 
 ### Historia de Usuario 8 - Catálogo de productos por proveedor (Prioridad: P2)
+
 **Como** Comprador, **necesito** mantener por cada proveedor el catálogo de productos que ofrece, con precio de referencia y plazo de entrega, **para** cotizar más rápido y usar precios actualizados sin pedirlos por correo cada vez.
 
 **Por qué esta prioridad**: Acelera y estandariza las cotizaciones y líneas de solicitud, pero no bloquea el ciclo de compra. Depende de que existan proveedores (US1) y productos maestros de Inventario. Vincula `id_proveedor` con `id_producto` en modo solo lectura.
@@ -191,6 +213,7 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 **Prueba Independiente**: Un comprador agrega un producto al catálogo de un proveedor con precio y plazo, lo busca, actualiza el precio y el sistema marca como desactualizada una referencia con más de 90 días.
 
 **Escenarios de Aceptación**:
+
 1. **Dado** un proveedor y un producto activo, **cuando** el comprador agrega la relación, **entonces** se guarda una única entrada proveedor-producto con precio de referencia, plazo de entrega y fecha de actualización.
 2. **Dado** un producto ya asociado a ese proveedor, **cuando** se intenta agregar de nuevo, **entonces** el sistema lo impide.
 3. **Dado** un precio de referencia con más de 90 días desde su actualización, **cuando** se consulta el catálogo, **entonces** aparece marcado como desactualizado.
@@ -200,6 +223,7 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 ---
 
 ### Historia de Usuario 9 - Evaluación de desempeño de proveedores (Prioridad: P2)
+
 **Como** Jefe de Compras, **necesito** evaluar el desempeño de cada proveedor por orden recibida, **para** decidir con datos a quién seguir comprando y mostrar ese historial al comparar cotizaciones.
 
 **Por qué esta prioridad**: Convierte el histórico de órdenes en información de decisión. Depende de las recepciones de US4 y alimenta la comparativa de US6 y la ficha del proveedor de US1.
@@ -207,6 +231,7 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 **Prueba Independiente**: Sobre una OC recibida con 6 días de atraso, el jefe de compras registra una evaluación, obtiene `nota_plazo = 3` y el promedio aparece en la ficha del proveedor.
 
 **Escenarios de Aceptación**:
+
 1. **Dada** una OC en estado `recibida_total` o `cerrada`, **cuando** el jefe de compras registra una evaluación, **entonces** se guarda con sus puntajes y comentario.
 2. **Dado** que ya existe una evaluación para esa OC, **cuando** se intenta registrar otra, **entonces** el sistema lo impide (una evaluación por OC).
 3. **Dado** el atraso entre la fecha comprometida y la fecha de recepción, **cuando** se calcula la nota, **entonces** se aplica la escala: 0 días → 5; 1-3 → 4; 4-7 → 3; 8-14 → 2; más de 14 → 1.
@@ -216,6 +241,7 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 ---
 
 ### Historia de Usuario 10 - Exportación de reportes en CSV (Prioridad: P3)
+
 **Como** usuario del módulo (solicitante, comprador, jefe de compras, bodega o administrador), **necesito** exportar a CSV los listados de compras y proveedores que ya puedo ver, **para** compartir la información con Contabilidad o analizarla en una planilla sin pedir extracciones manuales.
 
 **Por qué esta prioridad**: Es una salida de conveniencia sobre datos ya existentes y no bloquea el ciclo de compras. Depende de que los listados y el panel de US5 estén implementados.
@@ -223,6 +249,7 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 **Prueba Independiente**: Un jefe de compras exporta el listado de órdenes del período y obtiene un archivo CSV con encabezados y una fila por OC, respetando los filtros y el rol activo.
 
 **Escenarios de Aceptación**:
+
 1. **Dado** un listado visible para el rol, **cuando** se elige exportar, **entonces** se descarga un CSV con encabezados y una fila por registro del filtro vigente.
 2. **Dado** un usuario con rol `solicitante`, **cuando** exporta solicitudes, **entonces** el CSV contiene solo sus propias solicitudes.
 3. **Dado** un listado sin registros, **cuando** se exporta, **entonces** se genera un CSV solo con encabezados o se avisa que no hay datos, sin error.
@@ -233,6 +260,7 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 ---
 
 ### Historia de Usuario 11 - Registrar devoluciones y notas de crédito (Prioridad: P2)
+
 **Como** Jefe de Compras, **necesito** registrar devoluciones y notas de crédito contra una Orden de Compra ya recibida y facturada, **para** descontar de lo facturado aquello que no cumple y no pagar de más al proveedor.
 
 **Por qué esta prioridad**: Cierra el hueco entre la recepción (US4) y la conciliación de facturas (US7). El caso límite de la nota de crédito no tiene flujo definido; sin esta historia, una devolución posterior a la recepción no se refleja en el saldo por pagar. Depende de que existan OC con recepciones y facturas registradas.
@@ -240,6 +268,7 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 **Prueba Independiente**: Sobre una OC `recibida_total` facturada por 100.000 CLP neto, se registra una devolución de 20.000 CLP por defectuosos; el saldo facturado pendiente baja a 80.000 CLP y una factura posterior por ese monto queda `conciliada`.
 
 **Escenarios de Aceptación**:
+
 1. **Dada** una OC con unidades aceptadas, **cuando** el jefe de compras registra una devolución indicando línea, cantidad y motivo, **entonces** el sistema genera un documento de devolución con correlativo `DEV-AAAA-NNNN` y descuenta la cantidad del saldo recibido.
 2. **Dada** una factura ya registrada, **cuando** se ingresa una nota de crédito del mismo proveedor, **entonces** se descuenta del monto facturado y no se permite que el crédito supere dicho monto.
 3. **Dada** una nota de crédito sin OC o sin factura asociada, **cuando** se intenta registrar, **entonces** el sistema lo impide y exige el documento de origen.
@@ -281,7 +310,7 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 - ¿Qué pasa si el daño se detecta con la factura ya aprobada para pago? Se registra una devolución con motivo `defectuoso` que descuenta el saldo recibido y facturado; el monto aprobado para pago se ajusta y la diferencia queda como crédito a favor o pendiente de nota de crédito, sin pagar lo dañado.
 - ¿Qué pasa si el proveedor no repone lo dañado? La OC se cierra con saldo pendiente, dejando registrada la cantidad no repuesta, y no se factura ni paga lo dañado.
 
-## Requisitos *(obligatorio)*
+## Requisitos _(obligatorio)_
 
 ### Requisitos Funcionales
 
@@ -316,6 +345,7 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 - **FR-029**: El sistema DEBE impedir la eliminación de documentos con historial y DEBE permitir solo su anulación con motivo registrado.
 - **FR-030**: El sistema DEBE registrar cada cambio de datos bancarios con el valor enmascarado, nunca con el número completo.
 - **FR-031**: El sistema DEBE permitir registrar devoluciones de unidades aceptadas contra una orden de compra con recepciones, indicando línea, cantidad y motivo, con correlativo `DEV-AAAA-NNNN`; DEBE impedir devolver más de lo aceptado pendiente de devolver, descontar la cantidad del saldo recibido y facturado, cerrar la OC cuando el saldo pendiente llegue a cero y exigir la aprobación de un `jefe_compras` o `admin_ti` distinto cuando quien registró la recepción intente registrar la devolución.
+- **FR-032**: La aplicación DEBE mostrar exclusivamente las vistas del módulo de Adquisiciones y Compras (Panel, Proveedores, Solicitudes, Cotizaciones, Órdenes de compra, Recepciones, Facturas, Devoluciones, Catálogo y Evaluaciones). NO DEBE mostrar, enlazar desde la navegación ni permitir acceder mediante acciones internas a las vistas genéricas del template base (Entidades, Documentos y Búsqueda).
 
 ### Requisitos de Integración
 
@@ -341,7 +371,7 @@ El detalle de atributos, cardinalidades y reglas está en [data-model.md](data-m
 - **Usuario y centro de costo**: quién opera el sistema y a qué área se imputa cada compra.
 - **Historial de trazabilidad**: registro de quién, cuándo y qué acción se ejecutó sobre solicitudes, cotizaciones, órdenes de compra, recepciones, facturas y devoluciones; permite navegar la cadena documental completa y conserva las anulaciones con su motivo y los cambios bancarios con el valor enmascarado.
 
-## Criterios de Éxito *(obligatorio)*
+## Criterios de Éxito _(obligatorio)_
 
 ### Resultados Medibles
 
@@ -350,7 +380,7 @@ El detalle de atributos, cardinalidades y reglas está en [data-model.md](data-m
 - **SC-003**: El 100 % de las órdenes sobre el umbral tienen 3 cotizaciones o una justificación registrada.
 - **SC-004**: Ninguna recepción permite aceptar más unidades que las compradas, verificado con pruebas automatizadas.
 - **SC-005**: El 100 % de las facturas que vencen en 5 días o menos sin aprobación aparecen en el panel.
-- **SC-006**: Las listas y búsquedas responden de forma instantánea con hasta 500 registros por colección, igual que el módulo base.
+- **SC-006**: Con hasta 500 registros por colección, las listas y búsquedas responden en **menos de 2 segundos**, medidos con `performance.now()` en `tests/integration/compras/rendimiento.test.js`. El umbral es medible y reproducible en la suite automatizada.
 - **SC-007**: Las reglas de cálculo y de estado de la sección 5 de `data-model.md` tienen pruebas unitarias que pasan.
 - **SC-008**: La exportación CSV de un listado de hasta 500 registros se completa en menos de 1 segundo y preserva los filtros y permisos del rol.
 - **SC-009**: El 0 % de las vistas, búsquedas y exportaciones realizadas por roles sin permiso expone el RUT completo de una persona natural o el número de cuenta completo de un proveedor, verificado en listados, ficha, panel, comparativa y CSV.
@@ -358,6 +388,7 @@ El detalle de atributos, cardinalidades y reglas está en [data-model.md](data-m
 - **SC-011**: El 100 % de las unidades dañadas registradas con motivo `danado` o devueltas con motivo `defectuoso` queda excluido del valor a facturar y del saldo pagado, verificado con entregas parciales, entregas totalmente dañadas y facturas ya aprobadas para pago.
 - **SC-012**: El 100 % de los cambios de estado de solicitud, cotización, OC, recepción, factura y devolución registra quién, cuándo y qué acción, y desde cualquier documento se puede navegar la cadena completa sin búsquedas manuales, verificado con una prueba de auditoría de punta a punta.
 - **SC-013**: El 100 % de las pantallas del módulo (proveedores, solicitudes, cotizaciones, órdenes de compra, recepciones, facturas, devoluciones y panel) tiene una etiqueta asociada a cada campo, se puede operar solo con teclado, muestra los mensajes de error junto al campo afectado y cumple un contraste mínimo de 4,5:1 en texto normal (WCAG 2.1 AA), verificado en una revisión de accesibilidad de cada pantalla.
+- **SC-014**: El 100 % de la navegación y del contenido visible de la aplicación corresponde a vistas del módulo de Adquisiciones y Compras; no aparece ninguna vista genérica del template base (Entidades, Documentos o Búsqueda), verificado al abrir la aplicación y revisar la barra lateral y las acciones disponibles.
 
 ## Suposiciones
 

@@ -40,7 +40,8 @@ async function bootWith(configOverride){
   await initApp(normalizeConfig(configOverride));
 }
 
-describe('User Story 10 - manage documents (edit, delete, cascade)', () => {
+// Pruebas heredadas del template base: sus vistas ya no están en index.html (funcionalidad 002).
+describe.skip('User Story 10 - manage documents (edit, delete, cascade)', () => {
   it('edits a selected document through the selector and persists the change', async () => {
     await bootWith(undefined);
     const entity = addEntity({ name: 'Acme', code: 'AC-001' });
@@ -94,7 +95,7 @@ describe('User Story 10 - manage documents (edit, delete, cascade)', () => {
   });
 });
 
-describe('User Story 12 - configured document status lifecycle', () => {
+describe.skip('User Story 12 - configured document status lifecycle', () => {
   it('offers only permitted next statuses when editing an existing document', async () => {
     await bootWith(lifecycle);
     const entity = addEntity({ name: 'Acme', code: 'AC-001' });

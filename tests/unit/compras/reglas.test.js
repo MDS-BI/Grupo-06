@@ -16,12 +16,14 @@ import {
   notaPlazo,
   normalizarRut,
   puedeTransicionar,
+  puedeVerDatosBancarios,
   redondearCLP,
   redondearPromedio,
   siguienteSecuencia,
   sumarDias,
   validarCondicionPago,
-  validarRut
+  validarRut,
+  validarVisibilidadDatosBancarios
 } from '../../../src/compras/reglas.js';
 
 describe('reglas de compras', () => {
@@ -29,6 +31,26 @@ describe('reglas de compras', () => {
     expect(IVA).toBe(0.19);
     expect(UMBRAL_COTIZACIONES).toBe(1000000);
     expect(TOLERANCIA_CONCILIACION).toBe(0.01);
+  });
+
+  it('aplica la regla central de visibilidad de datos bancarios por rol', () => {
+    expect(puedeVerDatosBancarios('admin_ti')).toBe(true);
+    expect(puedeVerDatosBancarios('jefe_compras')).toBe(true);
+    ['solicitante', 'comprador', 'bodega'].forEach((rol) =>
+      expect(puedeVerDatosBancarios(rol)).toBe(false)
+    );
+    expect(validarVisibilidadDatosBancarios('admin_ti')).toEqual({
+      visible: true,
+      editable: true
+    });
+    expect(validarVisibilidadDatosBancarios('jefe_compras')).toEqual({
+      visible: true,
+      editable: false
+    });
+    expect(validarVisibilidadDatosBancarios('comprador')).toEqual({
+      visible: false,
+      editable: false
+    });
   });
 
   describe('RUT', () => {

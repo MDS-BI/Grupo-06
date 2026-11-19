@@ -109,9 +109,12 @@ const COLUMNAS_FACTURAS = [
   { key: 'total', header: 'Total' }
 ];
 
-export function exportarProveedores(
-  { filas, filtro = '', descargar = true, usuario = getUsuarioActivo() } = {}
-) {
+export function exportarProveedores({
+  filas,
+  filtro = '',
+  descargar = true,
+  usuario = getUsuarioActivo()
+} = {}) {
   const q = String(filtro ?? '').toLowerCase();
   const lista = (filas || listarProveedores())
     .filter(

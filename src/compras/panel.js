@@ -41,8 +41,7 @@ export function construirPanel(usuario = getUsuarioActivo(), hoy = hoyISO()) {
   const pendientes = [];
   const solicitudes = listarSolicitudes(usuario).filter((s) => puedeVerSolicitud(s, usuario));
   const ordenes = listarOrdenes();
-  const alertas =
-    rol === 'solicitante' ? [] : alertasVencimiento(hoy, DIAS_ALERTA_VENCIMIENTO);
+  const alertas = rol === 'solicitante' ? [] : alertasVencimiento(hoy, DIAS_ALERTA_VENCIMIENTO);
   const porConciliar = facturasPorConciliar();
 
   if (['jefe_compras', 'admin_ti'].includes(rol)) {

@@ -253,7 +253,7 @@
 - [x] T082 [US11] Si quien registró la recepción intenta registrar la devolución, exigir la aprobación de un `jefe_compras` o `admin_ti` distinto. [FR-031, FR-014]
 - [x] T083 [US11] Agregar pruebas de devoluciones, notas de crédito, topes, duplicidad, cierre de OC y segregación en `tests/integration/compras/flujo-compras.test.js` y `tests/integration/compras/casos-limite.test.js`. [FR-031]
 - [x] T084 [US11] Agregar prueba de integración del flujo completo de US11 en `tests/integration/compras/flujo-compras.test.js`. [FR-031]
-- [x] T100 [US11] [FR-026] Registrar devoluciones con motivo `defectuoso` cuando el daño se detecta después de aceptar, descontando el saldo recibido y facturado, en `src/compras/devoluciones.js`; agregar pruebas en `tests/integration/compras/flujo-compras.test.js`.
+- [x] T100 [US11] [FR-026] Registrar devoluciones con motivo `defectuoso` cuando el daño se detecta después de aceptar, descontando el saldo recibido y facturado, en `src/compras/devoluciones.js`; agregar pruebas en `tests/integration/compras/flujo-compras.test.js`. Verificado en `tests/integration/compras/casos-limite.test.js` (cierre de OC con saldo pendiente y motivo `defectuoso`).
 - [ ] T101 [US11] [SC-011] Cubrir el daño detectado con la factura ya aprobada para pago y el cierre de la OC con saldo pendiente cuando el proveedor no repone, en `tests/integration/compras/casos-limite.test.js`. **Pendiente**: falta la transición `recibida_parcial → cerrada` en `src/compras/reglas.js` (ver `data-model.md`, sección 10, pendiente 3).
 - [ ] T110 [US11] [FR-026] [SC-011] Calcular `credito_a_favor` cuando una devolución con motivo `defectuoso` descuenta una factura ya `aprobada_pago`, y mostrarlo en la factura y en la cadena documental, en `src/compras/devoluciones.js`, `src/compras/facturas.js` y `src/compras/vista.js`; agregar la prueba en `tests/integration/compras/casos-limite.test.js`.
 
@@ -269,10 +269,10 @@
 
 - [x] T102 [FR-027] Implementar en `src/compras/trazabilidad.js` el registro de quién, cuándo y qué acción para cada cambio de estado de solicitud, cotización, OC, recepción, factura y devolución, integrándolo en `src/compras/solicitudes.js`, `src/compras/cotizaciones.js`, `src/compras/ordenes-compra.js`, `src/compras/recepciones.js`, `src/compras/facturas.js` y `src/compras/devoluciones.js`.
 - [x] T103 [FR-028] Implementar en `src/compras/trazabilidad.js` y `src/compras/vista.js` la navegación desde cualquier documento a la cadena completa solicitud, cotización, OC, recepción, factura y devolución.
-- [x] T104 [FR-029] Impedir la eliminación de documentos con historial y permitir solo su anulación con motivo en `src/compras/almacenamiento.js`, `src/compras/ordenes-compra.js`, `src/compras/facturas.js` y `src/compras/devoluciones.js`.
+- [ ] T104 [FR-029] Impedir la eliminación de documentos con historial y permitir solo su anulación con motivo en `src/compras/almacenamiento.js`, `src/compras/ordenes-compra.js`, `src/compras/facturas.js` y `src/compras/devoluciones.js`. **Deuda conocida**: el bloqueo de eliminación y la anulación de OC están probados; falta extender `motivo_anulacion` a facturas y devoluciones (ver T118).
 - [x] T105 [FR-030] Registrar cada cambio de datos bancarios con el valor enmascarado, nunca el completo, en `src/compras/proveedores.js` y `src/compras/trazabilidad.js`.
 - [x] T106 [SC-012] Agregar pruebas de auditoría de punta a punta en `tests/integration/compras/trazabilidad.test.js` que verifiquen quién, cuándo y qué acción en cada cambio de estado, la navegación de la cadena completa y la conservación de documentos anulados.
-- [ ] T109 [FR-029] Implementar la anulación con `motivo_anulacion` obligatorio de solicitudes, cotizaciones y recepciones en `src/compras/solicitudes.js` (ya guarda `motivo_anulacion`: verificar y completar), `src/compras/cotizaciones.js` y `src/compras/recepciones.js`, registrando el evento en `src/compras/trazabilidad.js`; una recepción anulada no cuenta para las cantidades recibidas ni para el valor recibido (`data-model.md`, reglas 5, 6 y 11). Agregar pruebas en `tests/integration/compras/trazabilidad.test.js` y `tests/unit/compras/reglas.test.js`.
+- [ ] T109 [FR-029] Implementar la anulación con `motivo_anulacion` obligatorio de solicitudes, cotizaciones y recepciones en `src/compras/solicitudes.js` (ya guarda `motivo_anulacion`: verificar y completar), `src/compras/cotizaciones.js` y `src/compras/recepciones.js`, registrando el evento en `src/compras/trazabilidad.js`; una recepción anulada no cuenta para las cantidades recibidas ni para el valor recibido (`data-model.md`, reglas 5, 6 y 11). Agregar pruebas en `tests/integration/compras/trazabilidad.test.js` y `tests/unit/compras/reglas.test.js`. **Deuda conocida**: solo la solicitud guarda hoy `motivo_anulacion`; cotizaciones usan `motivo_descarte` y recepciones no tienen anulación. Se completa con T118 para cerrar FR-029 y el pendiente 2 de `data-model.md` §10.
 
 **Punto de control**: trazabilidad completa y documentos no eliminables.
 
@@ -286,12 +286,48 @@
 - [x] T086 Parametrizar `UMBRAL_COTIZACIONES` y `TOLERANCIA_CONCILIACION` en configuración con los valores acordados: 1.000.000 CLP neto y 1 % del neto. [FR-021, FR-022]
 - [x] T087 Ejecutar y completar las pruebas unitarias de todas las reglas de la sección 5 de `data-model.md`. [SC-007]
 - [x] T088 Ejecutar las pruebas de integración de los flujos P1 (US1 a US6) y P2 (US7 a US9 y US11), además de la exportación de US10.
-- [x] T089 Verificar rendimiento con hasta 500 registros por colección y los tiempos de SC-001 (solicitud de 3 productos en menos de 2 minutos), SC-006 y SC-008. [SC-001, SC-006, SC-008]
+- [x] T089 Verificar rendimiento con hasta 500 registros por colección y los tiempos de SC-001 (solicitud de 3 productos en menos de 2 minutos), SC-006 (listas y búsquedas en menos de 2 segundos) y SC-008 (exportación CSV en menos de 1 segundo). [SC-001, SC-006, SC-008]
 - [x] T090 Ejecutar la demostración de extremo a extremo de SC-002 en menos de 5 minutos: solicitud, 3 cotizaciones, OC, recepción y factura conciliada. [SC-002]
 - [x] T091 Validar los casos límite de `spec.md`: anulación de OC con cotización seleccionada, nota de crédito, sobreentrega, producto desactivado con solicitudes abiertas, proveedor bloqueado con OC abiertas y `localStorage` lleno o deshabilitado.
 - [x] T092 Actualizar el README con instrucciones de ejecución, roles, datos semilla y alcance del módulo de compras.
 - [ ] T107 Ejecutar `npm run lint` (ESLint) y `npm run format:check` (Prettier) sin errores y corregir las advertencias que afecten la corrección o la mantenibilidad antes del congelamiento del 26-nov (constitución, Estándares de Calidad).
 - [ ] T108 [SC-013] Verificar la accesibilidad de las pantallas de proveedores, solicitudes, cotizaciones, OC, recepciones, facturas, devoluciones y panel: etiqueta asociada a cada campo, operación solo con teclado, errores junto al campo y contraste mínimo 4,5:1 (WCAG 2.1 AA); automatizar la comprobación de etiquetas y foco en `tests/integration/compras/vista.test.js` y dejar registrada la revisión de contraste.
+- [x] T111 [US5] Limpiar `index.html` del contenido de demostración del módulo base: retirar las vistas `view-dashboard`, `view-entities`, `view-documents` y `view-search`, sus botones de navegación y los rótulos "Módulo Base ERP", conservando `#config-errors`, `#app`, `#view-compras`, `#compras-root` y el script `src/main.js`. Verificar que la aplicación arranque sin errores y que en la interfaz solo quede la navegación y el panel del módulo de Adquisiciones y Compras. [FR-018]
+- [x] T112 [US5] Verificar los datos simulados en la interfaz: confirmar que `src/compras/semilla.json` incluya ejemplos ficticios que cubran los estados que consume el panel (solicitudes `enviadas`, OC sin recepción, recepciones pendientes y facturas que vencen en 5 días o menos), asegurar que el cargador de T007 los disponga al abrir `index.html` y comprobar en pantalla los contadores, alertas y accesos directos de US5. Respetar FR-020, el enmascaramiento de FR-025 y no usar datos reales. [FR-018, FR-020, SC-005]
+- [x] T113 Completar el artefacto de Fase 0 en `specs/002-modulo-adquisiciones-compras/research.md`, con las decisiones técnicas del módulo (pila, extensión en dos niveles, persistencia, reglas puras, roles simulados, trazabilidad, CSV, pruebas e integración), su justificación y las alternativas consideradas, sin clarificaciones pendientes.
+- [x] T114 Completar los artefactos de Fase 1 en `specs/002-modulo-adquisiciones-compras/contracts/almacenamiento-compras.md` y `specs/002-modulo-adquisiciones-compras/contracts/exportacion-e-integracion.md`, documentando claves, operaciones, formato CSV, permisos por rol y puntos de integración con el módulo base y los módulos vecinos. Actualizar el árbol de documentación de `plan.md`.
+- [x] T115 Completar `specs/002-modulo-adquisiciones-compras/quickstart.md` con requisitos, comandos, escenarios de validación por historia (SC-002, SC-005, SC-009, SC-010), reinicio de datos y referencias a `spec.md`, `data-model.md` y los contratos; reflejar los artefactos nuevos en `README.md`.
+- [x] T116 Auditar `spec.md` de la feature 002: confirmar que US1-US11 comparten el mismo formato (**Como/necesito/para**, **Por qué esta prioridad**, **Prueba Independiente**, **Escenarios de Aceptación** con pasos **Dado/Cuando/Entonces**), explicitar en Clarifications el umbral de 1.000.000 CLP neto, la tolerancia del 1 %, la visibilidad bancaria de `admin_ti` y `jefe_compras`, el CSV UTF-8 con BOM y `;`, y el flujo de dañados y devoluciones (FR-025 a FR-030); agregar FR-032, su escenario en US5 y SC-014 para prohibir las vistas genéricas del template base. [FR-032, SC-014]
+
+---
+
+## Fase 15: Cierre de pendientes del modelo de datos
+
+**Objetivo**: resolver las cuatro diferencias registradas en `data-model.md`, sección 10, y cerrar la cobertura de FR-029 con tareas explícitas y trazabilidad.
+
+- [ ] T117 [FR-015] Unificar el estado inicial de la factura entre código y modelo (`registrada` frente a `recibida`) según `data-model.md` §10, pendiente 1. Actualizar `src/compras/reglas.js`, `src/compras/facturas.js` y las pruebas correspondientes. **Deuda conocida**: decisión de nomenclatura pendiente de aprobación del grupo.
+- [ ] T118 [FR-029] Alinear los estados de devolución con `data-model.md` §10, pendiente 2: incorporar `anulada` con `motivo_anulacion` y registrarlo en `src/compras/trazabilidad.js`. Extender la anulación con motivo a facturas y devoluciones, además de solicitudes, cotizaciones y recepciones, para cerrar T104 y T109. **Deuda conocida**: hoy solo OC y solicitudes guardan `motivo_anulacion`; el resto usa `descartar`/`rechazar`.
+- [ ] T119 [FR-010] Resolver `data-model.md` §10, pendiente 4: decidir entre agregar el estado `borrador` a la OC o eliminarlo del modelo; sincronizar `src/compras/reglas.js`, `plan.md` y `data-model.md`. **Deuda conocida**: la spec US3 solo usa `emitida` y el plan ya no describe el ciclo de vida por configuración.
+
+**Punto de control**: `data-model.md` §10 queda sin decisiones abiertas y FR-029 tiene cobertura explícita.
+
+---
+
+## Deuda conocida
+
+Estas tareas permanecen sin marcar deliberadamente. Su estado se registra aquí y se replica en `plan.md` para que el congelamiento no esconda trabajo pendiente.
+
+| Tarea | Estado  | Justificación de la deuda                                                                                                                                                                                                                    | Referencia                          |
+| ----- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| T101  | Abierta | La prueba de cierre con saldo pendiente pasa, pero `cerrarSiSaldada()` muta el estado directamente; falta declarar `recibida_parcial → cerrada` en `TRANSICIONES`.                                                                           | `data-model.md` §10, pendiente 3    |
+| T104  | Abierta | Bloqueo de eliminación y anulación de OC verificados; falta `motivo_anulacion` en facturas y devoluciones.                                                                                                                                   | FR-029, T118                        |
+| T107  | Abierta | Deuda de calidad: `npm run format:check` sigue reportando 92 archivos base y de tooling fuera del alcance permitido; no se formatearon `src/storage.js` ni `tests/unit/storage.test.js`. Lint sin errores, con 6 advertencias preexistentes. | Constitución, Estándares de Calidad |
+| T108  | Abierta | No se completó la revisión de accesibilidad pantalla por pantalla ni la verificación de contraste 4,5:1.                                                                                                                                     | SC-013                              |
+| T109  | Abierta | Solo la solicitud guarda `motivo_anulacion`; faltan cotizaciones y recepciones.                                                                                                                                                              | FR-029, T118                        |
+| T110  | Abierta | `credito_a_favor` no está implementado ni mostrado en factura/cadena documental.                                                                                                                                                             | FR-026, SC-011                      |
+| T117  | Abierta | Pendiente 1 de `data-model.md` §10: nombre del estado inicial de factura sin unificar.                                                                                                                                                       | FR-015                              |
+| T118  | Abierta | Pendiente 2 de `data-model.md` §10: estados de devolución y anulación con motivo incompletos.                                                                                                                                                | FR-029                              |
+| T119  | Abierta | Pendiente 4 de `data-model.md` §10: estado `borrador` de OC sin decidir.                                                                                                                                                                     | FR-010                              |
 
 ---
 
@@ -314,6 +350,7 @@
 - **US11 (Fase 13)**: depende de US7 y de la recepción de US4.
 - **Trazabilidad (Fase 13A)**: depende de US1 a US11 y se ejecuta antes del pulido.
 - **Pulido (Fase 14)**: al finalizar todas las historias.
+- **Pendientes de modelo (Fase 15)**: depende de US3, US7 y US11; cierra las decisiones de `data-model.md` §10 y la cobertura de FR-029.
 
 ### Dependencias Críticas
 
@@ -348,79 +385,82 @@ Agregar primero US7 (facturas), luego US8 (catálogo), US9 (evaluación) y US11 
 
 ### Requisitos Funcionales
 
-| Requisito | Tareas |
-|---|---|
-| FR-001 | T011, T012, T013, T014, T015 |
-| FR-002 | T014 |
-| FR-003 | T016 |
-| FR-004 | T017, T062, T093 |
-| FR-005 | T020, T021, T022, T023 |
-| FR-006 | T024 |
-| FR-007 | T051, T052 |
-| FR-008 | T054 |
-| FR-009 | T053 |
-| FR-010 | T015, T028, T029 |
-| FR-011 | T030, T032 |
-| FR-012 | T005, T031 |
-| FR-013 | T036, T037, T039 |
-| FR-014 | T038, T082 |
-| FR-015 | T057, T058, T061, T080 |
-| FR-016 | T059 |
-| FR-017 | T045, T060 |
-| FR-018 | T043, T044, T046, T047, T048, T049 |
-| FR-019 | T072 |
-| FR-020 | T008 |
-| FR-021 | T086 |
-| FR-022 | T086 |
-| FR-023 | T066, T067, T068 |
-| FR-024 | T074, T075, T076 |
-| FR-025 | T017, T093, T094, T095, T096 |
-| FR-026 | T097, T098, T100, T101, T110 |
-| FR-027 | T102, T106 |
-| FR-028 | T103, T106 |
-| FR-029 | T104, T106, T109 |
-| FR-030 | T105, T106 |
-| FR-031 | T078, T079, T080, T081, T082, T083, T084 |
+| Requisito | Tareas                                         |
+| --------- | ---------------------------------------------- |
+| FR-001    | T011, T012, T013, T014, T015                   |
+| FR-002    | T014                                           |
+| FR-003    | T016                                           |
+| FR-004    | T017, T062, T093                               |
+| FR-005    | T020, T021, T022, T023                         |
+| FR-006    | T024                                           |
+| FR-007    | T051, T052                                     |
+| FR-008    | T054                                           |
+| FR-009    | T053                                           |
+| FR-010    | T015, T028, T029, T119                         |
+| FR-011    | T030, T032                                     |
+| FR-012    | T005, T031                                     |
+| FR-013    | T036, T037, T039                               |
+| FR-014    | T038, T082                                     |
+| FR-015    | T057, T058, T061, T080, T117                   |
+| FR-016    | T059                                           |
+| FR-017    | T045, T060                                     |
+| FR-018    | T043, T044, T046, T047, T048, T049, T111, T112 |
+| FR-019    | T072                                           |
+| FR-020    | T008, T112                                     |
+| FR-021    | T086                                           |
+| FR-022    | T086                                           |
+| FR-023    | T066, T067, T068                               |
+| FR-024    | T074, T075, T076                               |
+| FR-025    | T017, T093, T094, T095, T096                   |
+| FR-026    | T097, T098, T100, T101, T110                   |
+| FR-027    | T102, T106                                     |
+| FR-028    | T103, T106                                     |
+| FR-029    | T104, T106, T109, T118                         |
+| FR-030    | T105, T106                                     |
+| FR-031    | T078, T079, T080, T081, T082, T083, T084       |
+| FR-032    | T085, T111, T116                               |
 
 ### Requisitos de Integración
 
 | Requisito | Tareas |
-|---|---|
-| IR-001 | T009 |
-| IR-002 | T040 |
-| IR-003 | T063 |
+| --------- | ------ |
+| IR-001    | T009   |
+| IR-002    | T040   |
+| IR-003    | T063   |
 
 ### Criterios de Éxito
 
-| Criterio | Tareas |
-|---|---|
-| SC-001 | T089 |
-| SC-002 | T090 |
-| SC-003 | T054, T030 |
-| SC-004 | T041 |
-| SC-005 | T045, T050 |
-| SC-006 | T089 |
-| SC-007 | T087 |
-| SC-008 | T077, T089 |
-| SC-009 | T096 |
-| SC-010 | T077, T099 |
-| SC-011 | T098, T101, T110 |
-| SC-012 | T106 |
-| SC-013 | T108 |
+| Criterio | Tareas           |
+| -------- | ---------------- |
+| SC-001   | T089             |
+| SC-002   | T090             |
+| SC-003   | T054, T030       |
+| SC-004   | T041             |
+| SC-005   | T045, T050, T112 |
+| SC-006   | T089             |
+| SC-007   | T087             |
+| SC-008   | T077, T089       |
+| SC-009   | T096             |
+| SC-010   | T077, T099       |
+| SC-011   | T098, T101, T110 |
+| SC-012   | T106             |
+| SC-013   | T108             |
+| SC-014   | T111, T116       |
 
 ### Historias de Usuario
 
-| Historia | Prioridad | Tareas |
-|---|---|---|
-| US1 - Gestionar proveedores | P1 | T011-T019, T093-T096 |
-| US2 - Crear y aprobar solicitudes | P1 | T020-T026 |
-| US3 - Emitir órdenes de compra | P1 | T027-T034 |
-| US4 - Registrar recepciones | P1 | T035-T042, T097-T098 |
-| US5 - Panel de pendientes y alertas | P1 | T043-T050 |
-| US6 - Cotizaciones y comparativa side-by-side | P1 | T051-T056 |
-| US7 - Registrar y conciliar facturas | P2 | T057-T065 |
-| US8 - Catálogo de productos por proveedor | P2 | T066-T069 |
-| US9 - Evaluación de desempeño de proveedores | P2 | T070-T073 |
-| US10 - Exportación de reportes en CSV | P3 | T074-T077, T099 |
-| US11 - Registrar devoluciones y notas de crédito | P2 | T078-T084, T100-T101, T110 |
-| Trazabilidad transversal | Transversal | T102-T106, T109 |
+| Historia                                         | Prioridad   | Tareas                     |
+| ------------------------------------------------ | ----------- | -------------------------- |
+| US1 - Gestionar proveedores                      | P1          | T011-T019, T093-T096       |
+| US2 - Crear y aprobar solicitudes                | P1          | T020-T026                  |
+| US3 - Emitir órdenes de compra                   | P1          | T027-T034                  |
+| US4 - Registrar recepciones                      | P1          | T035-T042, T097-T098       |
+| US5 - Panel de pendientes y alertas              | P1          | T043-T050, T111-T112, T116 |
+| US6 - Cotizaciones y comparativa side-by-side    | P1          | T051-T056                  |
+| US7 - Registrar y conciliar facturas             | P2          | T057-T065                  |
+| US8 - Catálogo de productos por proveedor        | P2          | T066-T069                  |
+| US9 - Evaluación de desempeño de proveedores     | P2          | T070-T073                  |
+| US10 - Exportación de reportes en CSV            | P3          | T074-T077, T099            |
+| US11 - Registrar devoluciones y notas de crédito | P2          | T078-T084, T100-T101, T110 |
+| Trazabilidad transversal                         | Transversal | T102-T106, T109            |
+| Pendientes de modelo (`data-model.md` §10)       | Transversal | T101, T117-T119            |

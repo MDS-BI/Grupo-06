@@ -6,6 +6,8 @@ import {
   normalizarRut,
   enmascararRut,
   enmascararCuenta,
+  puedeVerDatosBancarios,
+  puedeEditarDatosBancarios,
   validarCondicionPago,
   hoyISO
 } from './reglas.js';
@@ -231,8 +233,8 @@ export function vistaProveedor(proveedor, rol) {
   const natural = String(proveedor.tipo_persona || '')
     .toLowerCase()
     .startsWith('natural');
-  const puedeVerBanco = rol === 'admin_ti' || rol === 'jefe_compras';
-  const puedeVerRut = rol === 'admin_ti' || rol === 'jefe_compras';
+  const puedeVerBanco = puedeVerDatosBancarios(rol);
+  const puedeVerRut = puedeVerDatosBancarios(rol);
   const rutVisible = natural ? enmascararRut(proveedor.taxId, rol) : formatearRut(proveedor.taxId);
   const cuentaVisible = proveedor.numero_cuenta
     ? enmascararCuenta(proveedor.numero_cuenta, rol)
@@ -242,7 +244,7 @@ export function vistaProveedor(proveedor, rol) {
     rut_visible: rutVisible,
     cuenta_visible: cuentaVisible,
     datos_bancarios_visibles: puedeVerBanco,
-    puede_editar_banco: rol === 'admin_ti'
+    puede_editar_banco: puedeEditarDatosBancarios(rol)
   };
   if (natural && !puedeVerRut) vista.taxId = rutVisible;
   if (!puedeVerBanco) vista.numero_cuenta = cuentaVisible;

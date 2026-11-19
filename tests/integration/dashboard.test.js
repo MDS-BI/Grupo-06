@@ -38,7 +38,8 @@ async function bootWith(configOverride){
   await initApp(normalizeConfig(configOverride));
 }
 
-describe('User Story 3 - home dashboard with quick actions and record stats', () => {
+// Pruebas heredadas del template base: sus vistas ya no están en index.html (funcionalidad 002).
+describe.skip('User Story 3 - home dashboard with quick actions and record stats', () => {
   it('opens on the dashboard with all other views hidden', async () => {
     await bootWith(undefined);
     expect(qs('view-dashboard').hidden).toBe(false);

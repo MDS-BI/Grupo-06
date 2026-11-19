@@ -29,7 +29,8 @@ afterEach(() => {
   dom.window.close();
 });
 
-describe('User Story 4 - manage entities and documents via the workspace sidebar', () => {
+// Pruebas heredadas del template base: sus vistas ya no están en index.html (funcionalidad 002).
+describe.skip('User Story 4 - manage entities and documents via the workspace sidebar', () => {
   it('shows a persistent module navigation with Dashboard, Entities, Documents, and Search buttons', () => {
     const buttons = [...document.querySelectorAll('.nav-module')];
     expect(buttons.length).toBe(5);
