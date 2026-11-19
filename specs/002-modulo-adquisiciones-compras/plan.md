@@ -8,7 +8,7 @@
 Construir el módulo Adquisiciones y Compras **sobre el módulo base ERP del curso** (`specs/001-erp-base-module`), sin reemplazar su código central. El módulo base ofrece un tipo de dato maestro (Entidad) y un tipo de documento (Documento) que se adaptan desde `src/module-config.js`. El plan aprovecha eso en dos niveles:
 
 1. **Por configuración**: Proveedor se monta sobre la Entidad y Orden de Compra sobre el Documento. Esto entrega rápido una **versión integrada de prueba** que corre dentro del template, como pidió el profesor en el feedback del 26-10-2026.
-2. **Por extensión**: solicitudes, cotizaciones, recepciones, facturas, catálogo y evaluaciones necesitan colecciones propias, que se agregan en `src/compras/` siguiendo el mismo contrato de almacenamiento del template (`specs/001-erp-base-module/contracts/entity-storage.md`).
+2. **Por extensión**: solicitudes, cotizaciones, recepciones, facturas, devoluciones, catálogo, evaluaciones y el historial de trazabilidad necesitan colecciones propias, que se agregan en `src/compras/` siguiendo el mismo contrato de almacenamiento del template (`specs/001-erp-base-module/contracts/entity-storage.md`).
 
 El trabajo se divide en iteraciones semanales; cada una termina con una versión que corre y con avance visible en el repositorio.
 
@@ -23,7 +23,7 @@ El trabajo se divide en iteraciones semanales; cada una termina con una versión
 **Tipo de Proyecto**: Aplicación web de una página, solo frontend  
 **Objetivos de Rendimiento**: Listas y búsquedas instantáneas con hasta 500 registros por colección (mismo objetivo del template)  
 **Restricciones**: Sin backend, sin autenticación real, sin conexión con el SII; no modificar el comportamiento del módulo base salvo donde se justifica en "Seguimiento de Complejidad"  
-**Escala/Alcance**: 18 entidades lógicas (ver `data-model.md`), 11 historias de usuario, 5 roles simulados
+**Escala/Alcance**: 19 entidades lógicas (ver `data-model.md`), 11 historias de usuario, 5 roles simulados
 
 ## Verificación de la Constitución
 
@@ -98,6 +98,7 @@ Cada colección nueva implementa las mismas operaciones del contrato del templat
 | EVALUACION_PROVEEDOR | `erp_compras:evaluaciones` |
 | CONTACTO_PROVEEDOR | `erp_compras:contactos` |
 | USUARIO, CENTRO_COSTO, PRODUCTO | `erp_compras:usuarios`, `erp_compras:centros_costo`, `erp_compras:productos` (datos semilla hasta conectar RR.HH., Contabilidad e Inventario) |
+| HISTORIAL_TRAZABILIDAD | `erp_compras:trazabilidad` (eventos inmutables: quién, cuándo, qué acción; cambios bancarios con valor enmascarado) |
 
 ## Estructura del Proyecto
 
@@ -108,7 +109,9 @@ specs/002-modulo-adquisiciones-compras/
 ├── spec.md          (historias de usuario y requisitos)
 ├── plan.md          (este archivo)
 ├── data-model.md    (MER, diccionario de datos, reglas)
-└── tasks.md         (tareas de implementación)
+├── tasks.md         (tareas de implementación)
+└── checklists/
+    └── requirements.md  (verificación de calidad de la especificación)
 ```
 
 ### Código Fuente (raíz del repositorio)
@@ -122,6 +125,7 @@ src/
     ├── almacenamiento.js   (colecciones erp_compras:* con el contrato del template)
     ├── solicitudes.js      (pantalla y flujo de solicitudes)
     ├── cotizaciones.js     (registro y comparación)
+    ├── ordenes-compra.js   (emisión, compra directa y anulación de OC)
     ├── recepciones.js
     ├── facturas.js
     ├── devoluciones.js     (devoluciones y notas de crédito)
@@ -135,8 +139,9 @@ src/
     └── semilla.json        (datos ficticios)
 
 tests/
-├── unit/compras/           (una prueba por regla de data-model.md, sección 5)
-└── integration/compras/    (un flujo por historia de usuario P1 y P2)
+├── unit/compras/           (reglas.test.js, exportacion.test.js, configuracion.test.js: reglas de data-model.md, sección 5)
+└── integration/compras/    (flujos por historia: proveedores, flujo-compras, casos-limite, catalogo-panel, vista,
+                             almacenamiento, trazabilidad y rendimiento; helpers.js compartido)
 ```
 
 **Decisión de Estructura**: todo lo propio del módulo vive en `src/compras/` para no mezclarlo con el módulo base; así se puede actualizar el template sin pisar el trabajo del grupo y otros módulos pueden leer las colecciones `erp_compras:*`.
@@ -149,18 +154,18 @@ tests/
 | 1. Versión integrada de prueba | 2 al 8-nov | US1, US3 simplificada, US5 básico | Proveedores y OC operando solo por configuración (el n° de solicitud se ingresa como texto, sin validarlo); panel con conteos |
 | 2. Ciclo operativo | 9 al 15-nov | US2, US4, US3 completa | Solicitud → OC → recepción; la OC se valida contra la solicitud aprobada, con líneas e IVA calculado |
 | 3. Adquisiciones y cierre del ciclo | 16 al 22-nov | US6, US7, US8 | Cotizaciones, conciliación de facturas, catálogo; demo del ciclo completo |
-| 4. Calidad | 23 al 26-nov | US9, US10, US11, indicadores | Evaluación, devoluciones/notas de crédito, CSV, README final; congelamiento del repositorio el 26-nov |
+| 4. Calidad | 23 al 26-nov | US9, US10, US11, trazabilidad transversal (FR-027 a FR-030), indicadores | Evaluación, devoluciones/notas de crédito, CSV, historial de auditoría y cadena documental, README final; congelamiento del repositorio el 26-nov |
 
 Cada historia se asigna a un responsable en un Issue de GitHub con la etiqueta de su iteración; los acuerdos de cada semana se registran en un Issue de seguimiento.
 
 ## Dependencia crítica
 
-El repositorio del grupo **no contiene la carpeta `src/`** en `HEAD`, aunque el README del template y sus pruebas (`tests/unit/storage.test.js` importa `../../src/storage.js`) la requieren. El código base existe en el historial: se restaura con `git checkout 501e9c6 -- src index.html`. Si no se restaura, la iteración 1 no puede ejecutarse.
+**Resuelta.** La carpeta `src/` (módulo base) se restauró desde el historial (`git checkout 501e9c6 -- src index.html`) y hoy está versionada en `HEAD` junto con `src/compras/`. Las pruebas del template (`tests/unit/storage.test.js`, entre otras) vuelven a encontrar sus dependencias.
 
 ## Plan de Pruebas
 
 - **Unitarias** (`tests/unit/compras/`): cálculo de neto, IVA y total con redondeo; validación de RUT; transiciones permitidas y prohibidas de cada estado; regla de 3 cotizaciones; tope de recepción por línea; conciliación con y sin discrepancia; nota de plazo según días de atraso; plazo de pago máximo sin acuerdo.
-- **Integración** (`tests/integration/compras/`): un flujo por historia P1 y P2 siguiendo sus escenarios de aceptación de `spec.md`.
+- **Integración** (`tests/integration/compras/`): un flujo por historia P1 y P2 siguiendo sus escenarios de aceptación de `spec.md`, y una prueba de auditoría de punta a punta (SC-012) en `trazabilidad.test.js`.
 - **Manual**: guion de la demo de 5 minutos del criterio SC-002.
 
 ## Datos Semilla
@@ -170,7 +175,8 @@ Todos ficticios: 4 centros de costo, 6 usuarios (uno por rol y un segundo solici
 ## Escalabilidad y Desarrollo Futuro
 
 - **Backend**: `localStorage` limita el almacenamiento a un navegador y a pocos MB. El MER está normalizado para migrarse sin cambios conceptuales a una base de datos relacional con una API.
-- **Autenticación y auditoría**: los roles simulados deben pasar a usuarios reales, y los cambios sensibles (datos bancarios, aprobaciones) a un historial de auditoría.
+- **Autenticación**: los roles simulados deben pasar a usuarios reales.
+- **Auditoría en servidor**: el historial de trazabilidad (FR-027 a FR-030) ya forma parte del MVP sobre `localStorage`; a futuro debe migrar a un registro en servidor que no pueda alterarse desde el navegador.
 - **SII**: recibir automáticamente los documentos tributarios electrónicos en lugar de ingresar facturas a mano.
 - **Integración**: solicitudes automáticas de reposición desde Inventario y control de presupuesto por centro de costo desde Contabilidad.
 - **Multiempresa**: agregar un identificador de empresa a cada colección.
