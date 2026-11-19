@@ -246,15 +246,16 @@
 
 **Prueba Independiente**: sobre una OC `recibida_total` facturada por 100.000 CLP neto, una devolución de 20.000 CLP por defectuosos baja el saldo pendiente a 80.000 CLP y una factura posterior por ese monto queda `conciliada`.
 
-- [x] T078 [US11] Crear el esquema de `DEVOLUCION` y su detalle en `src/compras/devoluciones.js` y `erp_compras:devoluciones`, con correlativo `DEV-AAAA-NNNN`, relación a la OC y a la línea de OC. [FR-015]
-- [x] T079 [US11] Implementar el registro de devoluciones con línea, cantidad y motivo; descontar la cantidad del saldo recibido y no permitir devolver más de lo aceptado. [FR-015]
-- [x] T080 [US11] Implementar notas de crédito contra una factura ya registrada: deben asociarse a OC y factura, no pueden superar el monto facturado y su folio es único por proveedor y tipo de documento. [FR-015]
-- [x] T081 [US11] Cuando la devolución o nota de crédito reduzca el saldo pendiente a cero, cerrar la OC y dar por saldada la factura sin pasarla a `aprobada_pago` por el monto descontado. [FR-016]
-- [x] T082 [US11] Si quien registró la recepción intenta registrar la devolución, exigir la aprobación de un `jefe_compras` o `admin_ti` distinto. [FR-014]
-- [x] T083 [US11] Agregar pruebas de devoluciones, notas de crédito, topes, duplicidad, cierre de OC y segregación en `tests/integration/compras/flujo-compras.test.js` y `tests/integration/compras/casos-limite.test.js`.
-- [x] T084 [US11] Agregar prueba de integración del flujo completo de US11 en `tests/integration/compras/flujo-compras.test.js`.
+- [x] T078 [US11] Crear el esquema de `DEVOLUCION` y su detalle en `src/compras/devoluciones.js` y `erp_compras:devoluciones`, con correlativo `DEV-AAAA-NNNN`, relación a la OC y a la línea de OC. [FR-031]
+- [x] T079 [US11] Implementar el registro de devoluciones con línea, cantidad y motivo; descontar la cantidad del saldo recibido y no permitir devolver más de lo aceptado. [FR-031]
+- [x] T080 [US11] Implementar notas de crédito contra una factura ya registrada: deben asociarse a OC y factura, no pueden superar el monto facturado y su folio es único por proveedor y tipo de documento. [FR-031, FR-015]
+- [x] T081 [US11] Cuando la devolución o nota de crédito reduzca el saldo pendiente a cero, cerrar la OC y dar por saldada la factura sin pasarla a `aprobada_pago` por el monto descontado. [FR-031]
+- [x] T082 [US11] Si quien registró la recepción intenta registrar la devolución, exigir la aprobación de un `jefe_compras` o `admin_ti` distinto. [FR-031, FR-014]
+- [x] T083 [US11] Agregar pruebas de devoluciones, notas de crédito, topes, duplicidad, cierre de OC y segregación en `tests/integration/compras/flujo-compras.test.js` y `tests/integration/compras/casos-limite.test.js`. [FR-031]
+- [x] T084 [US11] Agregar prueba de integración del flujo completo de US11 en `tests/integration/compras/flujo-compras.test.js`. [FR-031]
 - [x] T100 [US11] [FR-026] Registrar devoluciones con motivo `defectuoso` cuando el daño se detecta después de aceptar, descontando el saldo recibido y facturado, en `src/compras/devoluciones.js`; agregar pruebas en `tests/integration/compras/flujo-compras.test.js`.
-- [x] T101 [US11] [SC-011] Cubrir el daño detectado con la factura ya aprobada para pago y el cierre de la OC con saldo pendiente cuando el proveedor no repone, en `tests/integration/compras/casos-limite.test.js`.
+- [ ] T101 [US11] [SC-011] Cubrir el daño detectado con la factura ya aprobada para pago y el cierre de la OC con saldo pendiente cuando el proveedor no repone, en `tests/integration/compras/casos-limite.test.js`. **Pendiente**: falta la transición `recibida_parcial → cerrada` en `src/compras/reglas.js` (ver `data-model.md`, sección 10, pendiente 3).
+- [ ] T110 [US11] [FR-026] [SC-011] Calcular `credito_a_favor` cuando una devolución con motivo `defectuoso` descuenta una factura ya `aprobada_pago`, y mostrarlo en la factura y en la cadena documental, en `src/compras/devoluciones.js`, `src/compras/facturas.js` y `src/compras/vista.js`; agregar la prueba en `tests/integration/compras/casos-limite.test.js`.
 
 **Punto de control**: devoluciones y notas de crédito funcionales; ciclo de P2 cerrado.
 
@@ -271,6 +272,7 @@
 - [x] T104 [FR-029] Impedir la eliminación de documentos con historial y permitir solo su anulación con motivo en `src/compras/almacenamiento.js`, `src/compras/ordenes-compra.js`, `src/compras/facturas.js` y `src/compras/devoluciones.js`.
 - [x] T105 [FR-030] Registrar cada cambio de datos bancarios con el valor enmascarado, nunca el completo, en `src/compras/proveedores.js` y `src/compras/trazabilidad.js`.
 - [x] T106 [SC-012] Agregar pruebas de auditoría de punta a punta en `tests/integration/compras/trazabilidad.test.js` que verifiquen quién, cuándo y qué acción en cada cambio de estado, la navegación de la cadena completa y la conservación de documentos anulados.
+- [ ] T109 [FR-029] Implementar la anulación con `motivo_anulacion` obligatorio de solicitudes, cotizaciones y recepciones en `src/compras/solicitudes.js` (ya guarda `motivo_anulacion`: verificar y completar), `src/compras/cotizaciones.js` y `src/compras/recepciones.js`, registrando el evento en `src/compras/trazabilidad.js`; una recepción anulada no cuenta para las cantidades recibidas ni para el valor recibido (`data-model.md`, reglas 5, 6 y 11). Agregar pruebas en `tests/integration/compras/trazabilidad.test.js` y `tests/unit/compras/reglas.test.js`.
 
 **Punto de control**: trazabilidad completa y documentos no eliminables.
 
@@ -288,6 +290,8 @@
 - [x] T090 Ejecutar la demostración de extremo a extremo de SC-002 en menos de 5 minutos: solicitud, 3 cotizaciones, OC, recepción y factura conciliada. [SC-002]
 - [x] T091 Validar los casos límite de `spec.md`: anulación de OC con cotización seleccionada, nota de crédito, sobreentrega, producto desactivado con solicitudes abiertas, proveedor bloqueado con OC abiertas y `localStorage` lleno o deshabilitado.
 - [x] T092 Actualizar el README con instrucciones de ejecución, roles, datos semilla y alcance del módulo de compras.
+- [ ] T107 Ejecutar `npm run lint` (ESLint) y `npm run format:check` (Prettier) sin errores y corregir las advertencias que afecten la corrección o la mantenibilidad antes del congelamiento del 26-nov (constitución, Estándares de Calidad).
+- [ ] T108 [SC-013] Verificar la accesibilidad de las pantallas de proveedores, solicitudes, cotizaciones, OC, recepciones, facturas, devoluciones y panel: etiqueta asociada a cada campo, operación solo con teclado, errores junto al campo y contraste mínimo 4,5:1 (WCAG 2.1 AA); automatizar la comprobación de etiquetas y foco en `tests/integration/compras/vista.test.js` y dejar registrada la revisión de contraste.
 
 ---
 
@@ -360,8 +364,8 @@ Agregar primero US7 (facturas), luego US8 (catálogo), US9 (evaluación) y US11 
 | FR-012 | T005, T031 |
 | FR-013 | T036, T037, T039 |
 | FR-014 | T038, T082 |
-| FR-015 | T057, T058, T061, T078, T079, T080 |
-| FR-016 | T059, T081 |
+| FR-015 | T057, T058, T061, T080 |
+| FR-016 | T059 |
 | FR-017 | T045, T060 |
 | FR-018 | T043, T044, T046, T047, T048, T049 |
 | FR-019 | T072 |
@@ -371,11 +375,12 @@ Agregar primero US7 (facturas), luego US8 (catálogo), US9 (evaluación) y US11 
 | FR-023 | T066, T067, T068 |
 | FR-024 | T074, T075, T076 |
 | FR-025 | T017, T093, T094, T095, T096 |
-| FR-026 | T097, T098, T100, T101 |
+| FR-026 | T097, T098, T100, T101, T110 |
 | FR-027 | T102, T106 |
 | FR-028 | T103, T106 |
-| FR-029 | T104, T106 |
+| FR-029 | T104, T106, T109 |
 | FR-030 | T105, T106 |
+| FR-031 | T078, T079, T080, T081, T082, T083, T084 |
 
 ### Requisitos de Integración
 
@@ -399,8 +404,9 @@ Agregar primero US7 (facturas), luego US8 (catálogo), US9 (evaluación) y US11 
 | SC-008 | T077, T089 |
 | SC-009 | T096 |
 | SC-010 | T077, T099 |
-| SC-011 | T098, T101 |
+| SC-011 | T098, T101, T110 |
 | SC-012 | T106 |
+| SC-013 | T108 |
 
 ### Historias de Usuario
 
@@ -416,5 +422,5 @@ Agregar primero US7 (facturas), luego US8 (catálogo), US9 (evaluación) y US11 
 | US8 - Catálogo de productos por proveedor | P2 | T066-T069 |
 | US9 - Evaluación de desempeño de proveedores | P2 | T070-T073 |
 | US10 - Exportación de reportes en CSV | P3 | T074-T077, T099 |
-| US11 - Registrar devoluciones y notas de crédito | P2 | T078-T084, T100-T101 |
-| Trazabilidad transversal | Transversal | T102-T106 |
+| US11 - Registrar devoluciones y notas de crédito | P2 | T078-T084, T100-T101, T110 |
+| Trazabilidad transversal | Transversal | T102-T106, T109 |

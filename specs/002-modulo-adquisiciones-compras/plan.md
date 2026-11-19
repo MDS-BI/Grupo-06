@@ -33,6 +33,7 @@ El trabajo se divide en iteraciones semanales; cada una termina con una versión
 - **II. Pruebas primero**: cada regla de la sección 5 de `data-model.md` tiene prueba unitaria antes o junto con su implementación; cada historia P1 tiene al menos una prueba de integración de su flujo.
 - **III. Experiencia de usuario consistente**: todas las pantallas nuevas usan el marco del template (barra superior, barra lateral, tokens de `styles.css`), mensajes de validación en español y estados vacíos.
 - **IV. Rendimiento**: las colecciones se leen una vez por pantalla y se filtran en memoria; el objetivo de 500 registros se verifica con los datos semilla ampliados.
+- **Estándares de calidad**: antes de la entrega el código pasa `npm run lint` (ESLint) y `npm run format:check` (Prettier) sin errores, y se corrigen las advertencias que afecten la corrección o la mantenibilidad (tarea T107 de `tasks.md`).
 
 Resultado: **pasa**, con las desviaciones justificadas abajo.
 

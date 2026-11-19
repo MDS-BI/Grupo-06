@@ -46,7 +46,7 @@ Para asegurar el control de acceso y la integración fluida con otros módulos d
 
 ### Fuera de alcance
 
-Backend real, autenticación real (los roles se simulan), conexión con el SII o recepción automática de documentos tributarios electrónicos, registro del pago (lo hace Contabilidad), control de presupuesto por centro de costo, compras públicas (Ley 19.886) y envío real de correos.
+Backend real, autenticación real (los roles se simulan), conexión con el SII o recepción automática de documentos tributarios electrónicos, registro del pago (lo hace Contabilidad), control de presupuesto por centro de costo, compras públicas (Ley 19.886), envío real de correos y la gestión de contactos de proveedor (CONTACTO_PROVEEDOR: alta, edición y contacto principal), que queda modelada en [data-model.md](data-model.md) pero fuera del MVP.
 
 ## Clarifications
 
@@ -315,6 +315,7 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 - **FR-028**: El sistema DEBE permitir navegar, desde cualquier documento, la cadena completa solicitud, cotización, orden de compra, recepción, factura y devolución.
 - **FR-029**: El sistema DEBE impedir la eliminación de documentos con historial y DEBE permitir solo su anulación con motivo registrado.
 - **FR-030**: El sistema DEBE registrar cada cambio de datos bancarios con el valor enmascarado, nunca con el número completo.
+- **FR-031**: El sistema DEBE permitir registrar devoluciones de unidades aceptadas contra una orden de compra con recepciones, indicando línea, cantidad y motivo, con correlativo `DEV-AAAA-NNNN`; DEBE impedir devolver más de lo aceptado pendiente de devolver, descontar la cantidad del saldo recibido y facturado, cerrar la OC cuando el saldo pendiente llegue a cero y exigir la aprobación de un `jefe_compras` o `admin_ti` distinto cuando quien registró la recepción intente registrar la devolución.
 
 ### Requisitos de Integración
 
@@ -333,6 +334,9 @@ El detalle de atributos, cardinalidades y reglas está en [data-model.md](data-m
 - **Orden de compra**: compromiso formal con un proveedor.
 - **Recepción**: registro de lo efectivamente recibido y rechazado.
 - **Factura de proveedor**: documento tributario que se concilia y se aprueba para pago.
+- **Devolución**: documento `DEV-AAAA-NNNN` que devuelve unidades aceptadas de una orden de compra y descuenta el saldo recibido y facturado.
+- **Producto**: bien o servicio que se compra; dato maestro compartido con Inventario, que Compras solo lee (IR-001).
+- **Contacto de proveedor**: persona de contacto dentro de un proveedor; su gestión queda fuera del MVP (ver "Fuera de alcance").
 - **Evaluación de proveedor**: desempeño del proveedor en una orden.
 - **Usuario y centro de costo**: quién opera el sistema y a qué área se imputa cada compra.
 - **Historial de trazabilidad**: registro de quién, cuándo y qué acción se ejecutó sobre solicitudes, cotizaciones, órdenes de compra, recepciones, facturas y devoluciones; permite navegar la cadena documental completa y conserva las anulaciones con su motivo y los cambios bancarios con el valor enmascarado.
@@ -353,6 +357,7 @@ El detalle de atributos, cardinalidades y reglas está en [data-model.md](data-m
 - **SC-010**: El 100 % de los archivos exportados con la codificación definida en [plan.md](plan.md) se abre en una planilla de cálculo en español sin caracteres corruptos (tildes, ñ y símbolos), verificado con datos acentuados.
 - **SC-011**: El 100 % de las unidades dañadas registradas con motivo `danado` o devueltas con motivo `defectuoso` queda excluido del valor a facturar y del saldo pagado, verificado con entregas parciales, entregas totalmente dañadas y facturas ya aprobadas para pago.
 - **SC-012**: El 100 % de los cambios de estado de solicitud, cotización, OC, recepción, factura y devolución registra quién, cuándo y qué acción, y desde cualquier documento se puede navegar la cadena completa sin búsquedas manuales, verificado con una prueba de auditoría de punta a punta.
+- **SC-013**: El 100 % de las pantallas del módulo (proveedores, solicitudes, cotizaciones, órdenes de compra, recepciones, facturas, devoluciones y panel) tiene una etiqueta asociada a cada campo, se puede operar solo con teclado, muestra los mensajes de error junto al campo afectado y cumple un contraste mínimo de 4,5:1 en texto normal (WCAG 2.1 AA), verificado en una revisión de accesibilidad de cada pantalla.
 
 ## Suposiciones
 
