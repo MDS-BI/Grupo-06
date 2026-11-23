@@ -318,10 +318,10 @@
 
 **Propósito**: alinear permisos y visibilidad con FR-004, FR-006, FR-014 y FR-033 antes de tocar la interfaz. Bloquea las fases 17 a 19.
 
-- [ ] T121 Actualizar `PERMISOS` en `src/compras/almacenamiento.js` según la tabla de `contracts/exportacion-e-integracion.md`: quitar a `admin_ti` de todas las operaciones de compra; `crear_solicitud` solo para `solicitante`; `aprobar_solicitud`, `aprobar_pago` y `aprobar_devolucion` solo para `jefe_compras`; `gestionar_proveedores`, `gestionar_cotizaciones`, `emitir_oc`, `registrar_factura`, `conciliar_factura` y `gestionar_catalogo` solo para `comprador`; `evaluar_proveedor` para `comprador` y `jefe_compras`; `registrar_recepcion` y `registrar_devolucion` solo para `bodega`; agregar `desbloquear_proveedor` y `exportar_trazabilidad` (`admin_ti`) y `consultar_trazabilidad` (`jefe_compras`, `admin_ti`). [FR-004, FR-006, FR-033]
-- [ ] T122 [P] Crear `src/compras/visibilidad.js` con la matriz `VISIBILIDAD` (vista × rol → `'opera'`, `'lectura'` o `null`) para las 9 vistas operativas y la trazabilidad (10 filas en total), tal como la define la Matriz de visibilidad por rol de `spec.md`; la agrupación `GRUPOS` (Panel / Adquisiciones: Proveedores, Catálogo, Evaluaciones / Compras: Solicitudes, Cotizaciones, Órdenes de compra, Recepciones, Facturas, Devoluciones); y las funciones `nivelVista(vista, usuario)` y `vistasVisibles(usuario)`. El Panel es visible para los cinco roles. [FR-033, FR-034]
+- [ ] T121 Actualizar `PERMISOS` en `src/compras/almacenamiento.js` según la tabla de `contracts/exportacion-e-integracion.md`: quitar a `admin_ti` de todas las operaciones de compra; `crear_solicitud` para los cinco roles (`solicitante`, `comprador`, `jefe_compras`, `bodega` y `admin_ti`; hoy falta `bodega`), con edición solo del autor según T150; `aprobar_solicitud`, `aprobar_pago` y `aprobar_devolucion` solo para `jefe_compras`; `gestionar_proveedores`, `gestionar_cotizaciones`, `emitir_oc`, `registrar_factura`, `conciliar_factura` y `gestionar_catalogo` solo para `comprador`; `evaluar_proveedor` para `comprador` y `jefe_compras`; `registrar_recepcion` y `registrar_devolucion` solo para `bodega`; agregar `desbloquear_proveedor` y `exportar_trazabilidad` (`admin_ti`) y `consultar_trazabilidad` (`jefe_compras`, `admin_ti`). [FR-004, FR-005, FR-006, FR-033]
+- [ ] T122 [P] Crear `src/compras/visibilidad.js` con la matriz `VISIBILIDAD` (vista × rol → `'opera'`, `'lectura'` o `null`) para las 9 vistas operativas y la trazabilidad (10 filas en total), tal como la define la Matriz de visibilidad por rol de `spec.md` (en Solicitudes, los cinco roles tienen `'opera'`, incluido `bodega`; el alcance "solo propias" o "ajenas en lectura" lo aplica T150); la agrupación `GRUPOS` (Panel / Adquisiciones: Proveedores, Catálogo, Evaluaciones / Compras: Solicitudes, Cotizaciones, Órdenes de compra, Recepciones, Facturas, Devoluciones); y las funciones `nivelVista(vista, usuario)` y `vistasVisibles(usuario)`. El Panel es visible para los cinco roles. [FR-033, FR-034]
 - [ ] T123 [P] Agregar pruebas unitarias de `PERMISOS` y de las 50 combinaciones rol × vista de `VISIBILIDAD` en `tests/unit/compras/visibilidad.test.js`. [SC-015]
-- [ ] T124 Ajustar las pruebas existentes de `tests/integration/compras/*.test.js` y `tests/integration/compras/helpers.js` que usan a `admin_ti` o a `jefe_compras` como operadores (crear solicitud, emitir OC, gestionar proveedores, recibir, aprobar devoluciones) para que usen el rol que corresponde según la matriz, sin debilitar lo que verifican. [SC-016]
+- [ ] T124 Ajustar las pruebas existentes de `tests/integration/compras/*.test.js` y `tests/integration/compras/helpers.js` que usan a `admin_ti` o a `jefe_compras` como operadores (emitir OC, gestionar proveedores, recibir, aprobar devoluciones; crear solicitudes sigue permitido a ambos) para que usen el rol que corresponde según la matriz, sin debilitar lo que verifican. [SC-016]
 
 **Punto de control**: permisos y matriz centralizados y probados; la suite vuelve a pasar con los nuevos roles.
 
@@ -333,7 +333,7 @@
 
 **Prueba Independiente**: se recorre la aplicación con los cinco roles y, vista por vista, la barra lateral, las acciones disponibles y los registros visibles coinciden con la matriz de FR-033.
 
-- [ ] T125 [US12] Reemplazar la lista plana `TABS` de `src/compras/vista.js` por navegación agrupada: la barra lateral (`.side-nav` de `index.html`) muestra las secciones Panel, Adquisiciones y Compras según `vistasVisibles()` en lugar del ítem único `#nav-compras`; las pestañas de cada sección muestran solo sus vistas visibles; un grupo sin vistas se oculta; al cambiar de rol, si la vista actual no es visible, se vuelve al Panel. Conservar la navegación por teclado y los atributos ARIA existentes. [FR-034, SC-013]
+- [ ] T125 [US12] Reemplazar la lista plana `TABS` de `src/compras/vista.js` por navegación agrupada: la barra lateral (`.side-nav` de `index.html`) muestra las secciones Panel, Adquisiciones y Compras según `vistasVisibles()` en lugar del ítem único `#nav-compras`; las pestañas de cada sección muestran solo sus vistas visibles; un grupo sin vistas se oculta; al ingresar, la aplicación abre el Panel del rol (el rol no cambia en vivo, T146–T147). Conservar la navegación por teclado y los atributos ARIA existentes. [FR-034, SC-013]
 - [ ] T126 [US12] Aplicar el modo solo lectura en cada función `render*` de `src/compras/vista.js`: con `nivelVista() === 'lectura'` se ocultan los formularios y los botones de crear, editar, aprobar, rechazar, descartar y anular; se mantienen **Exportar CSV** y **Cadena**. [FR-033]
 - [ ] T127 [US12] Filtrar para el `solicitante` las OC y recepciones originadas en sus propias solicitudes en `src/compras/ordenes-compra.js`, `src/compras/recepciones.js`, `src/compras/vista.js` y `src/compras/exportacion.js` (el CSV aplica el mismo filtro). [FR-033, FR-024]
 - [ ] T128 [US12] Bloquear el acceso a vistas que el rol no ve desde `irA()`, `data-ir` y `data-traza-ir` en `src/compras/vista.js`: mostrar el aviso "Tu rol no tiene acceso a esta vista" sin cambiar de vista; en la cadena documental, los nodos de vistas no visibles se muestran sin enlace. [FR-033]
@@ -354,9 +354,9 @@
 - [ ] T134 [US1] Crear `actualizarDatosBancarios(id, datos, usuario)` en `src/compras/proveedores.js`, que exige solo `editar_datos_bancarios` (porque `admin_ti` ya no tiene `gestionar_proveedores`), actualiza `fecha_cambio_cuenta` y registra el cambio enmascarado. En la ficha de `src/compras/vista.js`, `admin_ti` solo edita banco, tipo y número de cuenta. Agregar las pruebas en `tests/integration/compras/proveedores.test.js`. [FR-004, FR-030]
 - [ ] T135 [US2] En `src/compras/solicitudes.js`, permitir aprobar y rechazar solo a `jefe_compras` distinto del solicitante y quitar a `admin_ti` de `anularSolicitud()` (línea 252). Agregar las pruebas en `tests/integration/compras/flujo-compras.test.js`. [FR-006]
 - [ ] T136 [US4] Eliminar la excepción `&& usuario.rol !== 'admin_ti'` de `src/compras/recepciones.js:50`, de modo que el emisor de la OC no pueda registrar su recepción con ningún rol; agregar la prueba en `tests/integration/compras/casos-limite.test.js`. [FR-014, SC-016]
-- [ ] T137 [US5] Reescribir las condiciones por rol de `construirPanel()` en `src/compras/panel.js` según la tabla de FR-035: `solicitante`, estado de sus solicitudes; `comprador`, solicitudes aprobadas sin cotizar, OC sin recepción y facturas con discrepancia, con el indicador de facturas con discrepancia; `jefe_compras`, solicitudes por aprobar, facturas conciliadas por aprobar pago y devoluciones `pendiente_aprobacion`, con gasto del período y facturas en riesgo de pago tardío; `bodega`, OC esperando entrega y recepciones parciales, con la tasa de rechazo; `admin_ti`, cambios bancarios de los últimos 30 días y alertas de fraude. Los indicadores se calculan según `data-model.md` §8; las alertas de vencimiento solo para roles que ven Facturas; el seguimiento de OC con más de 7 días solo para `bodega` y `comprador`. [FR-035, FR-017, FR-018]
-- [ ] T138 [US5] Definir las acciones rápidas por rol en `src/compras/panel.js` con `etiqueta` y `descripcion` legibles (p. ej., "Crear solicitud de compra") y mostrar en `src/compras/vista.js:465` la descripción en lugar de `a.clave`; el estado vacío solo invita a acciones que el rol puede ejecutar (sin invitación a crear para `bodega` ni `admin_ti`). Depende de T125. [FR-036, FR-018]
-- [ ] T139 [US5] Agregar pruebas del panel para los cinco roles (pendientes, indicadores y alertas de FR-035) y de acciones rápidas sin identificadores internos en `tests/integration/compras/catalogo-panel.test.js`. [FR-035, SC-017]
+- [ ] T137 [US5] Reescribir las condiciones por rol de `construirPanel()` en `src/compras/panel.js` según la tabla de FR-035: los cinco roles, el pendiente "Mis solicitudes" con el estado de las solicitudes propias del usuario de la sesión (nunca las de otros usuarios); además, `comprador`, solicitudes aprobadas sin cotizar, OC sin recepción y facturas con discrepancia, con el indicador de facturas con discrepancia; `jefe_compras`, solicitudes de otros usuarios por aprobar, facturas conciliadas por aprobar pago y devoluciones `pendiente_aprobacion`, con gasto del período y facturas en riesgo de pago tardío; `bodega`, OC esperando entrega y recepciones parciales, con la tasa de rechazo; `admin_ti`, cambios bancarios de los últimos 30 días y alertas de fraude. Los indicadores se calculan según `data-model.md` §8; las alertas de vencimiento solo para roles que ven Facturas; el seguimiento de OC con más de 7 días solo para `bodega` y `comprador`. [FR-035, FR-017, FR-018]
+- [ ] T138 [US5] Definir las acciones rápidas por rol en `src/compras/panel.js` con `etiqueta` y `descripcion` legibles (p. ej., "Crear solicitud de compra") y mostrar en `src/compras/vista.js:465` la descripción en lugar de `a.clave`; la acción "Crear solicitud de compra" aparece para los cinco roles; el estado vacío solo invita a acciones que el rol puede ejecutar (para `bodega` y `admin_ti`, solo a crear una solicitud de compra). Depende de T125. [FR-036, FR-018]
+- [ ] T139 [US5] Agregar pruebas del panel para los cinco roles (pendientes, incluido "Mis solicitudes" solo con las propias, indicadores y alertas de FR-035) y de acciones rápidas sin identificadores internos en `tests/integration/compras/catalogo-panel.test.js`. [FR-035, SC-017]
 - [ ] T140 [US7] Agregar pruebas en `tests/integration/compras/casos-limite.test.js` que verifiquen que el `comprador` no puede aprobar pagos y que `admin_ti` ve las facturas en solo lectura. [FR-033]
 - [ ] T141 [US11] En `src/compras/devoluciones.js` (líneas 153, 156 y 209), aceptar solo a `jefe_compras` como aprobador y actualizar los mensajes de error; agregar las pruebas en `tests/integration/compras/flujo-compras.test.js`. [FR-031]
 
@@ -369,11 +369,32 @@
 **Propósito**: datos de demostración, documentación y verificación final del rediseño.
 
 - [ ] T142 Revisar `src/compras/semilla.json` para que los paneles de `admin_ti` y `jefe_compras` tengan contenido: al menos un proveedor con cambio bancario hace menos de 30 días y una factura no aprobada, y una devolución `pendiente_aprobacion`, con datos ficticios. [FR-020, FR-035]
-- [ ] T143 Actualizar la documentación: roles en `README.md`; en `specs/002-modulo-adquisiciones-compras/plan.md`, reemplazar la fila "Sin tarea aún" de Deuda conocida por T121–T144 y agregar `visibilidad.js` al árbol de código; en `specs/002-modulo-adquisiciones-compras/contracts/exportacion-e-integracion.md`, agregar `trazabilidad.csv` a los nombres de archivo.
-- [ ] T144 Ejecutar `npx vitest run` y `npm run lint` sin errores ni advertencias, y recorrer con los cinco roles los escenarios 1 a 4 de `specs/002-modulo-adquisiciones-compras/quickstart.md`. [SC-015, SC-016, SC-017]
-- [x] T145 [US12] [FR-037] Documentar y verificar la pantalla de ingreso simulada ya implementada en `src/compras/autenticacion.js` (selector de rol, nombre condicional para `solicitante`/`comprador`, clave genérica `Compras2026`, botón **Cerrar sesión**), con pruebas en `tests/integration/compras/autenticacion.test.js`.
+- [ ] T143 Actualizar la documentación: roles en `README.md`; en `specs/002-modulo-adquisiciones-compras/plan.md`, verificar al cerrar las Fases 16 a 20 que la tabla de Deuda conocida esté sincronizada con `tasks.md` (filas T121-T144 y T146-T155, con su estado) y agregar `visibilidad.js` al árbol de código; en `specs/002-modulo-adquisiciones-compras/contracts/exportacion-e-integracion.md`, agregar `trazabilidad.csv` a los nombres de archivo.
+- [ ] T144 Ejecutar `npx vitest run` y `npm run lint` sin errores ni advertencias, y recorrer con los cinco roles, cerrando sesión e ingresando con cada uno, los escenarios 1 a 4 de `specs/002-modulo-adquisiciones-compras/quickstart.md`. [SC-015, SC-016, SC-017]
+- [x] T145 [US12] [FR-037] Documentar y verificar la pantalla de ingreso simulada ya implementada en `src/compras/autenticacion.js` (selector de rol, nombre condicional para `solicitante`/`comprador`, clave genérica `Compras2026`, botón **Cerrar sesión**), con pruebas en `tests/integration/compras/autenticacion.test.js`. **El nombre condicional y el selector Rol Activo los modifican T146–T148 (2026-11-23).**
 
 **Punto de control**: rediseño de permisos y navegación por rol cerrado.
+
+---
+
+## Fase 20: Solicitudes para los cinco roles y rol fijo por sesión (2026-11-23)
+
+**Propósito**: aplicar las decisiones 12 y 13 de `research.md`: los cinco roles crean solicitudes, la de un `jefe_compras` la aprueba otro `jefe_compras`, y el rol queda fijo durante la sesión (FR-005, FR-006, FR-034, FR-035, FR-036, FR-037).
+
+**Prueba Independiente**: con la sesión iniciada no existe forma de cambiar de rol; tras cerrar sesión e ingresar con otro rol, la barra superior, la barra lateral y el panel corresponden a ese rol. Un `jefe_compras` crea una solicitud que solo otro `jefe_compras` puede aprobar.
+
+- [ ] T146 [US12] En `src/compras/almacenamiento.js`, hacer que `setRolActivo(rol)` no cambie el rol de una sesión iniciada: si `estaAutenticado()` es verdadero, devuelve la sesión vigente sin escribir en `erp_compras:sesion`. La sesión solo se escribe desde `iniciarSesion()` de `src/compras/autenticacion.js` (y `setSesion()` queda para ese uso y para preparar pruebas). [FR-037]
+- [ ] T147 [US12] Reemplazar en `index.html` el selector `#rol-activo` (líneas 102-103) por un indicador de solo lectura con el usuario y el rol de la sesión, junto a `#btn-logout`. En `src/app.js`, eliminar el listener `change` de `cablearEventos()` (líneas 226-232) y la importación de `setRolActivo`; mostrar el indicador al iniciar sesión, limpiarlo al cerrar sesión y abrir el Panel del rol al ingresar. Ajustar en `src/styles.css` las reglas de `.rol-select` que queden sin uso y dar estilo al indicador, conservando contraste y nombre accesible. [FR-036, FR-037, FR-034]
+- [ ] T148 [US12] Agregar `jefe_compras` a `ROLES_CON_NOMBRE` en `src/compras/reglas.js`, de modo que `validarCredenciales()` le pida nombre y lo valide contra los usuarios semilla; revisar `getUsuarioActivo()` y `etiquetaUsuario()` de `src/compras/almacenamiento.js`, el campo de nombre de `src/app.js` y `src/compras/vista.js:332` para que `jefe_compras` se muestre con su nombre en el indicador y en la trazabilidad. [FR-037, FR-006]
+- [ ] T149 [P] En `src/compras/semilla.json`, agregar el nombre ficticio `Marcela Rojas` a `u-jefe-1` y un segundo usuario `u-jefe-2` (`Jorge Muñoz`, rol `jefe_compras`, centro de costo `cc-003`, correo ficticio `@example.com`). Agregar al menos una solicitud `enviada` creada por `u-jefe-1`, para que `u-jefe-2` pueda aprobarla en la demostración. Todos los datos son ficticios. [FR-006, FR-020]
+- [ ] T150 [US2] En `src/compras/solicitudes.js`, limitar `actualizarSolicitud()` y `enviarSolicitud()` al autor de la solicitud; en `listarSolicitudes()` y `puedeVerSolicitud()`, mostrar a `solicitante` y `bodega` solo sus propias solicitudes y a `comprador`, `jefe_compras` y `admin_ti` también las ajenas; mantener en `aprobarSolicitud()` (que también rechaza con `{ aprobar: false, motivo }`) la exigencia de un `jefe_compras` distinto del solicitante. En `src/compras/vista.js`, mostrar el formulario de nueva solicitud a los cinco roles y las solicitudes ajenas en solo lectura; `exportarSolicitudes()` de `src/compras/exportacion.js` aplica el mismo filtro. Depende de T121 y T149. [FR-005, FR-006, FR-033, FR-024]
+- [ ] T151 [US2] Agregar pruebas en `tests/integration/compras/flujo-compras.test.js`: los cinco roles crean y envían una solicitud; `bodega` y `solicitante` ven solo las propias; ningún usuario edita una solicitud ajena; una solicitud de `u-jefe-1` la aprueba `u-jefe-2` y `u-jefe-1` no puede aprobarla (regla 8). Depende de T150. [FR-005, FR-006, SC-016]
+- [ ] T152 [US12] Ajustar las pruebas que usan `setRolActivo()` o cambian de rol en vivo, sin debilitar lo que verifican: agregar a `tests/integration/compras/helpers.js` un helper que inicie sesión por rol (con nombre para `solicitante`, `comprador` y `jefe_compras`); en `tests/integration/compras/vista.test.js`, reemplazar el uso del selector `#rol-activo` (líneas 43, 55-65, 83-108, 112, 149 y 200) por cierre de sesión e ingreso con el otro rol, y convertir "cambia el rol activo y vuelve a renderizar" en una prueba del indicador de solo lectura; en `tests/integration/compras/autenticacion.test.js`, actualizar "pide nombre solo a solicitante y comprador" y "ingresa sin nombre para jefatura y muestra solo el rol" (líneas 65-118) para que `jefe_compras` pida nombre y la sesión se compruebe en el indicador. Depende de T146–T149. [FR-037, SC-015]
+- [ ] T153 [US12] Agregar pruebas en `tests/integration/compras/autenticacion.test.js`: con la sesión iniciada, `setRolActivo()` no cambia el rol ni `getUsuarioActivo()`; no existe `#rol-activo` en la barra superior; el indicador muestra el usuario y el rol; tras cerrar sesión e ingresar con otro rol, la barra lateral y el panel corresponden al nuevo rol. Depende de T146–T148. [FR-037, FR-034, FR-036]
+- [ ] T154 Actualizar `README.md` (líneas 30, 31, 38 y 129): acceso con nombre para `solicitante`, `comprador` y `jefe_compras`, indicador de solo lectura en lugar del selector **Rol Activo**, rol fijo durante la sesión y creación de solicitudes por los cinco roles; al cerrar la fase, marcar como cerrada la fila T146-T155 de Deuda conocida en `specs/002-modulo-adquisiciones-compras/plan.md`. [FR-037]
+- [ ] T155 Ejecutar `npx vitest run` y `npm run lint` sin errores ni advertencias y recorrer los escenarios 1 y 3 de `specs/002-modulo-adquisiciones-compras/quickstart.md` cerrando sesión entre roles. [FR-005, FR-006, FR-037, SC-015, SC-016]
+
+**Punto de control**: el rol no cambia dentro de una sesión, los cinco roles crean solicitudes y la regla 8 se cumple también para las solicitudes de `jefe_compras`.
 
 ---
 
@@ -419,13 +440,15 @@ El estado de estas tareas se registra aquí y se replica en `plan.md` para que e
 - **Fundacional del rediseño (Fase 16)**: depende de las fases 1 a 15 y bloquea las fases 17, 18 y 19. T122 y T123 pueden ejecutarse en paralelo con T121; T124 va después de T121.
 - **US12 (Fase 17)** y **Ajustes por historia (Fase 18)**: dependen de la Fase 16 y pueden avanzar en paralelo, salvo T138, que depende de T125, y T133 y T134, cuyos botones requieren T126.
 - **Cierre del rediseño (Fase 19)**: al finalizar las fases 17 y 18.
+- **Solicitudes para los cinco roles y rol fijo (Fase 20)**: T146–T149 pueden empezar tras la Fase 16 (T149 en paralelo); T150 depende de T121 y T149; T151 de T150; T152 y T153 de T146–T148 (T152 también de T149); T154 y T155 cierran la fase. Conviene ejecutar T147 antes o junto con T125 y T130, porque las tres tocan la barra superior y la navegación.
 
 ### Dependencias Críticas
 
 - La plantilla base debe tener `src/` operativo y sus pruebas deben pasar antes de T002.
 - Una solicitud sin aprobación no puede generar OC; una OC sin recepciones no puede recibir facturas; una factura con discrepancia no puede aprobarse para pago.
 - Una cotización no puede registrarse sin solicitud aprobada ni convertirse en OC sin estar seleccionada.
-- La segregación de funciones debe respetarse en solicitudes, OC, recepciones y devoluciones, sin excepciones por rol (T136).
+- La segregación de funciones debe respetarse en solicitudes, OC, recepciones y devoluciones, sin excepciones por rol (T136); la solicitud de un `jefe_compras` la aprueba otro `jefe_compras` (T150, T151).
+- El rol no cambia dentro de una sesión (T146, T147): ninguna prueba ni pantalla debe depender de cambiar de rol en vivo (T152).
 
 ---
 
@@ -457,6 +480,14 @@ Agregar primero US7 (facturas), luego US8 (catálogo), US9 (evaluación) y US11 
 
 Ejemplo de paralelismo: tras T121, ejecutar en paralelo T122/T123 (matriz y sus pruebas) y T136 (recepciones); tras la Fase 16, T125–T132 (US12) en paralelo con T133–T137 y T139–T141.
 
+### Solicitudes para los cinco roles y rol fijo (2026-11-23)
+
+1. T146–T148: rol fijo en almacenamiento, indicador en la barra superior y nombre para `jefe_compras`.
+2. T149: segundo `jefe_compras` en la semilla (en paralelo con el paso 1).
+3. T150–T151: creación, edición y visibilidad de solicitudes por autor, con sus pruebas.
+4. T152–T153: pruebas sin cambio de rol en vivo y pruebas del rol fijo.
+5. T154–T155: documentación y verificación final.
+
 ---
 
 ## Trazabilidad con Requisitos
@@ -469,8 +500,8 @@ Ejemplo de paralelismo: tras T121, ejecutar en paralelo T122/T123 (matriz y sus 
 | FR-002    | T014                                           |
 | FR-003    | T016                                           |
 | FR-004    | T017, T062, T093, T121, T133, T134             |
-| FR-005    | T020, T021, T022, T023                         |
-| FR-006    | T024 (sup. por T135), T121, T135                |
+| FR-005    | T020, T021, T022, T023, T121, T150, T151, T155 |
+| FR-006    | T024 (sup. por T135), T121, T135, T148, T149, T150, T151, T155 |
 | FR-007    | T051, T052                                     |
 | FR-008    | T054                                           |
 | FR-009    | T053                                           |
@@ -484,11 +515,11 @@ Ejemplo de paralelismo: tras T121, ejecutar en paralelo T122/T123 (matriz y sus 
 | FR-017    | T045, T060, T137                               |
 | FR-018    | T043, T044 (sup. por T137), T046 (sup. por T137), T047, T048, T049 (sup. por T138), T111, T112, T137, T138 |
 | FR-019    | T072                                           |
-| FR-020    | T008, T112, T142                               |
+| FR-020    | T008, T112, T142, T149                         |
 | FR-021    | T086                                           |
 | FR-022    | T086                                           |
 | FR-023    | T066, T067, T068                               |
-| FR-024    | T074, T075, T076, T127                         |
+| FR-024    | T074, T075, T076, T127, T150                   |
 | FR-025    | T017, T093, T094, T095, T096, T129             |
 | FR-026    | T097, T098, T100, T101, T110                   |
 | FR-027    | T102, T106                                     |
@@ -497,11 +528,11 @@ Ejemplo de paralelismo: tras T121, ejecutar en paralelo T122/T123 (matriz y sus 
 | FR-030    | T105, T106, T129, T134                         |
 | FR-031    | T078, T079, T080, T081, T082 (sup. por T141), T083, T084, T141 |
 | FR-032    | T085, T111, T116                               |
-| FR-033    | T121, T122, T126, T127, T128, T129, T140       |
-| FR-034    | T122, T125                                     |
+| FR-033    | T121, T122, T126, T127, T128, T129, T140, T150 |
+| FR-034    | T122, T125, T147, T153                         |
 | FR-035    | T137, T139, T142                               |
-| FR-036    | T130, T138                                     |
-| FR-037    | T145                                           |
+| FR-036    | T130, T138, T147, T153                         |
+| FR-037    | T145 (modificada por T146–T148), T146, T147, T148, T152, T153, T154, T155 |
 
 ### Requisitos de Integración
 
@@ -529,8 +560,8 @@ Ejemplo de paralelismo: tras T121, ejecutar en paralelo T122/T123 (matriz y sus 
 | SC-012   | T106             |
 | SC-013   | T108, T125, T132 |
 | SC-014   | T111, T116       |
-| SC-015   | T123, T131, T144 |
-| SC-016   | T124, T136, T144 |
+| SC-015   | T123, T131, T144, T152, T155 |
+| SC-016   | T124, T136, T144, T151, T155 |
 | SC-017   | T131, T139, T144 |
 
 ### Historias de Usuario
@@ -538,7 +569,7 @@ Ejemplo de paralelismo: tras T121, ejecutar en paralelo T122/T123 (matriz y sus 
 | Historia                                         | Prioridad   | Tareas                     |
 | ------------------------------------------------ | ----------- | -------------------------- |
 | US1 - Gestionar proveedores                      | P1          | T011-T019, T093-T096       |
-| US2 - Crear y aprobar solicitudes                | P1          | T020-T026                  |
+| US2 - Crear y aprobar solicitudes                | P1          | T020-T026, T150-T151       |
 | US3 - Emitir órdenes de compra                   | P1          | T027-T034                  |
 | US4 - Registrar recepciones                      | P1          | T035-T042, T097-T098       |
 | US5 - Panel de pendientes y alertas              | P1          | T043-T050, T111-T112, T116 |
@@ -550,5 +581,6 @@ Ejemplo de paralelismo: tras T121, ejecutar en paralelo T122/T123 (matriz y sus 
 | US11 - Registrar devoluciones y notas de crédito | P2          | T078-T084, T100-T101, T110 |
 | Trazabilidad transversal                         | Transversal | T102-T106, T109            |
 | Pendientes de modelo (`data-model.md` §10)       | Transversal | T101, T117-T119            |
-| US12 - Navegación y visibilidad por rol          | P1          | T125-T132, T145             |
+| US12 - Navegación y visibilidad por rol          | P1          | T125-T132, T145, T146-T148, T152-T153 |
 | Rediseño de permisos (fundacional, ajustes y cierre) | Transversal | T121-T124, T133-T144   |
+| Solicitudes para los cinco roles y rol fijo (Fase 20) | Transversal | T146-T155         |

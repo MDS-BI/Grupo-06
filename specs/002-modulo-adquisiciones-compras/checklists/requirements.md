@@ -61,7 +61,7 @@
 - [x] FR-035 muestra "Mis solicitudes" en el panel de los cinco roles, con escenario en US5 (9); el estado vacío de `bodega` y `admin_ti` solo invita a crear una solicitud (US5, escenario 6).
 - [x] data-model.md v1.3 documenta en §6 el riesgo asumido de que el comprador cotice y emita la OC de una solicitud propia y el riesgo del ingreso simulado con rol fijo; §9 tiene una sola fila v1.3 con todos los cambios.
 - [x] `research.md` registra las decisiones 12 (todos crean solicitudes; alternativas descartadas: `admin_ti` aprueba como excepción y rol `gerente`) y 13 (rol fijo por sesión; alternativa descartada: selector de rol libre).
-- [ ] Las tareas de implementación (T121 ajustada y tareas nuevas) y la matriz de trazabilidad de `tasks.md` están pendientes (Etapa 2).
+- [x] `tasks.md` ajusta T121 (`crear_solicitud` para los cinco roles), agrega la Fase 20 (T146–T155) y actualiza la matriz de trazabilidad; `plan.md` registra T146–T155 en Deuda conocida.
 
 ## Notas
 
