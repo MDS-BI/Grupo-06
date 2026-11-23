@@ -402,6 +402,7 @@ _Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo u
 
   La alerta de vencimiento de FR-017 se muestra solo a los roles con acceso a Facturas.
 - **FR-036**: La interfaz DEBE: (a) mostrar en cada acción rápida una descripción legible para el usuario y nunca el identificador interno del permiso; (b) no mostrar la tarjeta "Sesión activa", ya que el rol se ve en el selector de rol; (c) mostrar en el encabezado la sección actual (grupo y vista).
+- **FR-037**: El sistema DEBE mostrar una pantalla de ingreso simulada, centralizada en `src/compras/autenticacion.js`, con selector de rol y una clave genérica única (`Compras2026`). Los roles `solicitante` y `comprador` DEBEN pedir un nombre y validarlo contra los usuarios semilla; `jefe_compras`, `bodega` y `admin_ti` DEBEN ingresar y mostrarse solo por su rol, sin nombre. La pantalla NO DEBE validar identidad real ni modificar los permisos por rol (FR-033) ni la simulación de roles del MVP; solo controla la visibilidad de la interfaz y permite cerrar sesión.
 
 #### Matriz de visibilidad por rol (FR-033)
 

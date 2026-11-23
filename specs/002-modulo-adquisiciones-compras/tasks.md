@@ -319,7 +319,7 @@
 **Propósito**: alinear permisos y visibilidad con FR-004, FR-006, FR-014 y FR-033 antes de tocar la interfaz. Bloquea las fases 17 a 19.
 
 - [ ] T121 Actualizar `PERMISOS` en `src/compras/almacenamiento.js` según la tabla de `contracts/exportacion-e-integracion.md`: quitar a `admin_ti` de todas las operaciones de compra; `crear_solicitud` solo para `solicitante`; `aprobar_solicitud`, `aprobar_pago` y `aprobar_devolucion` solo para `jefe_compras`; `gestionar_proveedores`, `gestionar_cotizaciones`, `emitir_oc`, `registrar_factura`, `conciliar_factura` y `gestionar_catalogo` solo para `comprador`; `evaluar_proveedor` para `comprador` y `jefe_compras`; `registrar_recepcion` y `registrar_devolucion` solo para `bodega`; agregar `desbloquear_proveedor` y `exportar_trazabilidad` (`admin_ti`) y `consultar_trazabilidad` (`jefe_compras`, `admin_ti`). [FR-004, FR-006, FR-033]
-- [ ] T122 [P] Crear `src/compras/visibilidad.js` con la matriz `VISIBILIDAD` (vista × rol → `'opera'`, `'lectura'` o `null`) para las 10 vistas y la trazabilidad, tal como la define la Matriz de visibilidad por rol de `spec.md`; la agrupación `GRUPOS` (Panel / Adquisiciones: Proveedores, Catálogo, Evaluaciones / Compras: Solicitudes, Cotizaciones, Órdenes de compra, Recepciones, Facturas, Devoluciones); y las funciones `nivelVista(vista, usuario)` y `vistasVisibles(usuario)`. El Panel es visible para los cinco roles. [FR-033, FR-034]
+- [ ] T122 [P] Crear `src/compras/visibilidad.js` con la matriz `VISIBILIDAD` (vista × rol → `'opera'`, `'lectura'` o `null`) para las 9 vistas operativas y la trazabilidad (10 filas en total), tal como la define la Matriz de visibilidad por rol de `spec.md`; la agrupación `GRUPOS` (Panel / Adquisiciones: Proveedores, Catálogo, Evaluaciones / Compras: Solicitudes, Cotizaciones, Órdenes de compra, Recepciones, Facturas, Devoluciones); y las funciones `nivelVista(vista, usuario)` y `vistasVisibles(usuario)`. El Panel es visible para los cinco roles. [FR-033, FR-034]
 - [ ] T123 [P] Agregar pruebas unitarias de `PERMISOS` y de las 50 combinaciones rol × vista de `VISIBILIDAD` en `tests/unit/compras/visibilidad.test.js`. [SC-015]
 - [ ] T124 Ajustar las pruebas existentes de `tests/integration/compras/*.test.js` y `tests/integration/compras/helpers.js` que usan a `admin_ti` o a `jefe_compras` como operadores (crear solicitud, emitir OC, gestionar proveedores, recibir, aprobar devoluciones) para que usen el rol que corresponde según la matriz, sin debilitar lo que verifican. [SC-016]
 
@@ -371,6 +371,7 @@
 - [ ] T142 Revisar `src/compras/semilla.json` para que los paneles de `admin_ti` y `jefe_compras` tengan contenido: al menos un proveedor con cambio bancario hace menos de 30 días y una factura no aprobada, y una devolución `pendiente_aprobacion`, con datos ficticios. [FR-020, FR-035]
 - [ ] T143 Actualizar la documentación: roles en `README.md`; en `specs/002-modulo-adquisiciones-compras/plan.md`, reemplazar la fila "Sin tarea aún" de Deuda conocida por T121–T144 y agregar `visibilidad.js` al árbol de código; en `specs/002-modulo-adquisiciones-compras/contracts/exportacion-e-integracion.md`, agregar `trazabilidad.csv` a los nombres de archivo.
 - [ ] T144 Ejecutar `npx vitest run` y `npm run lint` sin errores ni advertencias, y recorrer con los cinco roles los escenarios 1 a 4 de `specs/002-modulo-adquisiciones-compras/quickstart.md`. [SC-015, SC-016, SC-017]
+- [x] T145 [US12] [FR-037] Documentar y verificar la pantalla de ingreso simulada ya implementada en `src/compras/autenticacion.js` (selector de rol, nombre condicional para `solicitante`/`comprador`, clave genérica `Compras2026`, botón **Cerrar sesión**), con pruebas en `tests/integration/compras/autenticacion.test.js`.
 
 **Punto de control**: rediseño de permisos y navegación por rol cerrado.
 
@@ -469,7 +470,7 @@ Ejemplo de paralelismo: tras T121, ejecutar en paralelo T122/T123 (matriz y sus 
 | FR-003    | T016                                           |
 | FR-004    | T017, T062, T093, T121, T133, T134             |
 | FR-005    | T020, T021, T022, T023                         |
-| FR-006    | T024, T121, T135                               |
+| FR-006    | T024 (sup. por T135), T121, T135                |
 | FR-007    | T051, T052                                     |
 | FR-008    | T054                                           |
 | FR-009    | T053                                           |
@@ -477,11 +478,11 @@ Ejemplo de paralelismo: tras T121, ejecutar en paralelo T122/T123 (matriz y sus 
 | FR-011    | T030, T032                                     |
 | FR-012    | T005, T031                                     |
 | FR-013    | T036, T037, T039                               |
-| FR-014    | T038, T082, T136                               |
+| FR-014    | T038 (sup. por T136), T082 (sup. por T141), T136 |
 | FR-015    | T057, T058, T061, T080, T117                   |
 | FR-016    | T059                                           |
 | FR-017    | T045, T060, T137                               |
-| FR-018    | T043, T044, T046, T047, T048, T049, T111, T112, T137, T138 |
+| FR-018    | T043, T044 (sup. por T137), T046 (sup. por T137), T047, T048, T049 (sup. por T138), T111, T112, T137, T138 |
 | FR-019    | T072                                           |
 | FR-020    | T008, T112, T142                               |
 | FR-021    | T086                                           |
@@ -494,12 +495,13 @@ Ejemplo de paralelismo: tras T121, ejecutar en paralelo T122/T123 (matriz y sus 
 | FR-028    | T103, T106                                     |
 | FR-029    | T104, T106, T109, T118                         |
 | FR-030    | T105, T106, T129, T134                         |
-| FR-031    | T078, T079, T080, T081, T082, T083, T084, T141 |
+| FR-031    | T078, T079, T080, T081, T082 (sup. por T141), T083, T084, T141 |
 | FR-032    | T085, T111, T116                               |
 | FR-033    | T121, T122, T126, T127, T128, T129, T140       |
 | FR-034    | T122, T125                                     |
 | FR-035    | T137, T139, T142                               |
 | FR-036    | T130, T138                                     |
+| FR-037    | T145                                           |
 
 ### Requisitos de Integración
 
@@ -548,5 +550,5 @@ Ejemplo de paralelismo: tras T121, ejecutar en paralelo T122/T123 (matriz y sus 
 | US11 - Registrar devoluciones y notas de crédito | P2          | T078-T084, T100-T101, T110 |
 | Trazabilidad transversal                         | Transversal | T102-T106, T109            |
 | Pendientes de modelo (`data-model.md` §10)       | Transversal | T101, T117-T119            |
-| US12 - Navegación y visibilidad por rol          | P1          | T125-T132                  |
+| US12 - Navegación y visibilidad por rol          | P1          | T125-T132, T145             |
 | Rediseño de permisos (fundacional, ajustes y cierre) | Transversal | T121-T124, T133-T144   |

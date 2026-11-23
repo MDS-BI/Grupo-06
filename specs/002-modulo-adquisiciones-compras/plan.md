@@ -98,6 +98,7 @@ src/
     ├── facturas.js
     ├── devoluciones.js     (devoluciones y notas de crédito)
     ├── proveedores.js      (alta/edición, visibilidad de datos sensibles, cambio bancario auditado)
+    ├── autenticacion.js    (pantalla de ingreso simulada: selector de rol, nombre condicional, clave genérica)
     ├── vista.js            (pantallas de compras, navegación agrupada por rol y cadena documental)
     ├── exportacion.js      (CSV con BOM y permisos por rol)
     ├── trazabilidad.js     (historial de eventos y cadena documental)
@@ -146,7 +147,7 @@ Las siguientes tareas se documentan también en `tasks.md`: T101, T104, T109, T1
 | T118  | Abierta | Pendiente 2 de `data-model.md` §10: estados de devolución y anulación con motivo incompletos.                                                                                                                                                                                                                                                       | FR-029                              |
 | T119  | Cerrada | Decisión aplicada: se elimina `borrador` del modelo de OC y se conserva `emitida` como estado inicial; `data-model.md` y `plan.md` sincronizados.                                                                                                                                                                                                | FR-010                              |
 | T120  | Cerrada | Auditoría global de SC-003 en `flujo-compras.test.js`: se validan las dos vías de cumplimiento sobre todas las OC no anuladas.                                                                                                                                                                                                                | SC-003                              |
-| Sin tarea aún | Abierta | Rediseño de permisos sin implementar: `PERMISOS` todavía le da a `admin_ti` todas las operaciones de compra, `recepciones.js` lo exime de la regla 8, la barra lateral no está agrupada, el panel no sigue FR-035 y sigue la tarjeta "Sesión activa". Se asignará con `/speckit-tasks`. | FR-033 a FR-036, SC-015 a SC-017 |
+| T121-T144 | Abierta | Rediseño de permisos y navegación por rol: asignado en `tasks.md` (Fases 16-19); `PERMISOS` sigue dando a `admin_ti` operaciones de compra hasta cerrar la Fase 16. | FR-033 a FR-036, SC-015 a SC-017 |
 
 ## Plan de Pruebas
 
