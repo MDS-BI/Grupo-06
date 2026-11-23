@@ -138,6 +138,33 @@ describe('vista de compras', () => {
     expect(qs('compras-content').textContent).toContain('No registrado');
   });
 
+  it('muestra retraso en lugar de días restantes negativos en las alertas de vencimiento', async () => {
+    qs('nav-compras').click();
+    const { guardar, leer } = await import('../../../src/compras/almacenamiento.js');
+    const { hoyISO, sumarDias } = await import('../../../src/compras/reglas.js');
+    const facturas = leer('facturas');
+    facturas.find((f) => f.id === 'fac-001').fecha_vencimiento = sumarDias(hoyISO(), -2);
+    guardar('facturas', facturas);
+
+    const selector = qs('rol-activo');
+    selector.value = 'jefe_compras';
+    selector.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+
+    const filaAlerta = [...qs('compras-content').querySelectorAll('tbody tr')].find((fila) =>
+      fila.textContent.includes('1001')
+    );
+    const plazo = filaAlerta.querySelectorAll('td')[3].textContent;
+    expect(plazo).toBe('retraso de 2 días');
+    expect(plazo).not.toContain('-');
+
+    qs('compras-root').querySelector('[data-tab="facturas"]').click();
+    const itemAlerta = [...qs('compras-content').querySelectorAll('li')].find((li) =>
+      li.textContent.includes('folio 1001')
+    );
+    expect(itemAlerta.textContent).toContain('(retraso de 2 días)');
+    expect(itemAlerta.textContent).not.toContain('(-2 días)');
+  });
+
   it('abre la cadena documental y el historial desde una solicitud', () => {
     qs('nav-compras').click();
     qs('compras-root').querySelector('[data-tab="solicitudes"]').click();
