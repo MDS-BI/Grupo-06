@@ -2,7 +2,7 @@
 
 **Rama de la funcionalidad**: 002-modulo-adquisiciones-compras  
 **Creada**: 2026-10-27  
-**Estado**: Aprobada; implementación con deuda documentada en `plan.md`. Rediseño de permisos y navegación por rol (2026-11-23) pendiente de implementar
+**Estado**: Aprobada; implementación con deuda documentada en `plan.md`. Rediseño de permisos y navegación por rol (2026-11-23) pendiente de implementar. Creación de solicitudes por los cinco roles y rol fijo por sesión (2026-11-23) pendientes de implementar
 
 **Entrada**: Descripción del grupo: "Construir, sobre el módulo base del curso, un módulo de Adquisiciones y Compras para una pyme chilena que cubra el ciclo completo: solicitud de compra, cotizaciones de proveedores, orden de compra, recepción y factura del proveedor, junto con la gestión y evaluación de proveedores."
 
@@ -42,12 +42,14 @@ Para asegurar el control de acceso y la integración fluida con otros módulos d
 | Usuario                      | Rol técnico    | Nivel de Acceso y Propósito                                                                                                                |
 | :--------------------------- | :------------- | :----------------------------------------------------------------------------------------------------------------------------------------- |
 | Solicitante (cualquier área) | `solicitante`  | **Restringido:** Crea y ve solo sus propias solicitudes; consulta en solo lectura las OC y recepciones originadas en ellas, y el catálogo.                                                                                       |
-| Comprador                    | `comprador`    | **Ejecutor:** Cotiza, emite Órdenes de Compra (OC), registra y concilia facturas, mantiene proveedores y catálogo y evalúa proveedores. Ve solicitudes, recepciones y devoluciones en solo lectura. No ve datos bancarios completos. |
-| Jefe de compras              | `jefe_compras` | **Aprobador:** Aprueba o rechaza solicitudes, aprueba el pago de facturas y las devoluciones, evalúa proveedores y consulta la trazabilidad. Ve el resto en solo lectura, con datos bancarios completos, pero no los edita.      |
-| Encargado de bodega          | `bodega`       | **Restringido (Físico):** Registra recepciones y devoluciones de OC emitidas; ve las OC en solo lectura.                                                                                                                        |
-| Administrador                | `admin_ti`     | **Administrador del sistema:** Edita datos bancarios, desbloquea proveedores y consulta y exporta la trazabilidad; ve el resto del módulo en solo lectura. No emite OC, no registra recepciones ni aprueba solicitudes, pagos ni devoluciones. |
+| Comprador                    | `comprador`    | **Ejecutor:** Cotiza, emite Órdenes de Compra (OC), registra y concilia facturas, mantiene proveedores y catálogo y evalúa proveedores. Crea y edita sus propias solicitudes y ve las demás, junto con recepciones y devoluciones, en solo lectura. No ve datos bancarios completos. |
+| Jefe de compras              | `jefe_compras` | **Aprobador:** Aprueba o rechaza las solicitudes de otros usuarios, aprueba el pago de facturas y las devoluciones, evalúa proveedores y consulta la trazabilidad. Crea y edita sus propias solicitudes, que debe aprobar otro `jefe_compras`. Ve el resto en solo lectura, con datos bancarios completos, pero no los edita. |
+| Encargado de bodega          | `bodega`       | **Restringido (Físico):** Registra recepciones y devoluciones de OC emitidas; ve las OC en solo lectura. Crea, edita y ve solo sus propias solicitudes.                                                                          |
+| Administrador                | `admin_ti`     | **Administrador del sistema:** Edita datos bancarios, desbloquea proveedores y consulta y exporta la trazabilidad; crea y edita sus propias solicitudes; ve el resto del módulo en solo lectura. No emite OC, no registra recepciones ni aprueba solicitudes, pagos ni devoluciones. |
 
-El detalle por vista está en la [Matriz de visibilidad por rol](#matriz-de-visibilidad-por-rol-fr-033) (FR-033).
+Los cinco roles pueden crear solicitudes de compra (`crear_solicitud`). Cada usuario edita solo las suyas; la aprobación es exclusiva de un `jefe_compras` distinto del solicitante (regla 8). El detalle por vista está en la [Matriz de visibilidad por rol](#matriz-de-visibilidad-por-rol-fr-033) (FR-033).
+
+El rol queda fijo durante la sesión: se elige al ingresar (FR-037) y, para usar otro rol, hay que cerrar sesión e ingresar de nuevo.
 
 ### Fuera de alcance
 
@@ -74,8 +76,13 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 
 ### Session 2026-11-23
 
-- Q: ¿Cómo se incorpora el acceso pedido para la demostración sin implementar autenticación real? → A: Se agrega una pantalla de ingreso simulada con selector de rol, campo de nombre condicional y una clave genérica única (`Compras2026`) centralizada en `src/compras/autenticacion.js`. Solo los roles `solicitante` y `comprador` piden y muestran nombre (validado contra los usuarios semilla); `jefe_compras`, `bodega` y `admin_ti` ingresan y se muestran únicamente por su rol, sin nombre. No valida identidad real, no sustituye a un proveedor de identidad y no modifica los permisos por rol: solo controla la visibilidad de la interfaz, permite cerrar sesión y deja intacta la simulación de roles del MVP. La clave se documenta en `README.md` y `quickstart.md`.
+- Q: ¿Cómo se incorpora el acceso pedido para la demostración sin implementar autenticación real? → A: **[Reemplazada]** Esta respuesta queda reemplazada por las aclaraciones "¿Se puede cambiar de rol durante una sesión?" y "¿Cómo ingresa el segundo `jefe_compras` si ese rol no pide nombre?" de esta misma sesión: ahora `jefe_compras` también pide nombre y el rol queda fijo durante la sesión. FR-037 recoge la versión vigente. Texto original: se agrega una pantalla de ingreso simulada con selector de rol, campo de nombre condicional y una clave genérica única (`Compras2026`) centralizada en `src/compras/autenticacion.js`. Solo los roles `solicitante` y `comprador` piden y muestran nombre (validado contra los usuarios semilla); `jefe_compras`, `bodega` y `admin_ti` ingresan y se muestran únicamente por su rol, sin nombre. No valida identidad real, no sustituye a un proveedor de identidad y no modifica los permisos por rol: solo controla la visibilidad de la interfaz, permite cerrar sesión y deja intacta la simulación de roles del MVP. La clave se documenta en `README.md` y `quickstart.md`.
 - Q: ¿Cómo se rediseñan los permisos y la navegación por rol? (FR-004, FR-014, FR-033 a FR-036) → A: `admin_ti` pasa a ser **administrador del sistema** y no operador de compras: conserva la edición de datos bancarios, el desbloqueo de proveedores y la consulta y exportación de la trazabilidad, y ve todo lo demás en solo lectura; pierde emitir OC, registrar recepciones y aprobar solicitudes, pagos y devoluciones. La segregación de funciones (regla 8) se aplica **sin excepciones** para ningún rol. Cada rol ve y opera según la matriz de visibilidad (FR-033); la barra lateral se agrupa en Panel / Adquisiciones / Compras (FR-034); el panel muestra pendientes e indicadores propios de cada rol (FR-035); las acciones rápidas muestran una descripción legible, se elimina la tarjeta "Sesión activa" y el encabezado muestra la sección actual (FR-036). El comprador concilia facturas de OC que él emitió como riesgo asumido de pyme (data-model §6). Resoluciones de consistencia: solo `admin_ti` desbloquea proveedores (vuelven a `aprobado`) y el comprador puede bloquearlos; solo el `comprador` emite OC; el solicitante ve el precio de referencia del catálogo, pero no las cotizaciones; bodega registra las devoluciones y `jefe_compras` las aprueba; en trazabilidad, `admin_ti` consulta y exporta (el historial es inmutable) y `jefe_compras` solo consulta.
+- Q: ¿Qué roles pueden crear solicitudes de compra? (FR-005, FR-006, FR-033) → A: **Los cinco roles** (`solicitante`, `comprador`, `jefe_compras`, `bodega` y `admin_ti`) tienen `crear_solicitud`. Cada usuario crea y edita solo sus propias solicitudes; los roles que ya veían las solicitudes ajenas (`comprador`, `jefe_compras` y `admin_ti`) las siguen viendo en solo lectura o para aprobarlas, y `solicitante` y `bodega` ven solo las suyas. La aprobación sigue siendo exclusiva de un `jefe_compras` distinto del solicitante (regla 8): si quien crea la solicitud es `jefe_compras`, debe aprobarla otro `jefe_compras`, por lo que la semilla agrega un segundo usuario `jefe_compras`. La decisión y sus alternativas descartadas están en `research.md`.
+- Q: ¿Se puede cambiar de rol durante una sesión? (FR-034, FR-036, FR-037) → A: **No.** Al iniciar sesión el rol queda fijo hasta cerrarla. El selector **Rol Activo** se reemplaza por un indicador de solo lectura con el usuario y el rol actuales, junto al botón **Cerrar sesión**; para usar otro rol hay que cerrar sesión e ingresar de nuevo. `setRolActivo()` no puede cambiar el rol de una sesión iniciada. Así una misma sesión no puede crear una solicitud con un rol y aprobarla con otro (regla 8).
+- Q: ¿Cómo ingresa el segundo `jefe_compras` si ese rol no pide nombre? (FR-037) → A: `jefe_compras` pasa a pedir nombre al ingresar, igual que `solicitante` y `comprador`, y se muestra con su nombre en la sesión y en la trazabilidad; así se distinguen los dos usuarios `jefe_compras` de la semilla. `bodega` y `admin_ti` siguen ingresando y mostrándose solo por su rol.
+- Q: ¿Dónde ve cada rol el estado de las solicitudes que creó? (FR-035) → A: Como los cinco roles pueden crear solicitudes, el panel de **todos los roles** muestra el pendiente **"Mis solicitudes"** con el estado de las solicitudes propias del usuario, además de los pendientes propios de su rol.
+- Q: ¿Se permite que un comprador cotice y emita la OC de una solicitud que él mismo creó? → A: Sí, como **riesgo asumido de pyme** (conflicto de interés), documentado en data-model §6. Se mitiga porque la solicitud la aprueba un `jefe_compras` distinto del solicitante antes de cotizar y porque cada paso queda en la trazabilidad.
 
 ## Escenarios de Usuario y Pruebas _(obligatorio)_
 
@@ -103,7 +110,7 @@ _Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo u
 
 ### Historia de Usuario 2 - Crear y aprobar solicitudes de compra (Prioridad: P1)
 
-**Como** Solicitante de cualquier área, **necesito** pedir los materiales que me faltan indicando cantidad y justificación, y que mi jefatura pueda revisarlos, **para** que las compras nazcan de una necesidad real y no se atrasen por correos perdidos.
+**Como** usuario de cualquier área y de cualquiera de los cinco roles (solicitante, comprador, jefe de compras, bodega o administrador TI), **necesito** pedir los materiales que me faltan indicando cantidad y justificación, y que un jefe de compras distinto de mí pueda revisarlos, **para** que las compras nazcan de una necesidad real y no se atrasen por correos perdidos.
 
 **Por qué esta prioridad**: La solicitud aprobada es la puerta de entrada y el principal control contra compras no autorizadas. Vincula el `id_producto` y el `id_usuario`.
 
@@ -116,7 +123,10 @@ _Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo u
 3. **Dada** una solicitud `enviada`, **cuando** el jefe de compras la rechaza, **entonces** el sistema exige escribir un motivo de rechazo.
 4. **Dado** que el jefe de compras es también el solicitante, **cuando** intenta aprobar su propia solicitud, **entonces** el sistema se lo impide (segregación de funciones).
 5. **Dada** una solicitud sin productos, **cuando** el solicitante intenta enviarla, **entonces** el sistema lo impide.
-6. **Dada** una solicitud `enviada`, **cuando** un usuario `admin_ti` la abre, **entonces** la ve en solo lectura y no dispone de las acciones de aprobar ni rechazar.
+6. **Dada** una solicitud `enviada` de otro usuario, **cuando** un usuario `admin_ti` la abre, **entonces** la ve en solo lectura y no dispone de las acciones de aprobar ni rechazar.
+7. **Dado** un usuario con cualquiera de los cinco roles, **cuando** crea una solicitud con al menos un producto activo y la envía, **entonces** queda `enviada` a su nombre y solo él puede editarla mientras esté en `borrador`.
+8. **Dado** un usuario `bodega` o `solicitante`, **cuando** abre la vista Solicitudes, **entonces** ve solo sus propias solicitudes; y **dado** un usuario `comprador` o `admin_ti`, **cuando** abre una solicitud ajena, **entonces** la ve en solo lectura.
+9. **Dada** una solicitud `enviada` creada por un `jefe_compras`, **cuando** otro usuario `jefe_compras` la aprueba o rechaza, **entonces** el sistema lo permite y registra al segundo como aprobador; **cuando** lo intenta el mismo `jefe_compras` que la creó, **entonces** el sistema se lo impide (regla 8).
 
 ---
 
@@ -173,9 +183,10 @@ _Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo u
 3. **Dado** un solicitante, **cuando** revisa el panel, **entonces** solo ve sus propias solicitudes y no los pendientes de otros usuarios ni datos de otras áreas (acceso restringido).
 4. **Dadas** órdenes de compra emitidas sin recepción registrada por más de 7 días, **cuando** el encargado de bodega o el comprador abre el panel, **entonces** el sistema las lista como pendientes de seguimiento.
 5. **Dado** un período seleccionado (mes actual), **cuando** el panel carga, **entonces** muestra los indicadores del período que FR-035 asigna a su rol, calculados con los datos existentes.
-6. **Dado** que no hay pendientes para el rol, **cuando** el usuario abre el panel, **entonces** ve un estado vacío claro que solo lo invita a acciones que su rol puede ejecutar (p. ej., crear una solicitud u orden); para `bodega` y `admin_ti` el estado vacío informa que no hay pendientes, sin invitar a crear documentos.
+6. **Dado** que no hay pendientes para el rol, **cuando** el usuario abre el panel, **entonces** ve un estado vacío claro que solo lo invita a acciones que su rol puede ejecutar (p. ej., crear una solicitud u orden); para `bodega` y `admin_ti` el estado vacío informa que no hay pendientes y solo invita a crear una solicitud de compra, el único documento del ciclo que esos roles pueden crear.
 7. **Dado** que la aplicación se abre en un navegador, **cuando** se revisan la navegación lateral y el contenido principal, **entonces** solo aparecen las vistas del módulo de Adquisiciones y Compras, agrupadas en Panel / Adquisiciones / Compras según FR-034 y filtradas por el rol activo, y no se muestran ni se puede navegar a las vistas genéricas Entidades, Documentos ni Búsqueda del template base.
 8. **Dado** cada uno de los cinco roles, **cuando** abre el panel, **entonces** ve exactamente los pendientes e indicadores asignados a su rol en FR-035 y ninguno de los asignados a otros roles.
+9. **Dado** un usuario de cualquiera de los cinco roles que creó solicitudes, **cuando** abre el panel, **entonces** ve el pendiente **"Mis solicitudes"** con el estado de cada una de sus solicitudes y un acceso directo, sin solicitudes de otros usuarios.
 
 ---
 
@@ -308,11 +319,12 @@ _Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo u
 2. **Dado** un rol con 👁️ sobre una vista, **cuando** la abre, **entonces** ve y puede exportar los registros, pero no dispone de acciones para crear, editar, aprobar ni anular.
 3. **Dado** un rol con — sobre una vista, **cuando** intenta llegar a ella mediante un enlace interno, una acción rápida o la cadena documental, **entonces** el sistema no la muestra e informa que su rol no tiene acceso.
 4. **Dado** un usuario `solicitante`, **cuando** abre Órdenes de compra o Recepciones, **entonces** ve solo las originadas en sus propias solicitudes.
-5. **Dado** un usuario `admin_ti`, **cuando** recorre el módulo, **entonces** solo puede editar datos bancarios, desbloquear proveedores y consultar y exportar la trazabilidad; todo lo demás lo ve en solo lectura.
+5. **Dado** un usuario `admin_ti`, **cuando** recorre el módulo, **entonces** solo puede editar datos bancarios, desbloquear proveedores, consultar y exportar la trazabilidad y crear y editar sus propias solicitudes; todo lo demás lo ve en solo lectura.
 6. **Dado** un documento con historial, **cuando** lo abre un usuario `solicitante`, `comprador` o `bodega`, **entonces** no ve el historial de eventos; **cuando** lo abre un `jefe_compras`, **entonces** lo consulta sin poder exportarlo; y **cuando** lo abre un `admin_ti`, **entonces** lo consulta y puede exportarlo.
 7. **Dada** cualquier vista del módulo, **cuando** el usuario la abre, **entonces** el encabezado muestra la sección actual (p. ej., "Compras › Órdenes de compra").
 8. **Dado** el panel de inicio, **cuando** se muestran las acciones rápidas, **entonces** cada una tiene una descripción legible para el usuario y ninguna muestra el identificador interno del permiso.
-9. **Dada** una sesión iniciada, **cuando** el usuario revisa la pantalla, **entonces** no aparece la tarjeta "Sesión activa" y el rol se muestra solo en el selector de rol.
+9. **Dada** una sesión iniciada, **cuando** el usuario revisa la pantalla, **entonces** no aparece la tarjeta "Sesión activa" y el usuario y el rol se muestran solo en el indicador de solo lectura de la barra superior, junto al botón **Cerrar sesión**.
+10. **Dada** una sesión iniciada, **cuando** el usuario busca cómo usar otro rol, **entonces** no existe un selector para cambiarlo; debe cerrar sesión e ingresar de nuevo con el otro rol, y la aplicación abre el Panel de ese rol (FR-037).
 
 ---
 
@@ -327,7 +339,7 @@ _Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo u
 - ¿Qué pasa si un rol sin permiso intenta ver, editar o exportar datos sensibles? La operación se rechaza y la exportación CSV contiene el valor enmascarado, nunca el valor completo.
 - ¿Qué pasa si un rol sin permiso intenta recuperar el valor enmascarado por canales indirectos (tooltips, mensajes de error, historial de trazabilidad FR-027 a FR-030, HTML o almacenamiento del navegador)? El enmascaramiento se aplica en el origen de los datos antes de renderizar o exportar, de modo que el valor completo no llega a ese rol.
 - ¿Qué pasa si un rol sin permiso busca por RUT o número de cuenta completo? La búsqueda puede encontrar el registro, pero el resultado se muestra enmascarado y no revela el valor completo ni confirma dígitos fuera de la máscara.
-- ¿Qué pasa si se cambia de usuario o de rol simulado en la misma sesión? El enmascaramiento se recalcula de inmediato y no quedan valores completos visibles de la sesión anterior.
+- ¿Qué pasa si se cierra sesión y se ingresa con otro usuario o rol? El rol no cambia dentro de una sesión (FR-037); al ingresar de nuevo el enmascaramiento se calcula para el nuevo rol y no quedan valores completos visibles de la sesión anterior.
 - ¿Qué pasa si la cuenta cambió hace menos de 30 días y se aprueba una factura? La alerta de fraude muestra solo la cuenta enmascarada y la fecha del cambio a los roles sin permiso, nunca el número completo.
 - ¿Qué pasa si los datos semilla incluyen proveedores, contactos o cuentas? Todos son ficticios; no se usan RUT, nombres, correos, teléfonos ni cuentas de personas o empresas reales.
 
@@ -348,7 +360,9 @@ _Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo u
 
 **Permisos y navegación**
 
-- ¿Qué pasa si se cambia de rol estando en una vista que el nuevo rol no ve? La aplicación vuelve al Panel del nuevo rol.
+- ¿Qué pasa si se intenta cambiar de rol con la sesión iniciada? No es posible: la barra superior solo muestra el usuario y el rol actuales, y `setRolActivo()` no modifica el rol de una sesión iniciada. Para usar otro rol se cierra sesión y se ingresa de nuevo; la aplicación abre el Panel del nuevo rol (FR-034, FR-037).
+- ¿Qué pasa si quien crea la solicitud es `jefe_compras`? No puede aprobarla ni rechazarla; debe hacerlo otro usuario `jefe_compras`. La semilla incluye un segundo usuario `jefe_compras` para que el caso pueda demostrarse (FR-006, regla 8).
+- ¿Qué pasa si quien crea la solicitud es `comprador`, `bodega` o `admin_ti`? Solo puede crearla, editarla mientras esté en `borrador` y enviarla; la aprueba un `jefe_compras` y los demás pasos del ciclo siguen la matriz (FR-033).
 - ¿Qué pasa si una acción rápida apunta a una vista o acción que el rol no tiene? La acción rápida no se muestra.
 - ¿Qué pasa con documentos emitidos por `admin_ti` antes de este rediseño (datos semilla o historial)? Se conservan con el `rol_usuario` registrado en su momento, y la regla 8 se les aplica igual: quien emitió una OC no puede registrar su recepción.
 
@@ -359,9 +373,9 @@ _Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo u
 - **FR-001**: El sistema DEBE permitir crear, editar, buscar y cambiar de estado proveedores, validando RUT (formato y dígito verificador) y su unicidad.
 - **FR-002**: El sistema DEBE impedir una condición de pago mayor a 30 días si el proveedor no tiene registrado un acuerdo de plazo mayor (Ley 21.131).
 - **FR-003**: El sistema DEBE impedir eliminar proveedores con órdenes de compra; en su lugar DEBE permitir bloquearlos.
-- **FR-004**: El sistema DEBE permitir a `admin_ti` y `jefe_compras` ver sin enmascarar el RUT de personas naturales y el número de cuenta bancaria; los demás roles los ven enmascarados. Solo `admin_ti` puede editar los datos bancarios y desbloquear proveedores; cada cambio bancario actualiza `fecha_cambio_cuenta`. `admin_ti` es el administrador del sistema: no emite OC, no registra recepciones ni aprueba solicitudes, pagos ni devoluciones, y ve el resto del módulo en solo lectura (FR-033). La aplicación del enmascaramiento en todos los canales se rige por FR-025 y su registro por FR-030.
-- **FR-005**: El sistema DEBE permitir crear solicitudes de compra con una o más líneas y numeración correlativa `SC-AAAA-NNNN`.
-- **FR-006**: El sistema DEBE permitir aprobar o rechazar solicitudes solo a un usuario `jefe_compras` distinto del solicitante, DEBE impedir que un usuario apruebe su propia solicitud y DEBE exigir motivo al rechazar.
+- **FR-004**: El sistema DEBE permitir a `admin_ti` y `jefe_compras` ver sin enmascarar el RUT de personas naturales y el número de cuenta bancaria; los demás roles los ven enmascarados. Solo `admin_ti` puede editar los datos bancarios y desbloquear proveedores; cada cambio bancario actualiza `fecha_cambio_cuenta`. `admin_ti` es el administrador del sistema: no emite OC, no registra recepciones ni aprueba solicitudes, pagos ni devoluciones, y ve el resto del módulo en solo lectura, salvo sus propias solicitudes, que crea y edita como cualquier rol (FR-005, FR-033). La aplicación del enmascaramiento en todos los canales se rige por FR-025 y su registro por FR-030.
+- **FR-005**: El sistema DEBE permitir crear solicitudes de compra con una o más líneas y numeración correlativa `SC-AAAA-NNNN` a usuarios de los cinco roles (`solicitante`, `comprador`, `jefe_compras`, `bodega` y `admin_ti`). Cada usuario DEBE poder editar solo sus propias solicitudes; `solicitante` y `bodega` DEBEN ver solo las suyas, y `comprador`, `jefe_compras` y `admin_ti` ven además las ajenas según la matriz (FR-033).
+- **FR-006**: El sistema DEBE permitir aprobar o rechazar solicitudes solo a un usuario `jefe_compras` distinto del solicitante, DEBE impedir que un usuario apruebe su propia solicitud y DEBE exigir motivo al rechazar. Si el solicitante es `jefe_compras`, la solicitud DEBE aprobarla o rechazarla otro usuario `jefe_compras`; los datos semilla DEBEN incluir dos usuarios `jefe_compras` para demostrarlo.
 - **FR-007**: El sistema DEBE permitir registrar cotizaciones solo para solicitudes aprobadas, con una cotización por proveedor y solicitud.
 - **FR-008**: El sistema DEBE exigir al menos 3 cotizaciones, o una justificación de proveedor único, para seleccionar una cotización en solicitudes cuyo monto estimado iguale o supere UMBRAL_COTIZACIONES.
 - **FR-009**: El sistema DEBE exigir motivo al descartar una cotización y DEBE marcar como vencidas las cotizaciones cuya fecha de validez pasó.
@@ -389,20 +403,20 @@ _Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo u
 - **FR-031**: El sistema DEBE permitir registrar devoluciones de unidades aceptadas contra una orden de compra con recepciones, indicando línea, cantidad y motivo, con correlativo `DEV-AAAA-NNNN`; DEBE impedir devolver más de lo aceptado pendiente de devolver, descontar la cantidad del saldo recibido y facturado, cerrar la OC cuando el saldo pendiente llegue a cero y exigir la aprobación de un `jefe_compras` distinto cuando quien registró la recepción intente registrar la devolución.
 - **FR-032**: La aplicación DEBE mostrar exclusivamente las vistas del módulo de Adquisiciones y Compras (Panel, Proveedores, Solicitudes, Cotizaciones, Órdenes de compra, Recepciones, Facturas, Devoluciones, Catálogo y Evaluaciones). NO DEBE mostrar, enlazar desde la navegación ni permitir acceder mediante acciones internas a las vistas genéricas del template base (Entidades, Documentos y Búsqueda). Las vistas se agrupan según FR-034.
 - **FR-033**: El sistema DEBE aplicar la [Matriz de visibilidad por rol](#matriz-de-visibilidad-por-rol-fr-033) a cada vista y acción: ✏️ significa que el rol opera (con el alcance indicado en la celda); 👁️, que solo ve y exporta lo visible, sin crear, editar, aprobar ni anular; —, que la vista no aparece ni es accesible por ningún enlace, acción rápida o cadena documental. La restricción DEBE validarse tanto en la interfaz como en cada operación.
-- **FR-034**: La barra lateral DEBE organizarse en Panel / **Adquisiciones** (Proveedores, Catálogo, Evaluaciones) / **Compras** (Solicitudes, Cotizaciones, Órdenes de compra, Recepciones, Facturas, Devoluciones), según data-model §1. Cada rol DEBE ver solo las vistas que la matriz (FR-033) le asigna como ✏️ o 👁️; un grupo sin vistas visibles NO DEBE mostrarse. Al cambiar de rol, si la vista actual no es visible para el nuevo rol, la aplicación DEBE volver al Panel.
+- **FR-034**: La barra lateral DEBE organizarse en Panel / **Adquisiciones** (Proveedores, Catálogo, Evaluaciones) / **Compras** (Solicitudes, Cotizaciones, Órdenes de compra, Recepciones, Facturas, Devoluciones), según data-model §1. Cada rol DEBE ver solo las vistas que la matriz (FR-033) le asigna como ✏️ o 👁️; un grupo sin vistas visibles NO DEBE mostrarse. Como el rol queda fijo durante la sesión (FR-037), la navegación NO DEBE cambiar de rol en vivo: para usar otro rol se cierra sesión y se ingresa de nuevo, y al ingresar la aplicación DEBE abrir el Panel del rol con su barra lateral.
 - **FR-035**: El panel de inicio DEBE mostrar a cada rol solo los pendientes e indicadores siguientes (los indicadores se calculan según data-model §8):
 
   | Rol            | Pendientes                                                                                                           | Indicadores                                          |
   | -------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-  | `solicitante`  | Estado de sus propias solicitudes                                                                                    | —                                                    |
-  | `comprador`    | Solicitudes aprobadas sin cotizar, OC sin recepción, facturas con discrepancia                                       | Facturas con discrepancia                            |
-  | `jefe_compras` | Aprobaciones pendientes: solicitudes por aprobar, facturas conciliadas por aprobar pago y devoluciones por aprobar   | Gasto del período, Facturas en riesgo de pago tardío |
-  | `bodega`       | OC esperando entrega, recepciones parciales                                                                          | Tasa de rechazo en recepción                         |
-  | `admin_ti`     | Cambios bancarios de los últimos 30 días, alertas de fraude (facturas no aprobadas de proveedores con cambio de cuenta hace menos de 30 días) | —                                                    |
+  | `solicitante`  | Mis solicitudes                                                                                                      | —                                                    |
+  | `comprador`    | Mis solicitudes; solicitudes aprobadas sin cotizar, OC sin recepción, facturas con discrepancia                      | Facturas con discrepancia                            |
+  | `jefe_compras` | Mis solicitudes; aprobaciones pendientes: solicitudes de otros usuarios por aprobar, facturas conciliadas por aprobar pago y devoluciones por aprobar | Gasto del período, Facturas en riesgo de pago tardío |
+  | `bodega`       | Mis solicitudes; OC esperando entrega, recepciones parciales                                                         | Tasa de rechazo en recepción                         |
+  | `admin_ti`     | Mis solicitudes; cambios bancarios de los últimos 30 días, alertas de fraude (facturas no aprobadas de proveedores con cambio de cuenta hace menos de 30 días) | —                                                    |
 
-  La alerta de vencimiento de FR-017 se muestra solo a los roles con acceso a Facturas.
-- **FR-036**: La interfaz DEBE: (a) mostrar en cada acción rápida una descripción legible para el usuario y nunca el identificador interno del permiso; (b) no mostrar la tarjeta "Sesión activa", ya que el rol se ve en el selector de rol; (c) mostrar en el encabezado la sección actual (grupo y vista).
-- **FR-037**: El sistema DEBE mostrar una pantalla de ingreso simulada, centralizada en `src/compras/autenticacion.js`, con selector de rol y una clave genérica única (`Compras2026`). Los roles `solicitante` y `comprador` DEBEN pedir un nombre y validarlo contra los usuarios semilla; `jefe_compras`, `bodega` y `admin_ti` DEBEN ingresar y mostrarse solo por su rol, sin nombre. La pantalla NO DEBE validar identidad real ni modificar los permisos por rol (FR-033) ni la simulación de roles del MVP; solo controla la visibilidad de la interfaz y permite cerrar sesión.
+  **Mis solicitudes** aparece en el panel de los cinco roles y muestra el estado de las solicitudes creadas por el usuario de la sesión, con acceso directo a cada una; nunca incluye solicitudes de otros usuarios. La alerta de vencimiento de FR-017 se muestra solo a los roles con acceso a Facturas.
+- **FR-036**: La interfaz DEBE: (a) mostrar en cada acción rápida una descripción legible para el usuario y nunca el identificador interno del permiso; (b) no mostrar la tarjeta "Sesión activa", ya que el usuario y el rol se ven en el indicador de solo lectura de la barra superior (FR-037); (c) mostrar en el encabezado la sección actual (grupo y vista).
+- **FR-037**: El sistema DEBE mostrar una pantalla de ingreso simulada, centralizada en `src/compras/autenticacion.js`, con selector de rol y una clave genérica única (`Compras2026`). Los roles `solicitante`, `comprador` y `jefe_compras` DEBEN pedir un nombre y validarlo contra los usuarios semilla; `bodega` y `admin_ti` DEBEN ingresar y mostrarse solo por su rol, sin nombre. Al iniciar sesión, el rol DEBE quedar fijo hasta cerrarla: la barra superior DEBE mostrar un indicador de solo lectura con el usuario y el rol actuales junto al botón **Cerrar sesión**, NO DEBE ofrecer ningún control para cambiar de rol y `setRolActivo()` NO DEBE poder cambiar el rol de una sesión iniciada. Para usar otro rol, el usuario DEBE cerrar sesión e ingresar de nuevo. La pantalla NO DEBE validar identidad real ni modificar los permisos por rol (FR-033); solo controla el acceso a la interfaz, fija el rol de la sesión y permite cerrarla.
 
 #### Matriz de visibilidad por rol (FR-033)
 
@@ -410,7 +424,7 @@ Leyenda: ✏️ opera · 👁️ solo lectura · — no ve.
 
 | Vista              | `solicitante`                   | `comprador`                           | `jefe_compras`                       | `bodega`       | `admin_ti`                                 |
 | ------------------ | ------------------------------- | ------------------------------------- | ------------------------------------ | -------------- | ------------------------------------------ |
-| Solicitudes        | ✏️ solo propias                 | 👁️                                    | ✏️ aprueba / rechaza                 | —              | 👁️                                         |
+| Solicitudes        | ✏️ crea y ve solo propias       | ✏️ crea propias · 👁️ ajenas           | ✏️ crea propias · aprueba / rechaza ajenas | ✏️ crea y ve solo propias | ✏️ crea propias · 👁️ ajenas       |
 | Cotizaciones       | —                               | ✏️                                    | 👁️                                   | —              | 👁️                                         |
 | Órdenes de compra  | 👁️ las de sus solicitudes       | ✏️                                    | 👁️                                   | 👁️             | 👁️                                         |
 | Recepciones        | 👁️ las de sus solicitudes       | 👁️                                    | 👁️                                   | ✏️             | 👁️                                         |
@@ -421,7 +435,7 @@ Leyenda: ✏️ opera · 👁️ solo lectura · — no ve.
 | Evaluaciones       | —                               | ✏️                                    | ✏️                                   | —              | 👁️                                         |
 | Trazabilidad       | —                               | —                                     | 👁️ consulta                          | —              | ✏️ consulta y exporta                      |
 
-En Trazabilidad, ✏️ significa consultar y exportar: el historial es inmutable y nadie edita sus eventos. La navegación de la cadena documental (FR-028) se mantiene para cada rol sobre los documentos que ya puede ver; lo que se restringe es el historial de eventos.
+En Solicitudes, cada usuario edita solo las solicitudes que creó; "ajenas" son las de otros usuarios. La aprobación de una solicitud creada por un `jefe_compras` corresponde a otro `jefe_compras` (FR-006). En Trazabilidad, ✏️ significa consultar y exportar: el historial es inmutable y nadie edita sus eventos. La navegación de la cadena documental (FR-028) se mantiene para cada rol sobre los documentos que ya puede ver; lo que se restringe es el historial de eventos.
 
 ### Requisitos de Integración
 
@@ -473,7 +487,7 @@ El detalle de atributos, cardinalidades y reglas está en [data-model.md](data-m
 
 - La empresa cliente es una pyme privada que recibe facturas afectas a IVA; boletas de honorarios y documentos exentos quedan fuera del MVP.
 - Todos los montos están en pesos chilenos; no hay compras en moneda extranjera.
-- Los roles se eligen desde un selector de usuario simulado; no hay inicio de sesión real.
+- Los roles se eligen en la pantalla de ingreso simulada (FR-037) y quedan fijos durante la sesión; no hay autenticación real. La clave genérica `Compras2026` está en el código y permite ingresar con cualquier rol: se acepta porque los datos son 100 % ficticios (data-model §6).
 - El módulo funciona en un solo navegador con `localStorage`; no hay sincronización entre equipos.
 - Productos, usuarios y centros de costo vienen como datos semilla mientras los módulos de Inventario, RR.HH. y Contabilidad no estén conectados.
 - La codificación y el separador de los archivos CSV exportados son los definidos en [plan.md](plan.md); un cambio de esa codificación se realiza en el plan y no en esta especificación.
@@ -481,3 +495,4 @@ El detalle de atributos, cardinalidades y reglas está en [data-model.md](data-m
 - El permiso de solo lectura (👁️) incluye exportar a CSV lo que el rol ve (FR-024), salvo el historial de trazabilidad, que solo exporta `admin_ti`.
 - El comprador puede bloquear proveedores; solo `admin_ti` puede desbloquearlos, y un proveedor desbloqueado vuelve a `aprobado`.
 - El comprador concilia facturas de OC que él mismo emitió. En una pyme se acepta como riesgo asumido, mitigado porque la recepción la registra bodega y la aprobación del pago es exclusiva de `jefe_compras` (data-model §6).
+- El comprador puede cotizar y emitir la OC de una solicitud que él mismo creó. Se acepta como riesgo asumido (conflicto de interés), mitigado porque la solicitud la aprueba un `jefe_compras` distinto y todo queda en la trazabilidad (data-model §6).

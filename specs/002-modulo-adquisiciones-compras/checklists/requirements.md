@@ -51,6 +51,18 @@
 - [x] data-model.md v1.3 documenta en §6 el riesgo asumido de conciliación por el comprador y el cambio en §9; las reglas 2, 8 y 10 y las secciones §3.9 y §3.13 se alinearon.
 - [x] US12 usa la misma estructura canónica que US1 a US11.
 
+## Creación de solicitudes por los cinco roles y rol fijo por sesión (2026-11-23)
+
+- [x] FR-005 da `crear_solicitud` a los cinco roles, con edición solo del autor y visibilidad acotada a las propias para `solicitante` y `bodega`; la matriz de FR-033 (fila Solicitudes) y US2 (escenarios 7 y 8) lo reflejan.
+- [x] FR-006 cubre el caso límite del `jefe_compras` solicitante: aprueba otro `jefe_compras` y la semilla incluye un segundo usuario de ese rol; US2 (escenario 9) y los casos límite de "Permisos y navegación" lo prueban.
+- [x] FR-037 fija el rol durante la sesión, reemplaza el selector **Rol Activo** por un indicador de solo lectura junto a **Cerrar sesión**, impide que `setRolActivo()` cambie el rol de una sesión iniciada y pide nombre a `jefe_compras`; US12 (escenarios 9 y 10) lo cubre.
+- [x] La aclaración original de FR-037 está marcada como reemplazada por las nuevas aclaraciones del 2026-11-23, sin borrar su texto.
+- [x] FR-034 y FR-036 ya no describen cambios de rol en vivo; los casos límite de enmascaramiento y de navegación se reescribieron para el rol fijo.
+- [x] FR-035 muestra "Mis solicitudes" en el panel de los cinco roles, con escenario en US5 (9); el estado vacío de `bodega` y `admin_ti` solo invita a crear una solicitud (US5, escenario 6).
+- [x] data-model.md v1.3 documenta en §6 el riesgo asumido de que el comprador cotice y emita la OC de una solicitud propia y el riesgo del ingreso simulado con rol fijo; §9 tiene una sola fila v1.3 con todos los cambios.
+- [x] `research.md` registra las decisiones 12 (todos crean solicitudes; alternativas descartadas: `admin_ti` aprueba como excepción y rol `gerente`) y 13 (rol fijo por sesión; alternativa descartada: selector de rol libre).
+- [ ] Las tareas de implementación (T121 ajustada y tareas nuevas) y la matriz de trazabilidad de `tasks.md` están pendientes (Etapa 2).
+
 ## Notas
 
 - La codificación y el separador de las exportaciones CSV están explicitados en la sección Clarifications (UTF-8 con BOM y `;`) y se mantienen delegados a `plan.md` como fuente técnica detallada en FR-024, US10 y SC-010.

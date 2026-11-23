@@ -5,7 +5,7 @@
 
 ## Resumen
 
-Construir el módulo Adquisiciones y Compras **sobre el módulo base ERP del curso** (`specs/001-erp-base-module`), sin reemplazar su código central: `src/storage.js` y sus pruebas permanecen sin cambios funcionales (solo se aplicó formateo con Prettier). La interfaz final es **exclusiva del módulo**: `index.html` solo expone `#view-compras`, `#compras-root` y el selector de roles; no se muestran las vistas genéricas de Entidades, Documentos ni Búsqueda del template, conforme a FR-032 y SC-014.
+Construir el módulo Adquisiciones y Compras **sobre el módulo base ERP del curso** (`specs/001-erp-base-module`), sin reemplazar su código central: `src/storage.js` y sus pruebas permanecen sin cambios funcionales (solo se aplicó formateo con Prettier). La interfaz final es **exclusiva del módulo**: `index.html` solo expone `#view-compras`, `#compras-root` y el indicador de solo lectura del usuario y rol de la sesión (el rol queda fijo al ingresar, FR-037); no se muestran las vistas genéricas de Entidades, Documentos ni Búsqueda del template, conforme a FR-032 y SC-014.
 
 Los proveedores reutilizan el contrato de Entidad del módulo base desde `src/compras/proveedores.js` sin tocar `src/storage.js`. El resto de documentos del ciclo (solicitudes, cotizaciones, OC, recepciones, facturas, devoluciones, catálogo, evaluaciones y trazabilidad) viven en colecciones propias `erp_compras:*` gestionadas desde `src/compras/almacenamiento.js`, siguiendo el mismo contrato de almacenamiento del template (`specs/001-erp-base-module/contracts/entity-storage.md`).
 
@@ -41,7 +41,11 @@ Resultado: **conforme con deuda documentada**. Los incumplimientos materiales qu
 
 ## Arquitectura del módulo (`src/compras/`)
 
-La interfaz final no usa las vistas genéricas del template: toda la navegación ocurre dentro de `#view-compras` y `#compras-root`, con el selector de roles simulados, según FR-032 y SC-014. `src/module-config.js` mantiene `userConfig = null` y su `COMPRAS_CONFIG` solo como referencia de la iteración descartada por configuración. La barra lateral se agrupa en Panel / **Adquisiciones** (Proveedores, Catálogo, Evaluaciones) / **Compras** (Solicitudes, Cotizaciones, Órdenes de compra, Recepciones, Facturas, Devoluciones) y cada rol ve solo las vistas que le asigna la matriz de visibilidad (FR-033, FR-034). El encabezado muestra la sección actual y no existe tarjeta "Sesión activa": el rol se ve solo en el selector (FR-036).
+La interfaz final no usa las vistas genéricas del template: toda la navegación ocurre dentro de `#view-compras` y `#compras-root`, con el rol simulado que se fija al ingresar (FR-037), según FR-032 y SC-014. `src/module-config.js` mantiene `userConfig = null` y su `COMPRAS_CONFIG` solo como referencia de la iteración descartada por configuración. La barra lateral se agrupa en Panel / **Adquisiciones** (Proveedores, Catálogo, Evaluaciones) / **Compras** (Solicitudes, Cotizaciones, Órdenes de compra, Recepciones, Facturas, Devoluciones) y cada rol ve solo las vistas que le asigna la matriz de visibilidad (FR-033, FR-034). El encabezado muestra la sección actual y no existe tarjeta "Sesión activa": el usuario y el rol se ven solo en el indicador de solo lectura de la barra superior, junto a **Cerrar sesión** (FR-036).
+
+**Rol fijo por sesión (FR-037)**: el rol se fija en `iniciarSesion()` (`src/compras/autenticacion.js`) y no cambia hasta `cerrarSesion()`. `src/app.js` deja de escuchar el `change` del antiguo selector `#rol-activo` y muestra en su lugar el indicador del usuario y rol; `setRolActivo()` (`src/compras/almacenamiento.js`) no modifica el rol de una sesión iniciada. `jefe_compras` pasa a pedir nombre al ingresar, igual que `solicitante` y `comprador`, para distinguir a los dos usuarios `jefe_compras` de la semilla.
+
+**Creación de solicitudes por los cinco roles**: `crear_solicitud` pasa a incluir a los cinco roles en `PERMISOS`; `src/compras/solicitudes.js` limita la edición al autor y la visibilidad de `solicitante` y `bodega` a sus propias solicitudes, y la aprobación sigue exigiendo un `jefe_compras` distinto del solicitante (regla 8).
 
 | Concepto del MER          | Almacenamiento físico real                                                                         | Observación                                                                                  |
 | ------------------------- | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
@@ -98,7 +102,7 @@ src/
     ├── facturas.js
     ├── devoluciones.js     (devoluciones y notas de crédito)
     ├── proveedores.js      (alta/edición, visibilidad de datos sensibles, cambio bancario auditado)
-    ├── autenticacion.js    (pantalla de ingreso simulada: selector de rol, nombre condicional, clave genérica)
+    ├── autenticacion.js    (pantalla de ingreso simulada: selector de rol, nombre condicional, clave genérica; fija el rol de la sesión)
     ├── vista.js            (pantallas de compras, navegación agrupada por rol y cadena documental)
     ├── exportacion.js      (CSV con BOM y permisos por rol)
     ├── trazabilidad.js     (historial de eventos y cadena documental)
@@ -148,6 +152,7 @@ Las siguientes tareas se documentan también en `tasks.md`: T101, T104, T109, T1
 | T119  | Cerrada | Decisión aplicada: se elimina `borrador` del modelo de OC y se conserva `emitida` como estado inicial; `data-model.md` y `plan.md` sincronizados.                                                                                                                                                                                                | FR-010                              |
 | T120  | Cerrada | Auditoría global de SC-003 en `flujo-compras.test.js`: se validan las dos vías de cumplimiento sobre todas las OC no anuladas.                                                                                                                                                                                                                | SC-003                              |
 | T121-T144 | Abierta | Rediseño de permisos y navegación por rol: asignado en `tasks.md` (Fases 16-19); `PERMISOS` sigue dando a `admin_ti` operaciones de compra hasta cerrar la Fase 16. | FR-033 a FR-036, SC-015 a SC-017 |
+| Sin tarea aún | Abierta | Creación de solicitudes por los cinco roles, segundo `jefe_compras` en la semilla y rol fijo por sesión (2026-11-23): hoy `crear_solicitud` excluye a `bodega`, `jefe_compras` ingresa sin nombre y el selector `#rol-activo` llama a `setRolActivo()` en vivo. Las tareas se asignan en `tasks.md`. | FR-005, FR-006, FR-034, FR-037 |
 
 ## Plan de Pruebas
 
@@ -155,17 +160,19 @@ Las siguientes tareas se documentan también en `tasks.md`: T101, T104, T109, T1
 - **Integración** (`tests/integration/compras/`): un flujo por historia P1 y P2 siguiendo sus escenarios de aceptación de `spec.md`, y una prueba de auditoría de punta a punta (SC-012) en `trazabilidad.test.js`.
 - **Auditoría SC-003** (`tests/integration/compras/flujo-compras.test.js`): cobertura del 100 % de las OC sobre el umbral con tres cotizaciones vigentes o justificación de proveedor único.
 - **Accesibilidad** (`tests/integration/compras/vista.test.js`): etiquetas asociadas en las diez vistas, foco y operación por teclado, errores junto al campo con `role="alert"` y revisión automatizada de contraste (WCAG 2.1 AA).
-- **Permisos y navegación por rol** (`tests/integration/compras/permisos.test.js`, nuevo): las 50 combinaciones de rol y vista de la matriz (SC-015); `admin_ti` sin ninguna de las cinco operaciones de compra y la regla 8 sin excepciones (SC-016); acciones rápidas sin identificadores internos y encabezado con la sección (SC-017).
+- **Permisos y navegación por rol** (`tests/integration/compras/permisos.test.js`, nuevo): las 50 combinaciones de rol y vista de la matriz (SC-015); `admin_ti` sin ninguna de las cinco operaciones de compra y la regla 8 sin excepciones (SC-016); acciones rápidas sin identificadores internos y encabezado con la sección (SC-017); creación de solicitudes con los cinco roles y aprobación de la solicitud de un `jefe_compras` por otro `jefe_compras` (FR-005, FR-006).
+- **Rol fijo por sesión** (`tests/integration/compras/autenticacion.test.js`): con la sesión iniciada, `setRolActivo()` no cambia el rol, la barra superior muestra el indicador de solo lectura en lugar del selector y el cambio de rol solo ocurre tras cerrar sesión e ingresar de nuevo (FR-037). Las pruebas que hoy cambian de rol en vivo pasan a iniciar una sesión por rol.
 - **Manual**: guion de la demo de 5 minutos del criterio SC-002 y escenarios de validación por historia, documentados en [quickstart.md](quickstart.md).
 
 ## Datos Semilla
 
-Todos ficticios: 4 centros de costo, 6 usuarios (uno por rol y un segundo solicitante), 8 proveedores (al menos uno de cada tamaño, uno bloqueado y uno con cuenta bancaria cambiada hace menos de 30 días), 20 productos, y solicitudes, cotizaciones, OC, recepciones y facturas en todos los estados para que cada pantalla y alerta tenga algo que mostrar.
+Todos ficticios: 4 centros de costo, 7 usuarios (uno por rol, un segundo solicitante y un segundo `jefe_compras` para aprobar las solicitudes que crea el primero; los dos `jefe_compras` tienen nombre ficticio porque ese rol lo pide al ingresar), 8 proveedores (al menos uno de cada tamaño, uno bloqueado y uno con cuenta bancaria cambiada hace menos de 30 días), 20 productos, y solicitudes, cotizaciones, OC, recepciones y facturas en todos los estados para que cada pantalla y alerta tenga algo que mostrar.
 
 ## Escalabilidad y Desarrollo Futuro
 
 - **Backend**: `localStorage` limita el almacenamiento a un navegador y a pocos MB. El MER está normalizado para migrarse sin cambios conceptuales a una base de datos relacional con una API.
-- **Autenticación**: los roles simulados deben pasar a usuarios reales.
+- **Autenticación**: los roles simulados deben pasar a usuarios reales con autenticación real y un rol fijo por usuario; hoy el rol es fijo por sesión, pero la clave genérica `Compras2026` permite ingresar con cualquier rol (data-model §6).
+- **Rol gerente**: un rol aprobador por sobre `jefe_compras` para aprobar sus solicitudes, en lugar de un segundo `jefe_compras` (ver `research.md`).
 - **Auditoría en servidor**: el historial de trazabilidad (FR-027 a FR-030) ya forma parte del MVP sobre `localStorage`; a futuro debe migrar a un registro en servidor que no pueda alterarse desde el navegador.
 - **SII**: recibir automáticamente los documentos tributarios electrónicos en lugar de ingresar facturas a mano.
 - **Integración**: solicitudes automáticas de reposición desde Inventario y control de presupuesto por centro de costo desde Contabilidad.

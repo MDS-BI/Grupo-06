@@ -2,18 +2,19 @@
 
 ## Propósito
 
-Describir las interfaces que el módulo `002` expone hacia el usuario y hacia otros módulos del ERP: el selector de rol, los permisos, la descarga de CSV y los puntos de integración con el módulo base, Inventario, Contabilidad y RR.HH. El contrato de persistencia interna está en [almacenamiento-compras.md](almacenamiento-compras.md).
+Describir las interfaces que el módulo `002` expone hacia el usuario y hacia otros módulos del ERP: la sesión con rol fijo, los permisos, la descarga de CSV y los puntos de integración con el módulo base, Inventario, Contabilidad y RR.HH. El contrato de persistencia interna está en [almacenamiento-compras.md](almacenamiento-compras.md).
 
 ## Interfaz de sesión y permisos
 
-- El elemento `#rol-activo` de la barra superior admite exactamente `solicitante`, `comprador`, `bodega`, `jefe_compras` y `admin_ti`. El valor inicial es `solicitante`.
-- El evento `change` del selector invoca `setRolActivo(rol)` y vuelve a renderizar la vista; no se recarga la página. Si la vista actual no es visible para el nuevo rol, se vuelve al Panel (FR-034).
-- `getUsuarioActivo()` devuelve el usuario de la semilla asociado al rol activo. `puede(accion, usuario)` consulta `PERMISOS` y `exigirPermiso()` lanza un error en español cuando la acción no está permitida.
+- El rol de la sesión es uno de `solicitante`, `comprador`, `bodega`, `jefe_compras` y `admin_ti`, se elige en la pantalla de ingreso (`iniciarSesion(rol, nombre, clave)`) y queda fijo hasta `cerrarSesion()` (FR-037). `solicitante`, `comprador` y `jefe_compras` exigen un nombre que corresponda a un usuario semilla de ese rol; `bodega` y `admin_ti` ingresan solo por su rol.
+- La barra superior no tiene un selector de rol: el antiguo `#rol-activo` se reemplaza por un indicador de solo lectura con el usuario y el rol de la sesión, junto al botón **Cerrar sesión**. Ningún evento de la interfaz cambia el rol de una sesión iniciada.
+- `setRolActivo(rol)` no modifica el rol de una sesión iniciada: devuelve la sesión vigente sin cambios. Para usar otro rol se cierra sesión y se ingresa de nuevo; al ingresar, la aplicación abre el Panel del rol (FR-034).
+- `getUsuarioActivo()` devuelve el usuario de la semilla con que se inició la sesión. `puede(accion, usuario)` consulta `PERMISOS` y `exigirPermiso()` lanza un error en español cuando la acción no está permitida.
 - Las acciones con restricción y los roles autorizados en `PERMISOS` son:
 
   | Acción                                                                                                                         | Roles                                         |
   | ------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------- |
-  | `crear_solicitud`                                                                                                              | `solicitante`                                 |
+  | `crear_solicitud`                                                                                                              | Los cinco roles; cada usuario edita solo sus propias solicitudes |
   | `aprobar_solicitud`, `aprobar_pago`, `aprobar_devolucion`                                                                      | `jefe_compras`                                |
   | `gestionar_proveedores`, `gestionar_cotizaciones`, `emitir_oc`, `registrar_factura`, `conciliar_factura`, `gestionar_catalogo` | `comprador`                                   |
   | `evaluar_proveedor`                                                                                                            | `comprador`, `jefe_compras`                   |
@@ -24,6 +25,7 @@ Describir las interfaces que el módulo `002` expone hacia el usuario y hacia ot
 
   La visibilidad de cada vista (opera / solo lectura / no ve) se resuelve con la matriz de FR-033; `PERMISOS` solo gobierna las acciones.
 - La regla "quien emite la OC no la recibe" se valida aparte de `PERMISOS` y sin excepciones por rol (FR-014).
+- `aprobar_solicitud` exige además que el aprobador sea distinto del solicitante; la solicitud creada por un `jefe_compras` la aprueba otro `jefe_compras` (FR-006, regla 8).
 - La edición de datos bancarios es exclusiva de `admin_ti`. La visibilidad sin enmascarar de RUT de persona natural y número de cuenta corresponde a `admin_ti` y `jefe_compras`, según `COMPRAS_PARAMETROS.datosBancarios`. Ninguna otra vista, búsqueda, mensaje ni exportación puede entregar el valor completo (FR-004 y FR-025).
 
 ## Interfaz de navegación
@@ -31,7 +33,7 @@ Describir las interfaces que el módulo `002` expone hacia el usuario y hacia ot
 - La barra lateral se agrupa en Panel / **Adquisiciones** (Proveedores, Catálogo, Evaluaciones) / **Compras** (Solicitudes, Cotizaciones, Órdenes de compra, Recepciones, Facturas, Devoluciones); los grupos sin vistas visibles para el rol se ocultan (FR-034).
 - El encabezado muestra la sección actual con el formato "Grupo › Vista" (FR-036).
 - Cada acción rápida se rotula con una descripción legible para el usuario, nunca con la clave de `PERMISOS` (FR-036).
-- No existe la tarjeta "Sesión activa": el rol se ve solo en el selector `#rol-activo` (FR-036).
+- No existe la tarjeta "Sesión activa": el usuario y el rol se ven solo en el indicador de solo lectura de la barra superior (FR-036, FR-037).
 
 ## Interfaz de exportación CSV
 

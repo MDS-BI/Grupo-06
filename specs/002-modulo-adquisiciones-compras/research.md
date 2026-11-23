@@ -15,7 +15,7 @@ El contexto técnico de `plan.md` llegó a esta fase sin preguntas abiertas: len
 | Herramientas              | Vite y Vitest con jsdom, ya configurados en la raíz                        |
 | Persistencia              | `localStorage`, con prefijo `erp_compras:` para lo propio del módulo       |
 | Exportaciones             | UTF-8 con BOM, separador `;`, filas con CRLF                               |
-| Roles                     | Cinco roles simulados, sin autenticación real; acceso según la matriz de visibilidad (FR-033) y `admin_ti` como administrador del sistema |
+| Roles                     | Cinco roles simulados, sin autenticación real y con el rol fijo durante la sesión (FR-037); acceso según la matriz de visibilidad (FR-033), `admin_ti` como administrador del sistema y `crear_solicitud` para los cinco roles |
 | Parámetros de negocio     | Umbral de 1.000.000 CLP neto y tolerancia de conciliación del 1 % del neto |
 
 A continuación se registran las decisiones que materializan ese contexto, con su justificación y las alternativas descartadas.
@@ -66,9 +66,9 @@ A continuación se registran las decisiones que materializan ese contexto, con s
 
 ## Decisión 5: Roles simulados con enmascaramiento en el origen de los datos
 
-**Decisión**: representar la sesión con un selector de **Rol Activo** en la barra superior, resolver permisos con `puede()` sobre `PERMISOS`, y aplicar el enmascaramiento antes de entregar los datos a cualquier vista, búsqueda o exportación.
+**Decisión**: representar la sesión con el rol elegido en la pantalla de ingreso simulada (FR-037), que queda fijo hasta cerrar sesión y se muestra en un indicador de solo lectura de la barra superior (ver Decisión 13), resolver permisos con `puede()` sobre `PERMISOS`, y aplicar el enmascaramiento antes de entregar los datos a cualquier vista, búsqueda o exportación.
 
-**Justificación**: el objetivo es demostrar la segregación de funciones sin implementar autenticación. Al centralizar la visibilidad en `COMPRAS_PARAMETROS.datosBancarios` y consumirla desde `reglas.js`, `proveedores.js`, la vista y el guardado del formulario, `jefe_compras` ve RUT y cuenta completos, `admin_ti` además puede editarlos, y el resto de roles nunca recibe el valor completo (FR-025 y SC-009). El cambio de rol vuelve a renderizar la vista, con lo que el enmascaramiento se aplica de inmediato. `admin_ti` es el administrador del sistema y no un operador de compras: edita datos bancarios, desbloquea proveedores y consulta y exporta la trazabilidad, pero no emite OC, no registra recepciones ni aprueba solicitudes, pagos o devoluciones (FR-004). La regla "quien emite la OC no la recibe" se valida aparte de `PERMISOS` y sin excepciones por rol (FR-014).
+**Justificación**: el objetivo es demostrar la segregación de funciones sin implementar autenticación. Al centralizar la visibilidad en `COMPRAS_PARAMETROS.datosBancarios` y consumirla desde `reglas.js`, `proveedores.js`, la vista y el guardado del formulario, `jefe_compras` ve RUT y cuenta completos, `admin_ti` además puede editarlos, y el resto de roles nunca recibe el valor completo (FR-025 y SC-009). Al ingresar con otro rol, tras cerrar sesión, la vista se renderiza de nuevo y el enmascaramiento se calcula para ese rol. `admin_ti` es el administrador del sistema y no un operador de compras: edita datos bancarios, desbloquea proveedores y consulta y exporta la trazabilidad, pero no emite OC, no registra recepciones ni aprueba solicitudes, pagos o devoluciones (FR-004). La regla "quien emite la OC no la recibe" se valida aparte de `PERMISOS` y sin excepciones por rol (FR-014).
 
 **Alternativas consideradas**:
 
@@ -135,7 +135,7 @@ A continuación se registran las decisiones que materializan ese contexto, con s
 
 ## Decisión 11: Navegación y visibilidad por rol
 
-**Decisión**: agrupar la barra lateral en Panel / **Adquisiciones** (Proveedores, Catálogo, Evaluaciones) / **Compras** (Solicitudes, Cotizaciones, Órdenes de compra, Recepciones, Facturas, Devoluciones), según data-model §1. Cada vista se resuelve como "opera", "solo lectura" o "no ve" con una matriz de visibilidad (FR-033) separada de `PERMISOS`, que solo gobierna las acciones. El panel muestra pendientes e indicadores propios de cada rol (FR-035). El encabezado muestra la sección actual, las acciones rápidas se rotulan con una descripción legible y se elimina la tarjeta "Sesión activa", que duplicaba el selector de rol (FR-036).
+**Decisión**: agrupar la barra lateral en Panel / **Adquisiciones** (Proveedores, Catálogo, Evaluaciones) / **Compras** (Solicitudes, Cotizaciones, Órdenes de compra, Recepciones, Facturas, Devoluciones), según data-model §1. Cada vista se resuelve como "opera", "solo lectura" o "no ve" con una matriz de visibilidad (FR-033) separada de `PERMISOS`, que solo gobierna las acciones. El panel muestra pendientes e indicadores propios de cada rol (FR-035). El encabezado muestra la sección actual, las acciones rápidas se rotulan con una descripción legible y se elimina la tarjeta "Sesión activa", que duplicaba el rol mostrado en la barra superior (FR-036).
 
 **Justificación**: una navegación por rol reduce la confusión y evita mostrar información que el rol no necesita (por ejemplo, cotizaciones al solicitante). La agrupación refleja las dos caras del modelo: la estratégica (Adquisiciones) y la operativa (Compras). Separar la visibilidad de las acciones permite expresar el "solo lectura", que `PERMISOS` por sí solo no distingue.
 
@@ -144,3 +144,24 @@ A continuación se registran las decisiones que materializan ese contexto, con s
 - Mostrar todas las vistas y deshabilitar los botones: expone datos innecesarios y llena la interfaz de controles inactivos.
 - Mantener una sola sección plana "Compras" con diez pestañas: era el estado anterior y no distingue la parte estratégica de la operativa.
 - Derivar la visibilidad solo de `PERMISOS`: no permite diferenciar "solo lectura" de "no ve".
+
+## Decisión 12: Todos los roles pueden crear solicitudes
+
+**Decisión**: dar `crear_solicitud` a los cinco roles (`solicitante`, `comprador`, `jefe_compras`, `bodega` y `admin_ti`). Cada usuario crea y edita solo sus propias solicitudes; `solicitante` y `bodega` ven solo las suyas, y `comprador`, `jefe_compras` y `admin_ti` siguen viendo las ajenas para cotizarlas, aprobarlas o consultarlas. La aprobación sigue siendo exclusiva de un `jefe_compras` distinto del solicitante (regla 8). Cuando quien crea la solicitud es `jefe_compras`, la aprueba otro `jefe_compras`, por lo que la semilla agrega un segundo usuario de ese rol y `jefe_compras` pasa a pedir nombre al ingresar para distinguirlos (FR-006, FR-037).
+
+**Justificación**: en una pyme cualquier persona puede necesitar un insumo, incluidos el comprador, el encargado de bodega, el jefe de compras o el administrador del sistema. Obligarlos a pedirle a un solicitante que cree la solicitud por ellos ocultaría quién originó la necesidad. Como la aprobación sigue en manos de un `jefe_compras` distinto del autor, abrir la creación no debilita la segregación de funciones.
+
+**Alternativas consideradas**:
+
+- `admin_ti` aprueba como excepción las solicitudes de `jefe_compras`: se descartó porque contradice su rol de administrador del sistema, que no opera ni aprueba el ciclo de compras (FR-004, Decisión 5), y reabriría la excepción a la regla 8 que el rediseño del 2026-11-23 eliminó.
+- Crear un rol `gerente` que apruebe las solicitudes de `jefe_compras`: es la opción más realista, pero exige un sexto rol con su fila en la matriz, permisos, panel y pruebas. Queda como trabajo futuro por el alcance del MVP (ver `plan.md`, Escalabilidad y Desarrollo Futuro).
+
+## Decisión 13: Rol fijo por sesión
+
+**Decisión**: al iniciar sesión (FR-037) el rol queda fijo hasta cerrarla. El selector **Rol Activo** se reemplaza por un indicador de solo lectura con el usuario y el rol actuales, junto al botón **Cerrar sesión**, y `setRolActivo()` no puede cambiar el rol de una sesión iniciada. Para usar otro rol hay que cerrar sesión e ingresar de nuevo.
+
+**Justificación**: la segregación de funciones (regla 8) pierde sentido si una misma sesión puede crear una solicitud como `jefe_compras`, cambiar el selector y aprobarla con otro usuario, o emitir una OC como `comprador` y recibirla como `bodega`. Fijar el rol obliga a pasar por el ingreso para cada rol, deja cada acción asociada a un único usuario y rol en la trazabilidad y hace que la demostración refleje cómo operaría el sistema con usuarios reales. El riesgo que sigue abierto (la clave genérica permite ingresar con cualquier rol) está documentado en data-model §6.
+
+**Alternativas consideradas**:
+
+- Selector de rol libre en la barra superior: era el comportamiento anterior y agilizaba la demostración, pero permitía que una sola persona usara dos roles en la misma sesión y eludiera la regla 8 en la práctica. Se descartó el 2026-11-23.
