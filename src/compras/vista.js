@@ -181,12 +181,79 @@ function opciones(items, seleccionado, vacio = '-- Selecciona --') {
     .join('')}`;
 }
 
-function ejecutar(fn) {
+const ERRORES_POR_CAMPO = [
+  [/razón social|razon social/i, ['#prov-razon']],
+  [/rut/i, ['#prov-rut']],
+  [/banco|cuenta/i, ['#prov-cuenta', '#prov-banco']],
+  [/condición de pago|condicion de pago|plazo mayor|días/i, ['#prov-dias', '#cot-condicion', '#oc-condicion']],
+  [/correo/i, ['#prov-email']],
+  [/justificación|justificacion/i, ['#sol-justificacion']],
+  [/producto/i, ['.sol-producto', '#cat-form-producto']],
+  [/cantidad/i, ['.sol-cantidad', '.rec-aceptada', '.dev-cantidad', '.cot-cantidad']],
+  [/precio/i, ['#cat-form-precio', '.cot-precio']],
+  [/fecha|validez/i, ['#cot-validez', '#sol-fecha']],
+  [/folio/i, ['#fac-folio']],
+  [/neto/i, ['#fac-neto']],
+  [/iva/i, ['#fac-iva']],
+  [/total/i, ['#fac-total']],
+  [/nota de crédito|referencia/i, ['#fac-referencia']],
+  [/motivo/i, ['.dev-motivo', '.rec-motivo']],
+  [/calidad/i, ['#eval-calidad']],
+  [/atención|atencion/i, ['#eval-atencion']],
+  [/proveedor/i, ['#cot-proveedor', '#cat-form-proveedor', '#oc-proveedor']]
+];
+
+let contadorEtiquetas = 0;
+
+function asociarEtiquetas(raiz = document) {
+  raiz.querySelectorAll('label').forEach((label) => {
+    if (label.htmlFor) return;
+    const control = label.parentElement?.querySelector('input, select, textarea');
+    if (!control) return;
+    if (!control.id) control.id = `campo-${++contadorEtiquetas}`;
+    label.htmlFor = control.id;
+  });
+}
+
+function mostrarErrorCampo(formulario, mensaje) {
+  formulario.querySelectorAll('.campo-error').forEach((nodo) => nodo.remove());
+  const patron = ERRORES_POR_CAMPO.find(([expresion]) => expresion.test(mensaje));
+  let control = null;
+  if (patron) {
+    for (const selector of patron[1]) {
+      const candidato = formulario.querySelector(selector);
+      if (candidato) {
+        control = candidato;
+        break;
+      }
+    }
+  }
+  if (!control) {
+    control = formulario.querySelector('input:not([disabled]), select:not([disabled]), textarea:not([disabled])');
+  }
+  const id = `error-campo-${++contadorEtiquetas}`;
+  const error = document.createElement('p');
+  error.className = 'error campo-error';
+  error.id = id;
+  error.setAttribute('role', 'alert');
+  error.textContent = mensaje;
+  if (control) {
+    control.setAttribute('aria-invalid', 'true');
+    control.setAttribute('aria-describedby', id);
+    control.insertAdjacentElement('afterend', error);
+    control.focus();
+  } else {
+    formulario.prepend(error);
+  }
+}
+
+function ejecutar(fn, formulario) {
   try {
     fn();
     renderComprasView();
   } catch (e) {
-    aviso(e.message);
+    if (formulario) mostrarErrorCampo(formulario, e.message);
+    else aviso(e.message);
   }
 }
 
@@ -229,16 +296,20 @@ export function renderComprasView() {
 }
 
 function renderComprasTab() {
-  if (tab === 'panel') return renderPanel();
-  if (tab === 'proveedores') return renderProveedores();
-  if (tab === 'solicitudes') return renderSolicitudes();
-  if (tab === 'cotizaciones') return renderCotizaciones();
-  if (tab === 'ordenes') return renderOrdenes();
-  if (tab === 'recepciones') return renderRecepciones();
-  if (tab === 'facturas') return renderFacturas();
-  if (tab === 'devoluciones') return renderDevoluciones();
-  if (tab === 'catalogo') return renderCatalogo();
-  if (tab === 'evaluaciones') return renderEvaluaciones();
+  const vistas = {
+    panel: renderPanel,
+    proveedores: renderProveedores,
+    solicitudes: renderSolicitudes,
+    cotizaciones: renderCotizaciones,
+    ordenes: renderOrdenes,
+    recepciones: renderRecepciones,
+    facturas: renderFacturas,
+    devoluciones: renderDevoluciones,
+    catalogo: renderCatalogo,
+    evaluaciones: renderEvaluaciones
+  };
+  (vistas[tab] || renderPanel)();
+  asociarEtiquetas(qs('compras-content'));
 }
 
 function irA(nuevaTab) {
@@ -377,7 +448,7 @@ function renderProveedores() {
   content.innerHTML = `
     <div class="card">
       <div class="toolbar">
-        <input id="prov-search" placeholder="Buscar por razón social, RUT, giro o región" value="${esc(provFiltro)}" />
+        <input id="prov-search" aria-label="Buscar proveedores" placeholder="Buscar por razón social, RUT, giro o región" value="${esc(provFiltro)}" />
         <button type="button" id="prov-buscar" class="secondary">Buscar</button>
         <button type="button" id="prov-nuevo" class="primary">Nuevo proveedor</button>
         <button type="button" id="prov-exportar" class="secondary">Exportar CSV</button>
@@ -428,25 +499,25 @@ function renderProveedores() {
   `;
   qs('prov-buscar').addEventListener('click', () => {
     provFiltro = qs('prov-search').value;
-    renderProveedores();
+    renderComprasTab();
   });
   qs('prov-search').addEventListener('keydown', (ev) => {
     if (ev.key === 'Enter') {
       provFiltro = qs('prov-search').value;
-      renderProveedores();
+      renderComprasTab();
     }
   });
   qs('prov-nuevo').addEventListener('click', () => {
     provEditId = null;
     provFormVisible = true;
-    renderProveedores();
+    renderComprasTab();
   });
   qs('prov-exportar').addEventListener('click', () => exportarProveedores({ filtro: provFiltro }));
   if (provFormVisible) {
     qs('prov-cancelar').addEventListener('click', () => {
       provFormVisible = false;
       provEditId = null;
-      renderProveedores();
+      renderComprasTab();
     });
     qs('prov-form').addEventListener('submit', (ev) => {
       ev.preventDefault();
@@ -486,7 +557,7 @@ function renderProveedores() {
         else crearProveedor(datos, usuario);
         provFormVisible = false;
         provEditId = null;
-      });
+      }, qs('prov-form'));
     });
   }
   content.querySelectorAll('[data-prov-accion]').forEach((btn) =>
@@ -533,8 +604,8 @@ function renderSolicitudes() {
   content.innerHTML = `
     <div class="card">
       <div class="toolbar">
-        <input id="sol-search" placeholder="Buscar número, justificación o estado" value="${esc(solFiltro)}" />
-        <select id="sol-estado">${opciones(['borrador', 'enviada', 'aprobada', 'en_cotizacion', 'adjudicada', 'rechazada', 'anulada'], solEstado, 'Todos los estados')}</select>
+        <input id="sol-search" aria-label="Buscar solicitudes" placeholder="Buscar número, justificación o estado" value="${esc(solFiltro)}" />
+        <select id="sol-estado" aria-label="Filtrar solicitudes por estado">${opciones(['borrador', 'enviada', 'aprobada', 'en_cotizacion', 'adjudicada', 'rechazada', 'anulada'], solEstado, 'Todos los estados')}</select>
         <button type="button" id="sol-buscar" class="secondary">Filtrar</button>
         ${puede('crear_solicitud', usuario) ? '<button type="button" id="sol-nuevo" class="primary">Nueva solicitud</button>' : ''}
         <button type="button" id="sol-exportar" class="secondary">Exportar CSV</button>
@@ -586,7 +657,7 @@ function renderSolicitudes() {
   qs('sol-buscar').addEventListener('click', () => {
     solFiltro = qs('sol-search').value;
     solEstado = qs('sol-estado').value;
-    renderSolicitudes();
+    renderComprasTab();
   });
   qs('sol-exportar').addEventListener('click', () =>
     exportarSolicitudes(usuario, { filtro: solFiltro })
@@ -594,12 +665,12 @@ function renderSolicitudes() {
   if (qs('sol-nuevo'))
     qs('sol-nuevo').addEventListener('click', () => {
       solFormVisible = true;
-      renderSolicitudes();
+      renderComprasTab();
     });
   if (solFormVisible) {
     qs('sol-cancelar').addEventListener('click', () => {
       solFormVisible = false;
-      renderSolicitudes();
+      renderComprasTab();
     });
     qs('sol-agregar-linea').addEventListener('click', () => {
       const contenedor = qs('sol-lineas');
@@ -632,7 +703,7 @@ function renderSolicitudes() {
           usuario
         );
         solFormVisible = false;
-      });
+      }, qs('sol-form'));
     });
   }
   content.querySelectorAll('[data-sol-accion]').forEach((btn) =>
@@ -759,7 +830,7 @@ function renderCotizaciones() {
   `;
   qs('cot-solicitud').addEventListener('change', (ev) => {
     cotSolicitudId = ev.target.value;
-    renderCotizaciones();
+    renderComprasTab();
   });
   if (solicitud && puede('gestionar_cotizaciones', usuario)) {
     qs('cot-form').addEventListener('submit', (ev) => {
@@ -783,7 +854,7 @@ function renderCotizaciones() {
           },
           usuario
         )
-      );
+      , qs('cot-form'));
     });
   }
   content.querySelectorAll('[data-cot-accion]').forEach((btn) =>
@@ -878,11 +949,11 @@ function renderOrdenes() {
     qs('oc-solicitud').addEventListener('change', (ev) => {
       ocSolicitudId = ev.target.value;
       ocCotizacionId = '';
-      renderOrdenes();
+      renderComprasTab();
     });
     qs('oc-cotizacion').addEventListener('change', (ev) => {
       ocCotizacionId = ev.target.value;
-      renderOrdenes();
+      renderComprasTab();
     });
     qs('oc-form').addEventListener('submit', (ev) => {
       ev.preventDefault();
@@ -898,7 +969,7 @@ function renderOrdenes() {
           },
           usuario
         )
-      );
+      , qs('oc-form'));
     });
   }
   content.querySelectorAll('[data-oc-accion]').forEach((btn) =>
@@ -977,7 +1048,7 @@ function renderRecepciones() {
   if (puede('registrar_recepcion', usuario) && orden) {
     qs('rec-orden').addEventListener('change', (ev) => {
       recOrdenId = ev.target.value;
-      renderRecepciones();
+      renderComprasTab();
     });
     qs('rec-form').addEventListener('submit', (ev) => {
       ev.preventDefault();
@@ -994,7 +1065,7 @@ function renderRecepciones() {
           { orden_id: orden.id, lineas, observaciones: qs('rec-obs').value },
           usuario
         )
-      );
+      , qs('rec-form'));
     });
   }
 }
@@ -1076,7 +1147,7 @@ function renderFacturas() {
   if (puede('registrar_factura', usuario) && orden) {
     qs('fac-orden').addEventListener('change', (ev) => {
       facOrdenId = ev.target.value;
-      renderFacturas();
+      renderComprasTab();
     });
     qs('fac-form').addEventListener('submit', (ev) => {
       ev.preventDefault();
@@ -1094,7 +1165,7 @@ function renderFacturas() {
           },
           usuario
         )
-      );
+      , qs('fac-form'));
     });
   }
   content.querySelectorAll('[data-fac-accion]').forEach((btn) =>
@@ -1174,7 +1245,7 @@ function renderDevoluciones() {
   if (puede('registrar_devolucion', usuario) && orden) {
     qs('dev-orden').addEventListener('change', (ev) => {
       devOrdenId = ev.target.value;
-      renderDevoluciones();
+      renderComprasTab();
     });
     qs('dev-form').addEventListener('submit', (ev) => {
       ev.preventDefault();
@@ -1190,7 +1261,7 @@ function renderDevoluciones() {
           { orden_id: orden.id, lineas, observaciones: qs('dev-obs').value },
           usuario
         )
-      );
+      , qs('dev-form'));
     });
   }
   content.querySelectorAll('[data-dev-accion]').forEach((btn) =>
@@ -1227,12 +1298,12 @@ function renderCatalogo() {
   content.innerHTML = `
     <div class="card">
       <div class="toolbar">
-        <select id="cat-proveedor">${opciones(
+        <select id="cat-proveedor" aria-label="Filtrar catálogo por proveedor">${opciones(
           proveedores.map((p) => ({ value: p.entity_id, label: `${p.code} · ${p.name}` })),
           catProveedorId,
           'Todos los proveedores'
         )}</select>
-        <input id="cat-search" placeholder="Buscar producto o proveedor" value="${esc(catFiltro)}" />
+        <input id="cat-search" aria-label="Buscar en el catálogo" placeholder="Buscar producto o proveedor" value="${esc(catFiltro)}" />
         <button type="button" id="cat-filtrar" class="secondary">Filtrar</button>
       </div>
       ${
@@ -1283,7 +1354,7 @@ function renderCatalogo() {
   qs('cat-filtrar').addEventListener('click', () => {
     catProveedorId = qs('cat-proveedor').value;
     catFiltro = qs('cat-search').value;
-    renderCatalogo();
+    renderComprasTab();
   });
   if (puede('gestionar_catalogo', usuario)) {
     qs('cat-form').addEventListener('submit', (ev) => {
@@ -1298,7 +1369,7 @@ function renderCatalogo() {
           },
           usuario
         )
-      );
+      , qs('cat-form'));
     });
   }
   content.querySelectorAll('[data-cat-accion]').forEach((btn) =>
@@ -1367,7 +1438,7 @@ function renderEvaluaciones() {
   if (puede('evaluar_proveedor', usuario) && ordenes.length > 0) {
     qs('eval-orden').addEventListener('change', (ev) => {
       evalOrdenId = ev.target.value;
-      renderEvaluaciones();
+      renderComprasTab();
     });
     qs('eval-form').addEventListener('submit', (ev) => {
       ev.preventDefault();
@@ -1381,7 +1452,7 @@ function renderEvaluaciones() {
           },
           usuario
         )
-      );
+      , qs('eval-form'));
     });
   }
 }

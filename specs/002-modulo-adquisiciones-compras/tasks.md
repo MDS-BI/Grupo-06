@@ -35,7 +35,7 @@
 **Propósito**: preparar la estructura y confirmar la dependencia bloqueante de la plantilla base.
 
 - [x] T001 Verificar que la plantilla base exista y funcione: `src/`, `src/module-config.js`, contrato de almacenamiento de `specs/001-erp-base-module/contracts/entity-storage.md` y Vitest configurado. BLOQUEANTE según `plan.md`.
-- [x] T002 Crear la estructura del módulo en `src/compras/`: `reglas.js`, `almacenamiento.js`, `solicitudes.js`, `cotizaciones.js`, `ordenes-compra.js`, `recepciones.js`, `facturas.js`, `devoluciones.js`, `catalogo.js`, `evaluaciones.js`, `panel.js`, `exportacion.js` y `semilla.json`.
+- [x] T002 Crear la estructura del módulo en `src/compras/`: `reglas.js`, `almacenamiento.js`, `proveedores.js`, `solicitudes.js`, `cotizaciones.js`, `ordenes-compra.js`, `recepciones.js`, `facturas.js`, `devoluciones.js`, `catalogo.js`, `evaluaciones.js`, `panel.js`, `vista.js`, `trazabilidad.js`, `exportacion.js` y `semilla.json`, según el árbol de `plan.md`.
 - [x] T003 [P] Crear la estructura de pruebas en `tests/unit/compras/` y `tests/integration/compras/`.
 
 ---
@@ -44,7 +44,7 @@
 
 **Propósito**: infraestructura común que debe existir antes de cualquier historia.
 
-- [x] T004 Configurar `src/module-config.js` para Compras: Proveedor como Entidad y Orden de Compra como Documento, con mapeo de campos base, campos personalizados y ciclo de vida de OC definido en `plan.md`.
+- [x] T004 Verificar que `src/module-config.js` conserva `userConfig = null` y que `COMPRAS_PARAMETROS`/`COMPRAS_CONFIG` quedan solo como referencia histórica, sin activar el enfoque de Entidad/Documento del template descartado por FR-032; documentar la decisión en `plan.md`.
 - [x] T005 [P] Implementar en `src/compras/reglas.js` las funciones puras de validación de RUT, cálculo de montos con IVA 19 %, transiciones de estado, conciliación, vencimientos y nota de plazo. [FR-012]
 - [x] T006 [P] Implementar en `src/compras/almacenamiento.js` las colecciones `erp_compras:*` con el contrato del template (`load`, `save`, `add`, `update`, `delete`), arrays `lineas` para detalles y validadores de unicidad. Manejar `localStorage` lleno o deshabilitado sin perder lo que el usuario tenía en pantalla.
 - [x] T007 [P] Implementar el cargador de datos semilla en `src/compras/almacenamiento.js`, con carga en la primera ejecución y mensaje claro si falla.
@@ -71,7 +71,7 @@
 - [x] T017 [US1] Enmascarar el RUT de personas naturales y el número de cuenta bancaria para roles distintos de `admin_ti` y `jefe_compras`; `admin_ti` y `jefe_compras` ven los datos sin enmascarar, pero solo `admin_ti` puede editarlos, actualizando `fecha_cambio_cuenta` al modificarlos. [FR-004]
 - [x] T018 [US1] Agregar pruebas unitarias de RUT, condición de pago, enmascaramiento y eliminación/bloqueo en `tests/unit/compras/reglas.test.js` y `tests/integration/compras/proveedores.test.js`.
 - [x] T019 [US1] Agregar prueba de integración del flujo completo de US1 en `tests/integration/compras/proveedores.test.js`.
-- [x] T093 [US1] [FR-025] Alinear `src/compras/reglas.js` y `src/compras/proveedores.js` para que `jefe_compras` vea el RUT de personas naturales y el número de cuenta sin enmascarar, manteniendo la edición bancaria exclusiva de `admin_ti`; actualizar `tests/unit/compras/reglas.test.js` y `tests/integration/compras/proveedores.test.js`.
+- [x] T093 [US1] [FR-025] Verificar como regresión que `jefe_compras` ve el RUT de personas naturales y el número de cuenta sin enmascarar y que la edición bancaria sigue siendo exclusiva de `admin_ti`, sin duplicar la implementación de T017; comprobarlo en `tests/unit/compras/reglas.test.js` y `tests/integration/compras/proveedores.test.js`.
 - [x] T094 [US1] [FR-025] En `src/compras/reglas.js`, enmascarar cuentas de 4 dígitos o menos conservando solo los últimos 2 dígitos; agregar los casos en `tests/unit/compras/reglas.test.js`.
 - [x] T095 [US1] [FR-025] Mostrar "No registrado" cuando el proveedor no tiene número de cuenta, sin máscara ni valor ficticio, en `src/compras/proveedores.js` y `src/compras/vista.js`; cubrirlo en `tests/integration/compras/proveedores.test.js` y `tests/integration/compras/vista.test.js`.
 - [x] T096 [US1] [SC-009] Agregar pruebas de no exposición de RUT y cuenta en listados, ficha, panel, comparativa y CSV para roles sin permiso, y de visibilidad sin máscara para `admin_ti` y `jefe_compras`, en `tests/integration/compras/proveedores.test.js`, `tests/integration/compras/catalogo-panel.test.js`, `tests/integration/compras/casos-limite.test.js` y `tests/unit/compras/reglas.test.js`.
@@ -105,7 +105,7 @@
 **Prueba Independiente**: con una solicitud aprobada bajo el umbral, el comprador emite una OC `OC-AAAA-NNNN` con neto, IVA y total, y la solicitud pasa a `adjudicada`; sobre el umbral sin cotización seleccionada, el sistema exige cotizaciones.
 
 - [x] T027 [US3] Crear el esquema de `ORDEN_COMPRA` y sus `lineas` en `src/compras/almacenamiento.js`, conforme a `data-model.md`. [FR-010]
-- [x] T028 [US3] Implementar en `src/compras/ordenes-compra.js` la creación de OC desde una cotización `seleccionada`: mismo proveedor, copia de líneas y precios, solicitud `adjudicada` y proveedor en estado `aprobado`. [FR-010]
+- [x] T028 [US3] Implementar en `src/compras/ordenes-compra.js` la creación de OC desde una cotización `seleccionada`: mismo proveedor, copia de líneas y precios, solicitud `adjudicada` y proveedor en estado `aprobado`. Requiere US6 (T051-T056) para la emisión desde cotización; la compra directa de T029 puede ejecutarse antes. [FR-010]
 - [x] T029 [US3] Permitir la compra directa sin cotización solo si `monto_estimado < UMBRAL_COTIZACIONES` y el proveedor está `aprobado`; sobre el umbral, impedirla y exigir cotizaciones. [FR-010]
 - [x] T030 [US3] Impedir más de una OC no anulada por solicitud y más de una OC por cotización. [FR-011]
 - [x] T031 [US3] Implementar la numeración `OC-AAAA-NNNN` y el cálculo de subtotales, neto, IVA 19 % y total en CLP enteros. [FR-012]
@@ -286,14 +286,14 @@
 - [x] T086 Parametrizar `UMBRAL_COTIZACIONES` y `TOLERANCIA_CONCILIACION` en configuración con los valores acordados: 1.000.000 CLP neto y 1 % del neto. [FR-021, FR-022]
 - [x] T087 Ejecutar y completar las pruebas unitarias de todas las reglas de la sección 5 de `data-model.md`. [SC-007]
 - [x] T088 Ejecutar las pruebas de integración de los flujos P1 (US1 a US6) y P2 (US7 a US9 y US11), además de la exportación de US10.
-- [x] T089 Verificar rendimiento con hasta 500 registros por colección y los tiempos de SC-001 (solicitud de 3 productos en menos de 2 minutos), SC-006 (listas y búsquedas en menos de 2 segundos) y SC-008 (exportación CSV en menos de 1 segundo). [SC-001, SC-006, SC-008]
+- [x] T089 Ejecutar `tests/integration/compras/rendimiento.test.js` con 500 registros por colección, midiendo una ejecución con `performance.now()` y comparando con los umbrales de SC-001 (solicitud de 3 productos en menos de 2 minutos), SC-006 (listas y búsquedas en menos de 2 000 ms) y SC-008 (exportación CSV en menos de 1 000 ms), según el protocolo de `plan.md`. [SC-001, SC-006, SC-008]
 - [x] T090 Ejecutar la demostración de extremo a extremo de SC-002 en menos de 5 minutos: solicitud, 3 cotizaciones, OC, recepción y factura conciliada. [SC-002]
 - [x] T091 Validar los casos límite de `spec.md`: anulación de OC con cotización seleccionada, nota de crédito, sobreentrega, producto desactivado con solicitudes abiertas, proveedor bloqueado con OC abiertas y `localStorage` lleno o deshabilitado.
 - [x] T092 Actualizar el README con instrucciones de ejecución, roles, datos semilla y alcance del módulo de compras.
-- [x] T107 Ejecutar `npm run lint` (ESLint) y `npm run format:check` (Prettier) sin errores y corregir las advertencias que afecten la corrección o la mantenibilidad antes del congelamiento del 26-nov (constitución, Estándares de Calidad).
-- [ ] T108 [SC-013] Verificar la accesibilidad de las pantallas de proveedores, solicitudes, cotizaciones, OC, recepciones, facturas, devoluciones y panel: etiqueta asociada a cada campo, operación solo con teclado, errores junto al campo y contraste mínimo 4,5:1 (WCAG 2.1 AA); automatizar la comprobación de etiquetas y foco en `tests/integration/compras/vista.test.js` y dejar registrada la revisión de contraste.
+- [x] T107 Ejecutar `npm run lint` (ESLint) y `npm run format:check` (Prettier) sin errores ni advertencias, con `format:check` pasando en el alcance real de `.prettierignore` (núcleo base `src/storage.js` y `tests/unit/storage.test.js`), antes del congelamiento del 26-nov (constitución, Estándares de Calidad).
+- [x] T108 [SC-013] Verificar la accesibilidad de las diez pantallas del módulo (panel, proveedores, solicitudes, cotizaciones, OC, recepciones, facturas, devoluciones, catálogo y evaluaciones): asociar etiqueta a cada campo en `src/compras/vista.js`, mostrar los errores de validación junto al campo con `role="alert"` y `aria-describedby`, comprobar foco y operación por teclado, y ajustar `--muted` y el color de las insignias de advertencia en `src/styles.css` para alcanzar 4,5:1; automatizar todo en `tests/integration/compras/vista.test.js`.
 - [x] T111 [US5] Limpiar `index.html` del contenido de demostración del módulo base: retirar las vistas `view-dashboard`, `view-entities`, `view-documents` y `view-search`, sus botones de navegación y los rótulos "Módulo Base ERP", conservando `#config-errors`, `#app`, `#view-compras`, `#compras-root` y el script `src/main.js`. Verificar que la aplicación arranque sin errores y que en la interfaz solo quede la navegación y el panel del módulo de Adquisiciones y Compras. [FR-018]
-- [x] T112 [US5] Verificar los datos simulados en la interfaz: confirmar que `src/compras/semilla.json` incluya ejemplos ficticios que cubran los estados que consume el panel (solicitudes `enviadas`, OC sin recepción, recepciones pendientes y facturas que vencen en 5 días o menos), asegurar que el cargador de T007 los disponga al abrir `index.html` y comprobar en pantalla los contadores, alertas y accesos directos de US5. Respetar FR-020, el enmascaramiento de FR-025 y no usar datos reales. [FR-018, FR-020, SC-005]
+- [x] T112 [US5] Verificar los datos simulados en la interfaz: confirmar que `src/compras/semilla.json` incluya ejemplos ficticios que cubran los estados que consume el panel (solicitudes `enviadas`, OC sin recepción, recepciones pendientes y facturas que vencen en 5 días o menos), asegurar que el cargador de T007 los disponga al abrir `index.html` y comprobar en pantalla los contadores, alertas y accesos directos de US5; revalidar los pendientes de facturas una vez cerrada US7 (Fase 9). Respetar FR-020, el enmascaramiento de FR-025 y no usar datos reales. [FR-018, FR-020, SC-005]
 - [x] T113 Completar el artefacto de Fase 0 en `specs/002-modulo-adquisiciones-compras/research.md`, con las decisiones técnicas del módulo (pila, extensión en dos niveles, persistencia, reglas puras, roles simulados, trazabilidad, CSV, pruebas e integración), su justificación y las alternativas consideradas, sin clarificaciones pendientes.
 - [x] T114 Completar los artefactos de Fase 1 en `specs/002-modulo-adquisiciones-compras/contracts/almacenamiento-compras.md` y `specs/002-modulo-adquisiciones-compras/contracts/exportacion-e-integracion.md`, documentando claves, operaciones, formato CSV, permisos por rol y puntos de integración con el módulo base y los módulos vecinos. Actualizar el árbol de documentación de `plan.md`.
 - [x] T115 Completar `specs/002-modulo-adquisiciones-compras/quickstart.md` con requisitos, comandos, escenarios de validación por historia (SC-002, SC-005, SC-009, SC-010), reinicio de datos y referencias a `spec.md`, `data-model.md` y los contratos; reflejar los artefactos nuevos en `README.md`.
@@ -308,26 +308,27 @@
 - [x] T117 [FR-015] Unificar el estado inicial de la factura entre código y modelo según `data-model.md` §10, pendiente 1. Decisión aplicada: `registrada` en código y modelo. `src/compras/reglas.js`, `src/compras/facturas.js` y las pruebas ya usaban ese valor; se actualizan `data-model.md` §3.11/regla 6 y §10.
 - [ ] T118 [FR-029] Alinear los estados de devolución con `data-model.md` §10, pendiente 2: incorporar `anulada` con `motivo_anulacion` y registrarlo en `src/compras/trazabilidad.js`. Extender la anulación con motivo a facturas y devoluciones, además de solicitudes, cotizaciones y recepciones, para cerrar T104 y T109. **Deuda conocida**: hoy solo OC y solicitudes guardan `motivo_anulacion`; el resto usa `descartar`/`rechazar`.
 - [x] T119 [FR-010] Resolver `data-model.md` §10, pendiente 4. Decisión aplicada: eliminar `borrador` del modelo de OC y mantener `emitida` como estado inicial, en línea con la spec US3, `src/compras/reglas.js` y `src/module-config.js`. Sincronizados `plan.md` y `data-model.md` §3.9/regla 4 y §10.
+- [x] T120 [SC-003] Auditoría en `tests/integration/compras/flujo-compras.test.js`: se generan casos sobre el umbral con tres cotizaciones vigentes y con `justificacion_proveedor_unico`, se recorren todas las OC no anuladas y se comprueba que el 100 % de las que superan `UMBRAL_COTIZACIONES` cumple alguna de las dos vías. Trazabilidad SC-003 actualizada.
 
-**Punto de control**: las decisiones 1 y 4 de `data-model.md` §10 quedan cerradas; las decisiones 2 y 3 siguen registradas como deuda conocida y FR-029 mantiene cobertura explícita mediante T118.
+**Punto de control**: las decisiones 1 y 4 de `data-model.md` §10 quedan cerradas; las decisiones 2 y 3 siguen registradas como deuda conocida y FR-029 mantiene cobertura explícita mediante T118. SC-003 queda cubierta por la auditoría de T120.
 
 ---
 
 ## Deuda conocida
 
-El estado de estas tareas se registra aquí y se replica en `plan.md` para que el congelamiento no esconda trabajo pendiente. T107, T117 y T119 figuran como cerradas; el resto permanece abierto.
+El estado de estas tareas se registra aquí y se replica en `plan.md` para que el congelamiento no esconda trabajo pendiente. T107, T108, T117, T119 y T120 figuran como cerradas; el resto permanece abierto.
 
 | Tarea | Estado  | Justificación de la deuda                                                                                                                                                                                                                    | Referencia                          |
 | ----- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
 | T101  | Abierta | La prueba de cierre con saldo pendiente pasa, pero `cerrarSiSaldada()` muta el estado directamente; falta declarar `recibida_parcial → cerrada` en `TRANSICIONES`.                                                                           | `data-model.md` §10, pendiente 3    |
 | T104  | Abierta | Bloqueo de eliminación y anulación de OC verificados; falta `motivo_anulacion` en facturas y devoluciones.                                                                                                                                   | FR-029, T118                        |
-| T107  | Cerrada | Se formatearon `src/storage.js` y `tests/unit/storage.test.js`, se eliminaron las 6 advertencias y se excluyó el tooling de Prettier. Lint y `format:check` pasan sin errores. | Constitución, Estándares de Calidad |
-| T108  | Abierta | No se completó la revisión de accesibilidad pantalla por pantalla ni la verificación de contraste 4,5:1.                                                                                                                                     | SC-013                              |
+| T107  | Cerrada | Se formatearon `src/storage.js` y `tests/unit/storage.test.js`, se eliminaron las 6 advertencias y `format:check` pasa en el alcance de `.prettierignore`. Lint y `format:check` pasan sin errores ni advertencias. | Constitución, Estándares de Calidad |
 | T109  | Abierta | Solo la solicitud guarda `motivo_anulacion`; faltan cotizaciones y recepciones.                                                                                                                                                              | FR-029, T118                        |
 | T110  | Abierta | `credito_a_favor` no está implementado ni mostrado en factura/cadena documental.                                                                                                                                                             | FR-026, SC-011                      |
 | T117  | Cerrada | Decisión aplicada: `registrada` como estado inicial de factura en código y modelo; `data-model.md` sincronizado en §3.11/regla 6 y §10.                                                                                                    | FR-015                              |
 | T118  | Abierta | Pendiente 2 de `data-model.md` §10: estados de devolución y anulación con motivo incompletos.                                                                                                                                                | FR-029                              |
 | T119  | Cerrada | Decisión aplicada: se elimina `borrador` del modelo de OC y se conserva `emitida` como estado inicial; `data-model.md` y `plan.md` sincronizados.                                                                                          | FR-010                              |
+| T120  | Cerrada | Auditoría global de SC-003 en `flujo-compras.test.js`: se verifican las dos vías de cumplimiento (tres cotizaciones vigentes o justificación de proveedor único) sobre todas las OC no anuladas.                                            | SC-003                              |
 
 ---
 
@@ -339,10 +340,10 @@ El estado de estas tareas se registra aquí y se replica en `plan.md` para que e
 - **Fundacional (Fase 2)**: depende de Fase 1 y bloquea todas las historias.
 - **US1 (Fase 3)**: depende de Fundacional.
 - **US2 (Fase 4)**: depende de Fundacional; no depende de US1.
-- **US3 (Fase 5)**: depende de US1 (proveedor aprobado) y US2 (solicitud aprobada); la emisión desde cotización requiere US6.
+- **US3 (Fase 5)**: depende de US1 (proveedor aprobado) y US2 (solicitud aprobada); la emisión desde cotización (T028) requiere US6 (T051-T056) y se ejecuta después de la Fase 8, mientras la compra directa (T029) puede ejecutarse en la Fase 5.
 - **US4 (Fase 6)**: depende de US3.
-- **US5 (Fase 7)**: depende de US2, US3, US4 y US7 para mostrar todos sus pendientes; puede desarrollarse con datos semilla antes de US7.
-- **US6 (Fase 8)**: depende de US1 y US2; habilita la emisión de OC desde cotización en US3.
+- **US5 (Fase 7)**: depende de US2, US3, US4 y US7 para mostrar todos sus pendientes; durante la Fase 7 se usa datos semilla y T112 revalida los pendientes de facturas una vez cerrada US7 (Fase 9).
+- **US6 (Fase 8)**: depende de US1 y US2; habilita la emisión de OC desde cotización en T028 (US3).
 - **US7 (Fase 9)**: depende de US4.
 - **US8 (Fase 10)**: depende de US1 y de los productos maestros; puede iniciarse tras Fundacional.
 - **US9 (Fase 11)**: depende de US4 y sus evaluaciones se consumen en US6 y US1.
@@ -434,7 +435,7 @@ Agregar primero US7 (facturas), luego US8 (catálogo), US9 (evaluación) y US11 
 | -------- | ---------------- |
 | SC-001   | T089             |
 | SC-002   | T090             |
-| SC-003   | T054, T030       |
+| SC-003   | T054, T120       |
 | SC-004   | T041             |
 | SC-005   | T045, T050, T112 |
 | SC-006   | T089             |
