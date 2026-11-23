@@ -7,6 +7,7 @@ import {
 } from '../../../src/compras/solicitudes.js';
 import {
   descartarCotizacion,
+  listarCotizaciones,
   obtenerCotizacion,
   registrarCotizacion,
   seleccionarCotizacion
@@ -25,6 +26,8 @@ import {
   registrarDevolucion
 } from '../../../src/compras/devoluciones.js';
 import { registrarEvaluacion } from '../../../src/compras/evaluaciones.js';
+import { leer } from '../../../src/compras/almacenamiento.js';
+import { UMBRAL_COTIZACIONES } from '../../../src/compras/reglas.js';
 import { cargarDatos, USUARIOS } from './helpers.js';
 
 function crearSolicitudDePrueba() {
@@ -68,6 +71,51 @@ function flujoHastaRecepcion() {
   );
   return { solicitud, cotizacion, orden };
 }
+
+function flujoSobreUmbral({ proveedores, justificacion = '' }) {
+  const solicitud = crearSolicitud(
+    {
+      justificacion: 'Renovación de equipos sobre el umbral',
+      fecha_requerida: '2026-12-15',
+      centro_costo_id: 'cc-001',
+      prioridad: 'alta',
+      fecha_creacion: '2026-11-01',
+      lineas: [{ producto_id: 'prod-001', cantidad: 2, precio_estimado: 600000 }]
+    },
+    USUARIOS.solicitante
+  );
+  enviarSolicitud(solicitud.id, USUARIOS.solicitante);
+  aprobarSolicitud(solicitud.id, USUARIOS.jefe);
+
+  const cotizaciones = proveedores.map((proveedor_id) =>
+    registrarCotizacion(
+      {
+        solicitud_id: solicitud.id,
+        proveedor_id,
+        fecha_validez: '2026-12-31',
+        plazo_entrega_dias: 5,
+        condicion_pago_dias: 30,
+        lineas: [{ producto_id: 'prod-001', cantidad: 2, precio_unitario: 580000 }]
+      },
+      USUARIOS.comprador
+    )
+  );
+  const seleccionada = seleccionarCotizacion(cotizaciones[0].id, USUARIOS.comprador, {
+    justificacion_proveedor_unico: justificacion
+  });
+  const orden = emitirOrdenCompra(
+    {
+      solicitud_id: solicitud.id,
+      cotizacion_id: seleccionada.id,
+      fecha_emision: '2026-11-02',
+      fecha_entrega_prometida: '2026-11-10'
+    },
+    USUARIOS.comprador
+  );
+  return { solicitud, orden };
+}
+
+const MOTIVO_SELECCION_POR_DEFECTO = 'Mejor evaluación de la comparativa';
 
 describe('flujo completo de compras', () => {
   beforeEach(() => {
@@ -368,5 +416,54 @@ describe('flujo completo de compras', () => {
 
     expect(valorRecibidoNeto(obtenerOrden(orden.id))).toBe(90000);
     expect(lineasPendientes(obtenerOrden(orden.id))[0].cantidad_pendiente).toBe(1);
+  });
+
+  it('audita el 100 % de cumplimiento de SC-003 en todas las OC emitidas', () => {
+    const conTresCotizaciones = flujoSobreUmbral({
+      proveedores: ['prov-001', 'prov-002', 'prov-003']
+    });
+    const conJustificacion = flujoSobreUmbral({
+      proveedores: ['prov-004'],
+      justificacion: 'Único proveedor certificado para el equipo'
+    });
+
+    const todas = leer('ordenes').filter((orden) => orden.estado !== 'anulada');
+    const sobreUmbral = todas.filter((orden) => {
+      const solicitud = obtenerSolicitud(orden.solicitud_id);
+      return (
+        Number(solicitud?.monto_estimado ?? orden.neto) >= UMBRAL_COTIZACIONES
+      );
+    });
+
+    expect(sobreUmbral.length).toBeGreaterThanOrEqual(2);
+    const incumplimientos = sobreUmbral.filter((orden) => {
+      const solicitud = obtenerSolicitud(orden.solicitud_id);
+      const cotizaciones = listarCotizaciones({ solicitud_id: orden.solicitud_id });
+      const vigentes = cotizaciones.filter(
+        (cotizacion) =>
+          cotizacion.estado !== 'vencida' &&
+          cotizacion.estado !== 'anulada' &&
+          cotizacion.fecha_validez >= orden.fecha_emision
+      );
+      const seleccionada = cotizaciones.find((c) => c.id === orden.cotizacion_id);
+      const justificacion =
+        String(solicitud?.justificacion_proveedor_unico || '').trim() ||
+        (seleccionada?.motivo_seleccion &&
+        seleccionada.motivo_seleccion !== MOTIVO_SELECCION_POR_DEFECTO
+          ? String(seleccionada.motivo_seleccion).trim()
+          : '');
+      return vigentes.length < 3 && !justificacion;
+    });
+
+    expect(
+      incumplimientos.map((orden) => `${orden.numero} (${orden.solicitud_id})`),
+      'Toda OC sobre el umbral debe tener 3 cotizaciones vigentes o justificación registrada'
+    ).toEqual([]);
+    expect(
+      obtenerSolicitud(conTresCotizaciones.solicitud.id).justificacion_proveedor_unico || ''
+    ).toBe('');
+    expect(
+      obtenerSolicitud(conJustificacion.solicitud.id).justificacion_proveedor_unico
+    ).toContain('Único proveedor certificado');
   });
 });

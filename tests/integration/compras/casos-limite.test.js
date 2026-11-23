@@ -480,7 +480,7 @@ describe('casos límite de compras', () => {
     );
     const conciliada = conciliarFactura(factura.id, USUARIOS.comprador);
     expect(conciliada.estado).toBe('conciliada');
-    const pagada = aprobarPago(factura.id, USUARIOS.jefe);
+    const pagada = aprobarPago(factura.id, USUARIOS.jefe, '2026-11-03');
     expect(pagada.alerta_fraude).toBe(true);
     expect(pagada.mensaje_alerta).toMatch(/Posible fraude/);
   });

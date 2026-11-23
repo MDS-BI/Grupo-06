@@ -41,11 +41,11 @@ Después recargue la página para que se vuelva a cargar la semilla.
 | Comando                | Resultado esperado                                                                                              |
 | ---------------------- | --------------------------------------------------------------------------------------------------------------- |
 | `npm run dev`          | Servidor Vite activo; la interfaz muestra solo el módulo Adquisiciones y Compras.                               |
-| `npx vitest run`       | 138 pruebas aprobadas y 56 omitidas (las omitidas pertenecen al template base).                                 |
-| `npm run lint`         | 0 errores; pueden aparecer las 6 advertencias preexistentes de `src/storage.js` y `tests/unit/storage.test.js`. |
+| `npx vitest run`       | 144 pruebas aprobadas y 56 omitidas (las omitidas pertenecen al template base).                                 |
+| `npm run lint`         | 0 errores y 0 advertencias.                                                                                      |
 | `npm run build`        | Build de producción sin errores.                                                                                |
 | `npm run preview`      | El build se sirve en `http://localhost:4173` con el mismo comportamiento.                                       |
-| `npm run format:check` | Puede reportar diferencias de formato; no es bloqueante para la demo (T107 sigue pendiente).                    |
+| `npm run format:check` | Sin diferencias en el alcance de `.prettierignore` (núcleo base); el resto de `src/**` y `tests/**` está excluido. |
 
 ## Escenarios de validación
 
@@ -126,6 +126,7 @@ Los flujos de cada historia están en `tests/integration/compras/`: `proveedores
 
 ## Cobertura aún pendiente
 
-- T107: dejar `npm run format:check` sin diferencias.
-- T108: revisión de accesibilidad WCAG 2.1 AA de todas las pantallas (SC-013).
-- T043 a T050, T100, T101, T102 a T106 y T109: verificaciones adicionales del panel, daño posterior a la aceptación, crédito a favor y trazabilidad registradas en `tasks.md`.
+- T101 y T110: cierre de OC con saldo pendiente y cálculo y visualización de `credito_a_favor` cuando una devolución `defectuosa` descuenta una factura ya aprobada.
+- T104, T109 y T118: anulación con `motivo_anulacion` en facturas, devoluciones, cotizaciones y recepciones, con su registro en trazabilidad.
+
+T107, T108 y T120 están cerradas: `npm run format:check` pasa sin diferencias en el alcance de `.prettierignore`, la accesibilidad (SC-013) se verifica en `vista.test.js` y la auditoría de SC-003 en `flujo-compras.test.js`.
