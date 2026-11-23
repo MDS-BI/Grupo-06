@@ -50,14 +50,17 @@ Después recargue la página para que se vuelva a cargar la semilla.
 
 ## Escenarios de validación
 
-### 1. Arranque, navegación y rol activo (FR-018, SC-002)
+### 1. Arranque, navegación y rol activo (FR-018, FR-033, FR-034, FR-036, SC-002)
 
-1. Ingrese con un rol y la clave `Compras2026` (con nombre si es Solicitante o Comprador). Confirme que la barra superior muestra la marca **Adquisiciones y Compras**, el selector **Rol Activo** y **Cerrar sesión**, y que la barra lateral solo tiene la sección **Compras**.
-2. Compruebe las diez pestañas: Panel, Proveedores, Solicitudes, Cotizaciones, Órdenes de compra, Recepciones, Facturas, Devoluciones, Catálogo y Evaluaciones.
-3. En el Panel, verifique los pendientes por rol, las alertas de vencimiento y los indicadores del período.
-4. Cambie el **Rol Activo** de `solicitante` a `jefe_compras` y luego a `bodega`.
+1. Ingrese con un rol y la clave `Compras2026` (con nombre si es Solicitante o Comprador). Confirme que la barra superior muestra la marca **Adquisiciones y Compras**, el selector **Rol Activo** y **Cerrar sesión**; que la barra lateral muestra **Panel** y los grupos **Adquisiciones** y **Compras**; que el encabezado muestra la sección actual; y que no aparece la tarjeta **Sesión activa**.
+2. Compruebe las vistas visibles por rol:
+   - `comprador`, `jefe_compras` y `admin_ti`: las diez vistas (Panel, Proveedores, Catálogo, Evaluaciones, Solicitudes, Cotizaciones, Órdenes de compra, Recepciones, Facturas y Devoluciones).
+   - `solicitante`: Panel, Catálogo, Solicitudes, Órdenes de compra y Recepciones.
+   - `bodega`: Panel, Órdenes de compra, Recepciones y Devoluciones, sin el grupo Adquisiciones.
+3. En el Panel, verifique los pendientes por rol, las alertas de vencimiento y los indicadores del período, y que las acciones rápidas muestran una descripción (p. ej., _Crear solicitud de compra_), no la clave del permiso.
+4. Cambie el **Rol Activo** de `solicitante` a `jefe_compras`, luego a `bodega` y luego a `admin_ti`. Estando en **Cotizaciones**, cambie a `bodega`.
 
-**Resultado esperado**: el contenido se actualiza sin recargar, la sesión activa muestra el rol elegido y los pendientes y botones cambian según los permisos del rol.
+**Resultado esperado**: el contenido se actualiza sin recargar, el selector muestra el rol elegido, la barra lateral y los botones cambian según la matriz de visibilidad y, si la vista actual no es visible para el nuevo rol, se vuelve al Panel.
 
 ### 2. Proveedores y datos sensibles (US1, FR-001 a FR-004, FR-025, SC-009)
 
@@ -65,7 +68,8 @@ Después recargue la página para que se vuelva a cargar la semilla.
 2. Con rol `comprador` o `bodega`, confirme que el RUT aparece como `98.***.***-3` y la cuenta como `****4333`, y que los campos bancarios están deshabilitados.
 3. Cambie a `jefe_compras`: RUT y cuenta deben verse completos, sin habilitar la edición bancaria.
 4. Cambie a `admin_ti`: además debe poder editar banco y cuenta. Modifique la cuenta, guarde y confirme que se actualizó `fecha_cambio_cuenta`; el cambio queda registrado en `erp_compras:trazabilidad` con el valor enmascarado.
-5. Busque un proveedor sin cuenta registrada y confirme el texto **No registrado**.
+5. Con `admin_ti`, desbloquee el proveedor bloqueado de la semilla y confirme que vuelve a `aprobado`. Con `comprador`, la acción de desbloquear no aparece. Con `admin_ti`, no se pueden crear proveedores ni editar sus datos generales.
+6. Busque un proveedor sin cuenta registrada y confirme el texto **No registrado**.
 
 **Resultado esperado**: en roles sin permiso ni la tabla, ni el formulario, ni el CSV contienen el valor completo. El cambio bancario actualiza `fecha_cambio_cuenta` y deja un evento de trazabilidad con el valor enmascarado.
 
@@ -77,17 +81,18 @@ Con los datos semilla ya hay documentos en todos los estados. Para repetir el ci
 2. Como `jefe_compras`, apruébela; intente aprobar una solicitud propia y compruebe que se bloquea (FR-006).
 3. Como `comprador`, registre tres cotizaciones para una solicitud sobre el umbral, descarte una con motivo y seleccione otra (FR-008 y FR-009).
 4. Emita la orden de compra desde la cotización seleccionada: líneas y precios se copian, el neto, el IVA de 19 % y el total se calculan en CLP enteros y la solicitud pasa a `adjudicada`.
-5. Como `bodega`, registre una recepción parcial y una unidad dañada con motivo `danado`; intente recibir más de lo pendiente y compruebe el bloqueo (FR-013 y FR-026).
+5. Como `bodega`, registre una recepción parcial y una unidad dañada con motivo `danado`; intente recibir más de lo pendiente y compruebe el bloqueo (FR-013 y FR-026). Intente registrar la recepción con el usuario que emitió la OC y compruebe que se bloquea para cualquier rol (FR-014).
 6. Como `comprador`, registre la factura y verifique que queda `conciliada` cuando la diferencia está dentro de la tolerancia del 1 %.
-7. Use el botón de cadena documental en cualquier documento para recorrer solicitud → cotización → OC → recepción → factura y revisar el historial (FR-028).
+7. Use el botón de cadena documental en cualquier documento para recorrer solicitud → cotización → OC → recepción → factura y revisar el historial (FR-028): solo `jefe_compras` (consulta) y `admin_ti` (consulta y exporta) ven los eventos; el resto de los roles ve solo la cadena.
 
 **Resultado esperado**: el ciclo se completa en menos de cinco minutos, con estados congruentes y eventos de auditoría en cada cambio.
 
-### 4. Panel, alertas y pago dentro de plazo (US5, FR-017, SC-005)
+### 4. Panel, alertas y pago dentro de plazo (US5, FR-017, FR-035, SC-005)
 
-1. Vuelva a **Panel** con los roles `jefe_compras` y `admin_ti`.
+1. Recorra el **Panel** con los cinco roles y verifique que cada uno ve solo sus pendientes e indicadores (tabla de FR-035 en `spec.md`).
 2. Revise las facturas no aprobadas con vencimiento a cinco días o menos y los accesos directos a sus documentos.
 3. Como `jefe_compras`, apruebe para pago solo una factura `conciliada`; una factura `con_discrepancia` no debe pasar.
+4. Con `admin_ti`, compruebe que ve los cambios bancarios recientes y las alertas de fraude, y que no tiene botones para aprobar solicitudes, pagos ni devoluciones.
 
 **Resultado esperado**: las alertas coinciden con los vencimientos de la semilla y los botones del panel respetan el rol activo.
 
@@ -95,7 +100,7 @@ Con los datos semilla ya hay documentos en todos los estados. Para repetir el ci
 
 1. En **Catálogo**, identifique un precio con más de 90 días sin actualizar y compruébelo como desactualizado; al crear una solicitud se sugiere el menor precio vigente.
 2. En **Evaluaciones**, confirme que la nota de plazo se calcula desde las fechas de recepción y no se ingresa manualmente.
-3. En **Devoluciones**, registre una devolución con motivo `defectuoso` sobre una recepción aceptada y, cuando corresponda, una nota de crédito contra una factura existente.
+3. En **Devoluciones**, como `bodega`, registre una devolución con motivo `defectuoso` sobre una recepción aceptada; si quien la registra recibió la mercadería, apruébela como `jefe_compras`. Cuando corresponda, registre una nota de crédito contra una factura existente.
 
 **Resultado esperado**: la cantidad devuelta deja de contar como recibida y facturada, la factura queda saldada cuando el saldo llega a cero y la OC se cierra sin perder el historial.
 
@@ -129,5 +134,6 @@ Los flujos de cada historia están en `tests/integration/compras/`: `proveedores
 
 - T101 y T110: cierre de OC con saldo pendiente y cálculo y visualización de `credito_a_favor` cuando una devolución `defectuosa` descuenta una factura ya aprobada.
 - T104, T109 y T118: anulación con `motivo_anulacion` en facturas, devoluciones, cotizaciones y recepciones, con su registro en trazabilidad.
+- Rediseño de permisos y navegación por rol (FR-033 a FR-036): los pasos marcados en los escenarios 1, 2, 3 y 4 fallarán hasta que se implemente.
 
 T107, T108 y T120 están cerradas: `npm run format:check` pasa sin diferencias en el alcance de `.prettierignore`, la accesibilidad (SC-013) se verifica en `vista.test.js` (errores junto al campo con `role="alert"`/`aria-describedby`) y la auditoría de SC-003 en `flujo-compras.test.js`.

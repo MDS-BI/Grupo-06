@@ -7,10 +7,31 @@ Describir las interfaces que el módulo `002` expone hacia el usuario y hacia ot
 ## Interfaz de sesión y permisos
 
 - El elemento `#rol-activo` de la barra superior admite exactamente `solicitante`, `comprador`, `bodega`, `jefe_compras` y `admin_ti`. El valor inicial es `solicitante`.
-- El evento `change` del selector invoca `setRolActivo(rol)` y vuelve a renderizar la vista; no se recarga la página.
+- El evento `change` del selector invoca `setRolActivo(rol)` y vuelve a renderizar la vista; no se recarga la página. Si la vista actual no es visible para el nuevo rol, se vuelve al Panel (FR-034).
 - `getUsuarioActivo()` devuelve el usuario de la semilla asociado al rol activo. `puede(accion, usuario)` consulta `PERMISOS` y `exigirPermiso()` lanza un error en español cuando la acción no está permitida.
-- Las acciones con restricción son: crear y aprobar solicitudes, gestionar proveedores, editar datos bancarios, emitir OC, gestionar cotizaciones, registrar recepciones, registrar y aprobar facturas, registrar y aprobar devoluciones, gestionar catálogo, evaluar proveedores y exportar.
+- Las acciones con restricción y los roles autorizados en `PERMISOS` son:
+
+  | Acción                                                                                                                         | Roles                                         |
+  | ------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------- |
+  | `crear_solicitud`                                                                                                              | `solicitante`                                 |
+  | `aprobar_solicitud`, `aprobar_pago`, `aprobar_devolucion`                                                                      | `jefe_compras`                                |
+  | `gestionar_proveedores`, `gestionar_cotizaciones`, `emitir_oc`, `registrar_factura`, `conciliar_factura`, `gestionar_catalogo` | `comprador`                                   |
+  | `evaluar_proveedor`                                                                                                            | `comprador`, `jefe_compras`                   |
+  | `registrar_recepcion`, `registrar_devolucion`                                                                                  | `bodega`                                      |
+  | `editar_datos_bancarios`, `desbloquear_proveedor` (nueva), `exportar_trazabilidad` (nueva)                                     | `admin_ti`                                    |
+  | `consultar_trazabilidad` (nueva)                                                                                               | `jefe_compras`, `admin_ti`                    |
+  | `exportar`                                                                                                                     | Los cinco roles, sobre lo que pueden ver      |
+
+  La visibilidad de cada vista (opera / solo lectura / no ve) se resuelve con la matriz de FR-033; `PERMISOS` solo gobierna las acciones.
+- La regla "quien emite la OC no la recibe" se valida aparte de `PERMISOS` y sin excepciones por rol (FR-014).
 - La edición de datos bancarios es exclusiva de `admin_ti`. La visibilidad sin enmascarar de RUT de persona natural y número de cuenta corresponde a `admin_ti` y `jefe_compras`, según `COMPRAS_PARAMETROS.datosBancarios`. Ninguna otra vista, búsqueda, mensaje ni exportación puede entregar el valor completo (FR-004 y FR-025).
+
+## Interfaz de navegación
+
+- La barra lateral se agrupa en Panel / **Adquisiciones** (Proveedores, Catálogo, Evaluaciones) / **Compras** (Solicitudes, Cotizaciones, Órdenes de compra, Recepciones, Facturas, Devoluciones); los grupos sin vistas visibles para el rol se ocultan (FR-034).
+- El encabezado muestra la sección actual con el formato "Grupo › Vista" (FR-036).
+- Cada acción rápida se rotula con una descripción legible para el usuario, nunca con la clave de `PERMISOS` (FR-036).
+- No existe la tarjeta "Sesión activa": el rol se ve solo en el selector `#rol-activo` (FR-036).
 
 ## Interfaz de exportación CSV
 
@@ -37,6 +58,7 @@ Describir las interfaces que el módulo `002` expone hacia el usuario y hacia ot
 ### Reglas de contenido
 
 - Solo se exportan los registros que el rol activo ya puede ver, aplicando el mismo filtro que la pantalla (FR-024).
+- Un rol con solo lectura exporta lo que ve; si el rol no ve la vista, no hay botón **Exportar CSV**. El historial de trazabilidad solo lo exporta `admin_ti`.
 - Los proveedores se transforman con `vistaProveedor()` antes de exportarse: la columna `RUT` contiene el valor enmascarado para roles sin permiso. No se exporta el número de cuenta bancaria.
 - Si el entorno no dispone de `Blob` o `URL.createObjectURL` (por ejemplo, en pruebas), `descargarCSV()` devuelve el contenido sin lanzar un error.
 
@@ -44,8 +66,8 @@ Describir las interfaces que el módulo `002` expone hacia el usuario y hacia ot
 
 | Vínculo             | Estado en el MVP | Contrato                                                                                                                                                  |
 | ------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Módulo base (`001`) | Activo           | Proveedores se guardan como Entidades y las OC como Documentos; se respeta [entity-storage.md](../../../001-erp-base-module/contracts/entity-storage.md). |
-| Inventario          | Simultado        | `erp_compras:productos` es de solo lectura; las cantidades aceptadas de una recepción son la señal que Inventario deberá usar para aumentar el stock.     |
+| Módulo base (`001`) | Activo           | Proveedores se guardan como Entidades; las OC viven en `erp_compras:ordenes` con el mismo contrato de almacenamiento. Se respeta [entity-storage.md](../../../001-erp-base-module/contracts/entity-storage.md). |
+| Inventario          | Simulado         | `erp_compras:productos` es de solo lectura; las cantidades aceptadas de una recepción son la señal que Inventario deberá usar para aumentar el stock.     |
 | Contabilidad        | Simulada         | Una factura `aprobada_pago` representa la cuenta por pagar; el pago real y el asiento contable quedan fuera del módulo.                                   |
 | RR.HH.              | Simulado         | `erp_compras:usuarios` y `erp_compras:centros_costo` son maestros de solo lectura; el rol simulado sustituye a la autenticación real.                     |
 | SII                 | Fuera de alcance | Las facturas y notas de crédito se ingresan manualmente; no hay descarga de documentos tributarios electrónicos.                                          |
@@ -55,6 +77,6 @@ Los identificadores de producto, proveedor, usuario y centro de costo se compart
 ## Expectativas de compatibilidad
 
 - Un cambio en el separador, la codificación o el orden de las columnas debe revisarse contra SC-010 y actualizar las pruebas de `tests/unit/compras/exportacion.test.js`.
-- Un cambio en `PERMISOS` o en `COMPRAS_PARAMETROS.datosBancarios` debe reflejarse en la vista, en el guardado de proveedores, en el CSV y en las pruebas de no exposición (SC-009).
+- Un cambio en `PERMISOS`, en la matriz de visibilidad (FR-033) o en `COMPRAS_PARAMETROS.datosBancarios` debe reflejarse en la vista, en el guardado de proveedores, en el CSV y en las pruebas de no exposición (SC-009) y de permisos (SC-015, SC-016).
 - Un cambio en las claves o en la forma de los registros debe revisarse contra [almacenamiento-compras.md](almacenamiento-compras.md) antes de afectar a otros módulos.
 - La interfaz debe seguir los patrones visuales y de mensajes del módulo base, incluidos estados vacíos y errores en español (principio III de la constitución).

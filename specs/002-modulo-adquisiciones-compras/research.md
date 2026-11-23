@@ -15,7 +15,7 @@ El contexto técnico de `plan.md` llegó a esta fase sin preguntas abiertas: len
 | Herramientas              | Vite y Vitest con jsdom, ya configurados en la raíz                        |
 | Persistencia              | `localStorage`, con prefijo `erp_compras:` para lo propio del módulo       |
 | Exportaciones             | UTF-8 con BOM, separador `;`, filas con CRLF                               |
-| Roles                     | Cinco roles simulados, sin autenticación real                              |
+| Roles                     | Cinco roles simulados, sin autenticación real; acceso según la matriz de visibilidad (FR-033) y `admin_ti` como administrador del sistema |
 | Parámetros de negocio     | Umbral de 1.000.000 CLP neto y tolerancia de conciliación del 1 % del neto |
 
 A continuación se registran las decisiones que materializan ese contexto, con su justificación y las alternativas descartadas.
@@ -68,19 +68,21 @@ A continuación se registran las decisiones que materializan ese contexto, con s
 
 **Decisión**: representar la sesión con un selector de **Rol Activo** en la barra superior, resolver permisos con `puede()` sobre `PERMISOS`, y aplicar el enmascaramiento antes de entregar los datos a cualquier vista, búsqueda o exportación.
 
-**Justificación**: el objetivo es demostrar la segregación de funciones sin implementar autenticación. Al centralizar la visibilidad en `COMPRAS_PARAMETROS.datosBancarios` y consumirla desde `reglas.js`, `proveedores.js`, la vista y el guardado del formulario, `jefe_compras` ve RUT y cuenta completos, `admin_ti` además puede editarlos, y el resto de roles nunca recibe el valor completo (FR-025 y SC-009). El cambio de rol vuelve a renderizar la vista, con lo que el enmascaramiento se aplica de inmediato.
+**Justificación**: el objetivo es demostrar la segregación de funciones sin implementar autenticación. Al centralizar la visibilidad en `COMPRAS_PARAMETROS.datosBancarios` y consumirla desde `reglas.js`, `proveedores.js`, la vista y el guardado del formulario, `jefe_compras` ve RUT y cuenta completos, `admin_ti` además puede editarlos, y el resto de roles nunca recibe el valor completo (FR-025 y SC-009). El cambio de rol vuelve a renderizar la vista, con lo que el enmascaramiento se aplica de inmediato. `admin_ti` es el administrador del sistema y no un operador de compras: edita datos bancarios, desbloquea proveedores y consulta y exporta la trazabilidad, pero no emite OC, no registra recepciones ni aprueba solicitudes, pagos o devoluciones (FR-004). La regla "quien emite la OC no la recibe" se valida aparte de `PERMISOS` y sin excepciones por rol (FR-014).
 
 **Alternativas consideradas**:
 
 - Iniciar sesión con contraseñas reales: require almacenamiento de credenciales y autorización en servidor, fuera del alcance.
 - Ocultar columnas con CSS: el dato completo seguiría presente en el DOM y en el CSV, incumpliendo FR-025.
 - Comparar roles con literales en cada archivo: fue el estado inicial y provocó divergencias entre reglas, proveedores y vista (corregidas con T017 y T093).
+- Dar a `admin_ti` acceso total: era la definición inicial. Se descartó el 2026-11-23 porque un rol con todas las operaciones rompía la segregación de funciones: el código lo eximía de la regla 8 y podía emitir y recibir la misma OC.
+- Impedir que el comprador concilie las facturas de las OC que él emitió: exigiría un rol adicional que una pyme no tiene. Se acepta como riesgo asumido, mitigado porque la recepción la registra `bodega` y el pago lo aprueba `jefe_compras` (data-model §6).
 
 ## Decisión 6: Trazabilidad inmutable y anulación en lugar de borrado
 
 **Decisión**: registrar cada cambio de estado y cada modificación bancaria en `erp_compras:trazabilidad`, con usuario, rol, fecha y detalle; los valores bancarios se guardan solo enmascarados. Un documento con eventos no se elimina: se anula con motivo.
 
-**Justificación**: FR-027 a FR-030 existen para auditar quién aprobó, quién recibió y quién cambió una cuenta de pago. El historial también permite recorrer la cadena solicitud → cotización → OC → recepción → factura → devolución y conservar las anulaciones.
+**Justificación**: FR-027 a FR-030 existen para auditar quién aprobó, quién recibió y quién cambió una cuenta de pago. El historial también permite recorrer la cadena solicitud → cotización → OC → recepción → factura → devolución y conservar las anulaciones. El historial de eventos lo consultan solo `jefe_compras` y `admin_ti`, y solo `admin_ti` lo exporta; los demás roles recorren la cadena documental sin ver los eventos.
 
 **Alternativas consideradas**:
 
@@ -130,3 +132,15 @@ A continuación se registran las decisiones que materializan ese contexto, con s
 
 - Descargar documentos tributarios del SII: requiere credenciales y servicios externos ajenos al MVP.
 - Adelantar multiempresa: multiplicaría las claves de almacenamiento y los escenarios de prueba sin valor para la demo.
+
+## Decisión 11: Navegación y visibilidad por rol
+
+**Decisión**: agrupar la barra lateral en Panel / **Adquisiciones** (Proveedores, Catálogo, Evaluaciones) / **Compras** (Solicitudes, Cotizaciones, Órdenes de compra, Recepciones, Facturas, Devoluciones), según data-model §1. Cada vista se resuelve como "opera", "solo lectura" o "no ve" con una matriz de visibilidad (FR-033) separada de `PERMISOS`, que solo gobierna las acciones. El panel muestra pendientes e indicadores propios de cada rol (FR-035). El encabezado muestra la sección actual, las acciones rápidas se rotulan con una descripción legible y se elimina la tarjeta "Sesión activa", que duplicaba el selector de rol (FR-036).
+
+**Justificación**: una navegación por rol reduce la confusión y evita mostrar información que el rol no necesita (por ejemplo, cotizaciones al solicitante). La agrupación refleja las dos caras del modelo: la estratégica (Adquisiciones) y la operativa (Compras). Separar la visibilidad de las acciones permite expresar el "solo lectura", que `PERMISOS` por sí solo no distingue.
+
+**Alternativas consideradas**:
+
+- Mostrar todas las vistas y deshabilitar los botones: expone datos innecesarios y llena la interfaz de controles inactivos.
+- Mantener una sola sección plana "Compras" con diez pestañas: era el estado anterior y no distingue la parte estratégica de la operativa.
+- Derivar la visibilidad solo de `PERMISOS`: no permite diferenciar "solo lectura" de "no ve".

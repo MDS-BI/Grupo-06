@@ -25,7 +25,7 @@ El trabajo se divide en iteraciones semanales; cada una termina con una versión
 **Objetivos de Rendimiento**: listas y búsquedas en menos de 2 segundos con hasta 500 registros por colección, medidos con `performance.now()` en `tests/integration/compras/rendimiento.test.js` (SC-006). Protocolo: cada caso replica 500 registros por colección, mide una ejecución con `performance.now()` alrededor de la operación y aprueba si el tiempo transcurrido es menor al umbral (2 000 ms para SC-006 y 1 000 ms para SC-008)
 
 **Restricciones**: Sin backend, sin autenticación real, sin conexión con el SII; no modificar el comportamiento del módulo base salvo donde se justifica en "Seguimiento de Complejidad"  
-**Escala/Alcance**: 19 entidades lógicas (ver `data-model.md`), 11 historias de usuario, 5 roles simulados
+**Escala/Alcance**: 19 entidades lógicas (ver `data-model.md`), 12 historias de usuario, 5 roles simulados
 
 ## Verificación de la Constitución
 
@@ -33,7 +33,7 @@ _Según `.specify/memory/constitution.md` v1.0.0._
 
 - **I. Calidad del código**: la lógica de negocio (cálculos, validaciones y transiciones de estado) vive en funciones puras en `src/compras/reglas.js`, separada de la interfaz y del almacenamiento.
 - **II. Pruebas primero**: cada regla de la sección 5 de `data-model.md` tiene prueba unitaria antes o junto con su implementación; cada historia P1 tiene al menos una prueba de integración de su flujo.
-- **III. Experiencia de usuario consistente**: todas las pantallas nuevas usan el marco del template (barra superior, barra lateral, tokens de `styles.css`), mensajes de validación en español y estados vacíos. La accesibilidad (SC-013) se verifica en `tests/integration/compras/vista.test.js`: etiqueta por campo en las diez vistas, foco por teclado, errores junto al campo y contraste ≥ 4,5:1.
+- **III. Experiencia de usuario consistente**: todas las pantallas nuevas usan el marco del template (barra superior, barra lateral, tokens de `styles.css`), mensajes de validación en español y estados vacíos; encabezado con la sección actual y acciones rápidas rotuladas con una descripción legible, nunca con la clave interna del permiso. La accesibilidad (SC-013) se verifica en `tests/integration/compras/vista.test.js`: etiqueta por campo en las diez vistas, foco por teclado, errores junto al campo y contraste ≥ 4,5:1.
 - **IV. Rendimiento**: las colecciones se leen una vez por pantalla y se filtran en memoria; el objetivo de 500 registros se verifica con los datos semilla ampliados.
 - **Estándares de calidad**: antes de la entrega se ejecutan `npm run lint` (ESLint) y `npm run format:check` (Prettier). Ambos comandos pasan sin errores ni advertencias; T107 está cerrada. El alcance real de `format:check` es el que define `.prettierignore`: núcleo base (`src/storage.js` y `tests/unit/storage.test.js`); el resto de `src/**`, `tests/**`, `specs/**` y Markdown queda excluido.
 
@@ -41,7 +41,7 @@ Resultado: **conforme con deuda documentada**. Los incumplimientos materiales qu
 
 ## Arquitectura del módulo (`src/compras/`)
 
-La interfaz final no usa las vistas genéricas del template: toda la navegación ocurre dentro de `#view-compras` y `#compras-root`, con el selector de roles simulados, según FR-032 y SC-014. `src/module-config.js` mantiene `userConfig = null` y su `COMPRAS_CONFIG` solo como referencia de la iteración descartada por configuración.
+La interfaz final no usa las vistas genéricas del template: toda la navegación ocurre dentro de `#view-compras` y `#compras-root`, con el selector de roles simulados, según FR-032 y SC-014. `src/module-config.js` mantiene `userConfig = null` y su `COMPRAS_CONFIG` solo como referencia de la iteración descartada por configuración. La barra lateral se agrupa en Panel / **Adquisiciones** (Proveedores, Catálogo, Evaluaciones) / **Compras** (Solicitudes, Cotizaciones, Órdenes de compra, Recepciones, Facturas, Devoluciones) y cada rol ve solo las vistas que le asigna la matriz de visibilidad (FR-033, FR-034). El encabezado muestra la sección actual y no existe tarjeta "Sesión activa": el rol se ve solo en el selector (FR-036).
 
 | Concepto del MER          | Almacenamiento físico real                                                                         | Observación                                                                                  |
 | ------------------------- | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
@@ -90,7 +90,7 @@ src/
 ├── ...                     (archivos del módulo base, sin cambios salvo lo justificado)
 └── compras/
     ├── reglas.js           (cálculos de montos, validación de RUT, transiciones, conciliación, nota de plazo)
-    ├── almacenamiento.js   (colecciones erp_compras:* con el contrato del template)
+    ├── almacenamiento.js   (colecciones erp_compras:* con el contrato del template y PERMISOS por rol)
     ├── solicitudes.js      (pantalla y flujo de solicitudes)
     ├── cotizaciones.js     (registro y comparación)
     ├── ordenes-compra.js   (emisión, compra directa y anulación de OC)
@@ -98,12 +98,12 @@ src/
     ├── facturas.js
     ├── devoluciones.js     (devoluciones y notas de crédito)
     ├── proveedores.js      (alta/edición, visibilidad de datos sensibles, cambio bancario auditado)
-    ├── vista.js            (pantallas de compras y cadena documental)
+    ├── vista.js            (pantallas de compras, navegación agrupada por rol y cadena documental)
     ├── exportacion.js      (CSV con BOM y permisos por rol)
     ├── trazabilidad.js     (historial de eventos y cadena documental)
     ├── catalogo.js
     ├── evaluaciones.js
-    ├── panel.js            (indicadores y alertas)
+    ├── panel.js            (pendientes, indicadores y alertas por rol, FR-035)
     └── semilla.json        (datos ficticios)
 
 tests/
@@ -146,6 +146,7 @@ Las siguientes tareas se documentan también en `tasks.md`: T101, T104, T109, T1
 | T118  | Abierta | Pendiente 2 de `data-model.md` §10: estados de devolución y anulación con motivo incompletos.                                                                                                                                                                                                                                                       | FR-029                              |
 | T119  | Cerrada | Decisión aplicada: se elimina `borrador` del modelo de OC y se conserva `emitida` como estado inicial; `data-model.md` y `plan.md` sincronizados.                                                                                                                                                                                                | FR-010                              |
 | T120  | Cerrada | Auditoría global de SC-003 en `flujo-compras.test.js`: se validan las dos vías de cumplimiento sobre todas las OC no anuladas.                                                                                                                                                                                                                | SC-003                              |
+| Sin tarea aún | Abierta | Rediseño de permisos sin implementar: `PERMISOS` todavía le da a `admin_ti` todas las operaciones de compra, `recepciones.js` lo exime de la regla 8, la barra lateral no está agrupada, el panel no sigue FR-035 y sigue la tarjeta "Sesión activa". Se asignará con `/speckit-tasks`. | FR-033 a FR-036, SC-015 a SC-017 |
 
 ## Plan de Pruebas
 
@@ -153,6 +154,7 @@ Las siguientes tareas se documentan también en `tasks.md`: T101, T104, T109, T1
 - **Integración** (`tests/integration/compras/`): un flujo por historia P1 y P2 siguiendo sus escenarios de aceptación de `spec.md`, y una prueba de auditoría de punta a punta (SC-012) en `trazabilidad.test.js`.
 - **Auditoría SC-003** (`tests/integration/compras/flujo-compras.test.js`): cobertura del 100 % de las OC sobre el umbral con tres cotizaciones vigentes o justificación de proveedor único.
 - **Accesibilidad** (`tests/integration/compras/vista.test.js`): etiquetas asociadas en las diez vistas, foco y operación por teclado, errores junto al campo con `role="alert"` y revisión automatizada de contraste (WCAG 2.1 AA).
+- **Permisos y navegación por rol** (`tests/integration/compras/permisos.test.js`, nuevo): las 50 combinaciones de rol y vista de la matriz (SC-015); `admin_ti` sin ninguna de las cinco operaciones de compra y la regla 8 sin excepciones (SC-016); acciones rápidas sin identificadores internos y encabezado con la sección (SC-017).
 - **Manual**: guion de la demo de 5 minutos del criterio SC-002 y escenarios de validación por historia, documentados en [quickstart.md](quickstart.md).
 
 ## Datos Semilla

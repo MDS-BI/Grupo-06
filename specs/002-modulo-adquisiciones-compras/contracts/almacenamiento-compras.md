@@ -46,18 +46,19 @@ Toda clave se construye con `clave(nombre)`, que antepone `erp_compras:` al nomb
 - `cargarSemilla({ forzar, hoy })` y `asegurarSemilla()`: cargan `semilla.json` una sola vez y desplazan sus fechas al día actual. `semillaCargada()` y `marcarSemillaCargada()` controlan el estado en `erp_compras:meta`.
 - `reiniciarCompras()`: vacía todas las colecciones propias y marca la semilla como no cargada; la siguiente visita la vuelve a cargar.
 - `getSesion()`, `setSesion()`, `getUsuarioActivo()` y `setRolActivo()`: gestionan el usuario y el rol de la sesión simulada.
-- `puede(accion, usuario)` y `exigirPermiso(accion, usuario)`: resuelven `PERMISOS` y lanzan un error explícito cuando la acción no está permitida.
+- `puede(accion, usuario)` y `exigirPermiso(accion, usuario)`: resuelven `PERMISOS` y lanzan un error explícito cuando la acción no está permitida; la tabla de acciones por rol está en [exportacion-e-integracion.md](exportacion-e-integracion.md). `admin_ti` no tiene permisos de operación de compras.
 
 ## Expectativas de validación
 
 - Un RUT de proveedor debe tener formato válido, dígito verificador correcto y ser único; una condición de pago mayor a 30 días exige acuerdo de plazo mayor (FR-001 y FR-002).
 - Un proveedor con órdenes de compra no se elimina: se bloquea (FR-003).
-- Una solicitud requiere al menos una línea, aprobador distinto del solicitante y motivo al rechazarse (FR-005 y FR-006).
+- Un proveedor `bloqueado` solo lo desbloquea `admin_ti`, vuelve a `aprobado` y genera un evento de trazabilidad (FR-004).
+- Una solicitud requiere al menos una línea, aprobador `jefe_compras` distinto del solicitante y motivo al rechazarse (FR-005 y FR-006).
 - Una cotización es única por solicitud y proveedor; sobre el umbral se exigen tres cotizaciones o justificación de proveedor único (FR-007 y FR-008).
 - No puede existir más de una orden no anulada por solicitud ni más de una por cotización; los proveedores de las OC deben estar aprobados (FR-010 y FR-011).
-- Una recepción no puede aceptar más unidades de las pendientes de la línea y no la registra quien emitió la OC (FR-013 y FR-014).
+- Una recepción no puede aceptar más unidades de las pendientes de la línea y no la registra quien emitió la OC, sin excepciones por rol (FR-013 y FR-014).
 - Una factura requiere una OC con recepciones, folio único por proveedor y tipo de documento, y se clasifica por la conciliación de tres vías (FR-015 y FR-016).
-- Una devolución no puede superar la cantidad aceptada pendiente y descuenta el saldo recibido y facturado (FR-031).
+- Una devolución no puede superar la cantidad aceptada pendiente y descuenta el saldo recibido y facturado; la registra `bodega` y, si quien recibió es quien la registra, exige la aprobación de un `jefe_compras` distinto (FR-031).
 - Todo cambio de estado o de datos bancarios genera un evento de trazabilidad; los eventos no se editan ni se eliminan y los datos bancarios se registran enmascarados (FR-027 a FR-030).
 - Si `localStorage` no está disponible o falla al escribir, la capa mantiene los datos en memoria y expone un mensaje de error; nunca debe perder silenciosamente lo que el usuario estaba editando.
 
