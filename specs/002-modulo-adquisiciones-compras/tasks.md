@@ -6,11 +6,11 @@
 
 **Pruebas**: obligatorias según la constitución del proyecto y el plan. Cada regla de la sección 5 de `data-model.md` debe tener prueba unitaria, y cada historia de usuario debe tener al menos una prueba de integración de su flujo.
 
-**Organización**: las tareas siguen el orden y la numeración de las historias de `spec.md`: **US1, US2, US3, US4, US5, US6, US7, US8, US9, US10 y US11**. Cada historia tiene su propia fase y no se mezclan responsabilidades entre ellas.
+**Organización**: las tareas siguen el orden y la numeración de las historias de `spec.md`: **US1, US2, US3, US4, US5, US6, US7, US8, US9, US10, US11 y US12**. Cada historia tiene su propia fase y no se mezclan responsabilidades entre ellas.
 
 > **Alineación con spec.md**: las cotizaciones se separan en **US6** (registro y comparativa side-by-side), la emisión de OC queda en **US3**, el catálogo en **US8**, la evaluación de proveedores en **US9** y la exportación CSV en **US10**. Todas fueron creadas y ordenadas en `spec.md`; ya no existen tareas de "soporte" sin historia.
 >
-> **Roles**: se usan los roles definidos en `spec.md`: `solicitante`, `comprador`, `jefe_compras`, `bodega` y `admin_ti`.
+> **Roles**: se usan los roles definidos en `spec.md`: `solicitante`, `comprador`, `jefe_compras`, `bodega` y `admin_ti`. Desde el 2026-11-23, `admin_ti` es administrador del sistema y no opera el ciclo de compras; la visibilidad de cada vista sigue la matriz de FR-033 (fases 16 a 19).
 >
 > **Extensión necesaria para US11**: para cumplir el documento de devolución con correlativo `DEV-AAAA-NNNN` se agrega `src/compras/devoluciones.js` y la colección `erp_compras:devoluciones`, detallada en `plan.md`, según los escenarios de US11. Las notas de crédito se registran como `FACTURA_PROVEEDOR` con `tipo_documento = nota_credito`, según `data-model.md`.
 >
@@ -90,7 +90,7 @@
 - [x] T021 [US2] Implementar la creación y edición de solicitudes con al menos un producto activo, justificación, fecha requerida, centro de costo, prioridad y cálculo de `monto_estimado`. [FR-005]
 - [x] T022 [US2] Implementar la numeración correlativa `SC-AAAA-NNNN` y las transiciones `borrador → enviada → aprobada | rechazada`, `aprobada → en_cotizacion → adjudicada` y `anulada` antes de `adjudicada`. [FR-005]
 - [x] T023 [US2] Impedir enviar solicitudes sin productos y restringir al `solicitante` a ver y crear solo sus propias solicitudes. [FR-005, FR-018]
-- [x] T024 [US2] Implementar aprobación y rechazo solo por `jefe_compras` o `admin_ti` distinto del solicitante; el rechazo exige motivo y se registra el aprobador con su fecha. [FR-006]
+- [x] T024 [US2] Implementar aprobación y rechazo solo por `jefe_compras` o `admin_ti` distinto del solicitante; el rechazo exige motivo y se registra el aprobador con su fecha. [FR-006] **Reemplazada por T135 (rediseño 2026-11-23).**
 - [x] T025 [US2] Agregar pruebas de transiciones, autoaprobación bloqueada, rechazo sin motivo y solicitud vacía en `tests/integration/compras/flujo-compras.test.js`.
 - [x] T026 [US2] Agregar prueba de integración del flujo completo de US2 en `tests/integration/compras/flujo-compras.test.js`.
 
@@ -126,7 +126,7 @@
 - [x] T035 [US4] Crear los esquemas de `RECEPCION` y `DETALLE_RECEPCION` en `src/compras/almacenamiento.js`, referenciando la línea de OC recibida. [FR-013]
 - [x] T036 [US4] Implementar el registro de recepciones en `src/compras/recepciones.js` para OC en estado `emitida` o `recibida_parcial`, con cantidades aceptadas por línea que no superen lo pendiente. [FR-013]
 - [x] T037 [US4] Exigir motivo cuando haya unidades rechazadas; si llega más de lo pedido, aceptar solo lo pendiente y registrar el excedente como rechazado con motivo `no_corresponde`. [FR-013]
-- [x] T038 [US4] Impedir que el comprador que emitió la OC registre su recepción y restringir la operación al rol `bodega` (o `admin_ti` para auditoría), manteniendo la segregación de funciones. [FR-014]
+- [x] T038 [US4] Impedir que el comprador que emitió la OC registre su recepción y restringir la operación al rol `bodega` (o `admin_ti` para auditoría), manteniendo la segregación de funciones. [FR-014] **Reemplazada por T136 (rediseño 2026-11-23).**
 - [x] T039 [US4] Actualizar automáticamente el estado de la OC a `recibida_parcial` o `recibida_total` según la suma de cantidades aceptadas por línea. [FR-013]
 - [x] T040 [US4] Dejar disponibles las cantidades aceptadas de cada recepción para que Inventario actualice el stock, usando `id_producto`. [IR-002]
 - [x] T041 [US4] Agregar pruebas de tope por línea, motivo de rechazo, segregación y actualización de estado en `tests/integration/compras/casos-limite.test.js`.
@@ -145,12 +145,12 @@
 **Prueba Independiente**: un jefe de compras con dos solicitudes enviadas y una factura que vence en 3 días abre el panel, ve esos tres pendientes con acceso directo y, al aprobar una solicitud, el contador baja sin recargar la página.
 
 - [x] T043 [US5] Crear el componente de panel en `src/compras/panel.js` e integrarlo en la navegación principal de la aplicación. [FR-018]
-- [x] T044 [US5] Mostrar pendientes por rol con contador y acceso directo: solicitudes por aprobar, OC sin recepción, recepciones por registrar y facturas por conciliar. El `solicitante` solo ve sus propias solicitudes y no los pendientes de otros usuarios. [FR-018]
+- [x] T044 [US5] Mostrar pendientes por rol con contador y acceso directo: solicitudes por aprobar, OC sin recepción, recepciones por registrar y facturas por conciliar. El `solicitante` solo ve sus propias solicitudes y no los pendientes de otros usuarios. [FR-018] **Reemplazada por T137 (rediseño 2026-11-23).**
 - [x] T045 [US5] Mostrar una alerta destacada para facturas no aprobadas que vencen en 5 días o menos, con proveedor, folio y días restantes. [FR-017]
-- [x] T046 [US5] Listar como pendientes de seguimiento las OC emitidas sin recepción registrada por más de 7 días, visibles para `bodega` y `comprador`. [FR-018]
+- [x] T046 [US5] Listar como pendientes de seguimiento las OC emitidas sin recepción registrada por más de 7 días, visibles para `bodega` y `comprador`. [FR-018] **Reemplazada por T137 (rediseño 2026-11-23).**
 - [x] T047 [US5] Calcular y mostrar los indicadores del período seleccionado (mes actual): monto comprometido en OC no anuladas, órdenes abiertas y facturas aprobadas para pago. [FR-018]
 - [x] T048 [US5] Implementar el estado vacío del panel cuando no hay pendientes y actualizar los contadores sin recargar la página tras una acción. [FR-018]
-- [x] T049 [US5] Agregar acciones rápidas por rol para crear solicitud, OC, recepción o registrar factura según corresponda. [FR-018]
+- [x] T049 [US5] Agregar acciones rápidas por rol para crear solicitud, OC, recepción o registrar factura según corresponda. [FR-018] **Reemplazada por T138 (rediseño 2026-11-23).**
 - [x] T050 [US5] Agregar prueba de integración de US5 que cubra los seis escenarios y SC-005 en `tests/integration/compras/catalogo-panel.test.js` y `tests/integration/compras/vista.test.js`.
 
 **Punto de control**: panel de compras funcional.
@@ -250,7 +250,7 @@
 - [x] T079 [US11] Implementar el registro de devoluciones con línea, cantidad y motivo; descontar la cantidad del saldo recibido y no permitir devolver más de lo aceptado. [FR-031]
 - [x] T080 [US11] Implementar notas de crédito contra una factura ya registrada: deben asociarse a OC y factura, no pueden superar el monto facturado y su folio es único por proveedor y tipo de documento. [FR-031, FR-015]
 - [x] T081 [US11] Cuando la devolución o nota de crédito reduzca el saldo pendiente a cero, cerrar la OC y dar por saldada la factura sin pasarla a `aprobada_pago` por el monto descontado. [FR-031]
-- [x] T082 [US11] Si quien registró la recepción intenta registrar la devolución, exigir la aprobación de un `jefe_compras` o `admin_ti` distinto. [FR-031, FR-014]
+- [x] T082 [US11] Si quien registró la recepción intenta registrar la devolución, exigir la aprobación de un `jefe_compras` o `admin_ti` distinto. [FR-031, FR-014] **Reemplazada por T141 (rediseño 2026-11-23).**
 - [x] T083 [US11] Agregar pruebas de devoluciones, notas de crédito, topes, duplicidad, cierre de OC y segregación en `tests/integration/compras/flujo-compras.test.js` y `tests/integration/compras/casos-limite.test.js`. [FR-031]
 - [x] T084 [US11] Agregar prueba de integración del flujo completo de US11 en `tests/integration/compras/flujo-compras.test.js`. [FR-031]
 - [x] T100 [US11] [FR-026] Registrar devoluciones con motivo `defectuoso` cuando el daño se detecta después de aceptar, descontando el saldo recibido y facturado, en `src/compras/devoluciones.js`; agregar pruebas en `tests/integration/compras/flujo-compras.test.js`. Verificado en `tests/integration/compras/casos-limite.test.js` (cierre de OC con saldo pendiente y motivo `defectuoso`).
@@ -314,6 +314,68 @@
 
 ---
 
+## Fase 16: Fundacional del rediseño de permisos (Prerrequisito Bloqueante)
+
+**Propósito**: alinear permisos y visibilidad con FR-004, FR-006, FR-014 y FR-033 antes de tocar la interfaz. Bloquea las fases 17 a 19.
+
+- [ ] T121 Actualizar `PERMISOS` en `src/compras/almacenamiento.js` según la tabla de `contracts/exportacion-e-integracion.md`: quitar a `admin_ti` de todas las operaciones de compra; `crear_solicitud` solo para `solicitante`; `aprobar_solicitud`, `aprobar_pago` y `aprobar_devolucion` solo para `jefe_compras`; `gestionar_proveedores`, `gestionar_cotizaciones`, `emitir_oc`, `registrar_factura`, `conciliar_factura` y `gestionar_catalogo` solo para `comprador`; `evaluar_proveedor` para `comprador` y `jefe_compras`; `registrar_recepcion` y `registrar_devolucion` solo para `bodega`; agregar `desbloquear_proveedor` y `exportar_trazabilidad` (`admin_ti`) y `consultar_trazabilidad` (`jefe_compras`, `admin_ti`). [FR-004, FR-006, FR-033]
+- [ ] T122 [P] Crear `src/compras/visibilidad.js` con la matriz `VISIBILIDAD` (vista × rol → `'opera'`, `'lectura'` o `null`) para las 10 vistas y la trazabilidad, tal como la define la Matriz de visibilidad por rol de `spec.md`; la agrupación `GRUPOS` (Panel / Adquisiciones: Proveedores, Catálogo, Evaluaciones / Compras: Solicitudes, Cotizaciones, Órdenes de compra, Recepciones, Facturas, Devoluciones); y las funciones `nivelVista(vista, usuario)` y `vistasVisibles(usuario)`. El Panel es visible para los cinco roles. [FR-033, FR-034]
+- [ ] T123 [P] Agregar pruebas unitarias de `PERMISOS` y de las 50 combinaciones rol × vista de `VISIBILIDAD` en `tests/unit/compras/visibilidad.test.js`. [SC-015]
+- [ ] T124 Ajustar las pruebas existentes de `tests/integration/compras/*.test.js` y `tests/integration/compras/helpers.js` que usan a `admin_ti` o a `jefe_compras` como operadores (crear solicitud, emitir OC, gestionar proveedores, recibir, aprobar devoluciones) para que usen el rol que corresponde según la matriz, sin debilitar lo que verifican. [SC-016]
+
+**Punto de control**: permisos y matriz centralizados y probados; la suite vuelve a pasar con los nuevos roles.
+
+---
+
+## Fase 17: Historia de Usuario 12 - Navegación y visibilidad por rol (P1)
+
+**Objetivo**: que cada rol vea en la navegación y en cada vista solo lo que puede operar o consultar, con la barra lateral agrupada y la sección actual en el encabezado.
+
+**Prueba Independiente**: se recorre la aplicación con los cinco roles y, vista por vista, la barra lateral, las acciones disponibles y los registros visibles coinciden con la matriz de FR-033.
+
+- [ ] T125 [US12] Reemplazar la lista plana `TABS` de `src/compras/vista.js` por navegación agrupada: la barra lateral (`.side-nav` de `index.html`) muestra las secciones Panel, Adquisiciones y Compras según `vistasVisibles()` en lugar del ítem único `#nav-compras`; las pestañas de cada sección muestran solo sus vistas visibles; un grupo sin vistas se oculta; al cambiar de rol, si la vista actual no es visible, se vuelve al Panel. Conservar la navegación por teclado y los atributos ARIA existentes. [FR-034, SC-013]
+- [ ] T126 [US12] Aplicar el modo solo lectura en cada función `render*` de `src/compras/vista.js`: con `nivelVista() === 'lectura'` se ocultan los formularios y los botones de crear, editar, aprobar, rechazar, descartar y anular; se mantienen **Exportar CSV** y **Cadena**. [FR-033]
+- [ ] T127 [US12] Filtrar para el `solicitante` las OC y recepciones originadas en sus propias solicitudes en `src/compras/ordenes-compra.js`, `src/compras/recepciones.js`, `src/compras/vista.js` y `src/compras/exportacion.js` (el CSV aplica el mismo filtro). [FR-033, FR-024]
+- [ ] T128 [US12] Bloquear el acceso a vistas que el rol no ve desde `irA()`, `data-ir` y `data-traza-ir` en `src/compras/vista.js`: mostrar el aviso "Tu rol no tiene acceso a esta vista" sin cambiar de vista; en la cadena documental, los nodos de vistas no visibles se muestran sin enlace. [FR-033]
+- [ ] T129 [US12] En `renderTrazaCadena()` de `src/compras/vista.js`, mostrar el historial de eventos solo si `puede('consultar_trazabilidad')`; agregar el botón **Exportar historial** visible solo con `exportar_trazabilidad`, implementado con `exportarTrazabilidad()` en `src/compras/exportacion.js` (archivo `trazabilidad.csv`, datos bancarios enmascarados). [FR-033, FR-025, FR-030]
+- [ ] T130 [US12] Eliminar el bloque `compras-session` ("Sesión activa") de `src/compras/vista.js` y reemplazar el título fijo por un encabezado con la sección actual en formato "Grupo › Vista"; eliminar de `src/styles.css` las reglas que queden sin uso. [FR-036]
+- [ ] T131 [US12] Agregar pruebas de integración en `tests/integration/compras/permisos.test.js` (nuevo): barra lateral por rol, botones según la matriz, filtro de OC y recepciones del solicitante, acceso denegado a vistas no visibles, historial de eventos por rol, encabezado con la sección y ausencia de "Sesión activa". [SC-015, SC-017]
+- [ ] T132 [US12] Adaptar las pruebas de accesibilidad de `tests/integration/compras/vista.test.js` a la nueva navegación por secciones y pestañas (foco, teclado y roles ARIA). [SC-013]
+
+**Punto de control**: navegación y visibilidad por rol funcionales; US12 verificable de forma independiente.
+
+---
+
+## Fase 18: Ajustes de permisos por historia
+
+**Propósito**: aplicar el rediseño a las reglas de cada historia afectada.
+
+- [ ] T133 [US1] Crear `desbloquearProveedor(id, usuario)` en `src/compras/proveedores.js`: exige `desbloquear_proveedor`, pasa de `bloqueado` a `aprobado` y registra el evento `desbloqueo` en `src/compras/trazabilidad.js`; `cambiarEstadoProveedor()` sigue sin permitir salir de `bloqueado`. Agregar el botón **Desbloquear** en la ficha de `src/compras/vista.js` y la prueba en `tests/integration/compras/proveedores.test.js`. [FR-004]
+- [ ] T134 [US1] Crear `actualizarDatosBancarios(id, datos, usuario)` en `src/compras/proveedores.js`, que exige solo `editar_datos_bancarios` (porque `admin_ti` ya no tiene `gestionar_proveedores`), actualiza `fecha_cambio_cuenta` y registra el cambio enmascarado. En la ficha de `src/compras/vista.js`, `admin_ti` solo edita banco, tipo y número de cuenta. Agregar las pruebas en `tests/integration/compras/proveedores.test.js`. [FR-004, FR-030]
+- [ ] T135 [US2] En `src/compras/solicitudes.js`, permitir aprobar y rechazar solo a `jefe_compras` distinto del solicitante y quitar a `admin_ti` de `anularSolicitud()` (línea 252). Agregar las pruebas en `tests/integration/compras/flujo-compras.test.js`. [FR-006]
+- [ ] T136 [US4] Eliminar la excepción `&& usuario.rol !== 'admin_ti'` de `src/compras/recepciones.js:50`, de modo que el emisor de la OC no pueda registrar su recepción con ningún rol; agregar la prueba en `tests/integration/compras/casos-limite.test.js`. [FR-014, SC-016]
+- [ ] T137 [US5] Reescribir las condiciones por rol de `construirPanel()` en `src/compras/panel.js` según la tabla de FR-035: `solicitante`, estado de sus solicitudes; `comprador`, solicitudes aprobadas sin cotizar, OC sin recepción y facturas con discrepancia, con el indicador de facturas con discrepancia; `jefe_compras`, solicitudes por aprobar, facturas conciliadas por aprobar pago y devoluciones `pendiente_aprobacion`, con gasto del período y facturas en riesgo de pago tardío; `bodega`, OC esperando entrega y recepciones parciales, con la tasa de rechazo; `admin_ti`, cambios bancarios de los últimos 30 días y alertas de fraude. Los indicadores se calculan según `data-model.md` §8; las alertas de vencimiento solo para roles que ven Facturas; el seguimiento de OC con más de 7 días solo para `bodega` y `comprador`. [FR-035, FR-017, FR-018]
+- [ ] T138 [US5] Definir las acciones rápidas por rol en `src/compras/panel.js` con `etiqueta` y `descripcion` legibles (p. ej., "Crear solicitud de compra") y mostrar en `src/compras/vista.js:465` la descripción en lugar de `a.clave`; el estado vacío solo invita a acciones que el rol puede ejecutar (sin invitación a crear para `bodega` ni `admin_ti`). Depende de T125. [FR-036, FR-018]
+- [ ] T139 [US5] Agregar pruebas del panel para los cinco roles (pendientes, indicadores y alertas de FR-035) y de acciones rápidas sin identificadores internos en `tests/integration/compras/catalogo-panel.test.js`. [FR-035, SC-017]
+- [ ] T140 [US7] Agregar pruebas en `tests/integration/compras/casos-limite.test.js` que verifiquen que el `comprador` no puede aprobar pagos y que `admin_ti` ve las facturas en solo lectura. [FR-033]
+- [ ] T141 [US11] En `src/compras/devoluciones.js` (líneas 153, 156 y 209), aceptar solo a `jefe_compras` como aprobador y actualizar los mensajes de error; agregar las pruebas en `tests/integration/compras/flujo-compras.test.js`. [FR-031]
+
+**Punto de control**: las reglas de cada historia respetan la matriz y la regla 8 sin excepciones.
+
+---
+
+## Fase 19: Cierre del rediseño
+
+**Propósito**: datos de demostración, documentación y verificación final del rediseño.
+
+- [ ] T142 Revisar `src/compras/semilla.json` para que los paneles de `admin_ti` y `jefe_compras` tengan contenido: al menos un proveedor con cambio bancario hace menos de 30 días y una factura no aprobada, y una devolución `pendiente_aprobacion`, con datos ficticios. [FR-020, FR-035]
+- [ ] T143 Actualizar la documentación: roles en `README.md`; en `specs/002-modulo-adquisiciones-compras/plan.md`, reemplazar la fila "Sin tarea aún" de Deuda conocida por T121–T144 y agregar `visibilidad.js` al árbol de código; en `specs/002-modulo-adquisiciones-compras/contracts/exportacion-e-integracion.md`, agregar `trazabilidad.csv` a los nombres de archivo.
+- [ ] T144 Ejecutar `npx vitest run` y `npm run lint` sin errores ni advertencias, y recorrer con los cinco roles los escenarios 1 a 4 de `specs/002-modulo-adquisiciones-compras/quickstart.md`. [SC-015, SC-016, SC-017]
+
+**Punto de control**: rediseño de permisos y navegación por rol cerrado.
+
+---
+
 ## Deuda conocida
 
 El estado de estas tareas se registra aquí y se replica en `plan.md` para que el congelamiento no esconda trabajo pendiente. T107, T108, T117, T119 y T120 figuran como cerradas; el resto permanece abierto.
@@ -353,13 +415,16 @@ El estado de estas tareas se registra aquí y se replica en `plan.md` para que e
 - **Trazabilidad (Fase 13A)**: depende de US1 a US11 y se ejecuta antes del pulido.
 - **Pulido (Fase 14)**: al finalizar todas las historias.
 - **Pendientes de modelo (Fase 15)**: depende de US3, US7 y US11; cierra las decisiones de `data-model.md` §10 y la cobertura de FR-029.
+- **Fundacional del rediseño (Fase 16)**: depende de las fases 1 a 15 y bloquea las fases 17, 18 y 19. T122 y T123 pueden ejecutarse en paralelo con T121; T124 va después de T121.
+- **US12 (Fase 17)** y **Ajustes por historia (Fase 18)**: dependen de la Fase 16 y pueden avanzar en paralelo, salvo T138, que depende de T125, y T133 y T134, cuyos botones requieren T126.
+- **Cierre del rediseño (Fase 19)**: al finalizar las fases 17 y 18.
 
 ### Dependencias Críticas
 
 - La plantilla base debe tener `src/` operativo y sus pruebas deben pasar antes de T002.
 - Una solicitud sin aprobación no puede generar OC; una OC sin recepciones no puede recibir facturas; una factura con discrepancia no puede aprobarse para pago.
 - Una cotización no puede registrarse sin solicitud aprobada ni convertirse en OC sin estar seleccionada.
-- La segregación de funciones debe respetarse en solicitudes, OC, recepciones y devoluciones.
+- La segregación de funciones debe respetarse en solicitudes, OC, recepciones y devoluciones, sin excepciones por rol (T136).
 
 ---
 
@@ -381,6 +446,16 @@ El estado de estas tareas se registra aquí y se replica en `plan.md` para que e
 
 Agregar primero US7 (facturas), luego US8 (catálogo), US9 (evaluación) y US11 (devoluciones y notas de crédito), y finalmente US10 (exportación CSV), manteniendo siempre el ciclo completo funcionando.
 
+### Rediseño de permisos (2026-11-23)
+
+1. Fase 16: T121–T124 (permisos, matriz y pruebas ajustadas).
+2. T136: quitar la excepción de `admin_ti` en la recepción, que es el riesgo de segregación más alto.
+3. US12 (Fase 17): navegación agrupada, solo lectura, acceso denegado, historial y encabezado.
+4. Resto de la Fase 18: proveedores, solicitudes, panel, facturas y devoluciones.
+5. Fase 19: semilla, documentación y verificación con los cinco roles.
+
+Ejemplo de paralelismo: tras T121, ejecutar en paralelo T122/T123 (matriz y sus pruebas) y T136 (recepciones); tras la Fase 16, T125–T132 (US12) en paralelo con T133–T137 y T139–T141.
+
 ---
 
 ## Trazabilidad con Requisitos
@@ -392,9 +467,9 @@ Agregar primero US7 (facturas), luego US8 (catálogo), US9 (evaluación) y US11 
 | FR-001    | T011, T012, T013, T014, T015                   |
 | FR-002    | T014                                           |
 | FR-003    | T016                                           |
-| FR-004    | T017, T062, T093                               |
+| FR-004    | T017, T062, T093, T121, T133, T134             |
 | FR-005    | T020, T021, T022, T023                         |
-| FR-006    | T024                                           |
+| FR-006    | T024, T121, T135                               |
 | FR-007    | T051, T052                                     |
 | FR-008    | T054                                           |
 | FR-009    | T053                                           |
@@ -402,25 +477,29 @@ Agregar primero US7 (facturas), luego US8 (catálogo), US9 (evaluación) y US11 
 | FR-011    | T030, T032                                     |
 | FR-012    | T005, T031                                     |
 | FR-013    | T036, T037, T039                               |
-| FR-014    | T038, T082                                     |
+| FR-014    | T038, T082, T136                               |
 | FR-015    | T057, T058, T061, T080, T117                   |
 | FR-016    | T059                                           |
-| FR-017    | T045, T060                                     |
-| FR-018    | T043, T044, T046, T047, T048, T049, T111, T112 |
+| FR-017    | T045, T060, T137                               |
+| FR-018    | T043, T044, T046, T047, T048, T049, T111, T112, T137, T138 |
 | FR-019    | T072                                           |
-| FR-020    | T008, T112                                     |
+| FR-020    | T008, T112, T142                               |
 | FR-021    | T086                                           |
 | FR-022    | T086                                           |
 | FR-023    | T066, T067, T068                               |
-| FR-024    | T074, T075, T076                               |
-| FR-025    | T017, T093, T094, T095, T096                   |
+| FR-024    | T074, T075, T076, T127                         |
+| FR-025    | T017, T093, T094, T095, T096, T129             |
 | FR-026    | T097, T098, T100, T101, T110                   |
 | FR-027    | T102, T106                                     |
 | FR-028    | T103, T106                                     |
 | FR-029    | T104, T106, T109, T118                         |
-| FR-030    | T105, T106                                     |
-| FR-031    | T078, T079, T080, T081, T082, T083, T084       |
+| FR-030    | T105, T106, T129, T134                         |
+| FR-031    | T078, T079, T080, T081, T082, T083, T084, T141 |
 | FR-032    | T085, T111, T116                               |
+| FR-033    | T121, T122, T126, T127, T128, T129, T140       |
+| FR-034    | T122, T125                                     |
+| FR-035    | T137, T139, T142                               |
+| FR-036    | T130, T138                                     |
 
 ### Requisitos de Integración
 
@@ -446,8 +525,11 @@ Agregar primero US7 (facturas), luego US8 (catálogo), US9 (evaluación) y US11 
 | SC-010   | T077, T099       |
 | SC-011   | T098, T101, T110 |
 | SC-012   | T106             |
-| SC-013   | T108             |
+| SC-013   | T108, T125, T132 |
 | SC-014   | T111, T116       |
+| SC-015   | T123, T131, T144 |
+| SC-016   | T124, T136, T144 |
+| SC-017   | T131, T139, T144 |
 
 ### Historias de Usuario
 
@@ -466,3 +548,5 @@ Agregar primero US7 (facturas), luego US8 (catálogo), US9 (evaluación) y US11 
 | US11 - Registrar devoluciones y notas de crédito | P2          | T078-T084, T100-T101, T110 |
 | Trazabilidad transversal                         | Transversal | T102-T106, T109            |
 | Pendientes de modelo (`data-model.md` §10)       | Transversal | T101, T117-T119            |
+| US12 - Navegación y visibilidad por rol          | P1          | T125-T132                  |
+| Rediseño de permisos (fundacional, ajustes y cierre) | Transversal | T121-T124, T133-T144   |
