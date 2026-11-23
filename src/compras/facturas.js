@@ -177,7 +177,7 @@ export function conciliarFactura(id, usuario = getUsuarioActivo()) {
   return lista[idx];
 }
 
-export function aprobarPago(id, usuario = getUsuarioActivo()) {
+export function aprobarPago(id, usuario = getUsuarioActivo(), hoy = hoyISO()) {
   exigirPermiso('aprobar_pago', usuario);
   const lista = leer('facturas');
   const idx = lista.findIndex((f) => f.id === id);
@@ -190,7 +190,7 @@ export function aprobarPago(id, usuario = getUsuarioActivo()) {
   if (factura.estado !== 'conciliada')
     throw new Error('Solo se puede aprobar para pago una factura conciliada');
   const proveedor = obtenerProveedor(factura.proveedor_id);
-  const alerta = cuentaCambiadaRecientemente(proveedor);
+  const alerta = cuentaCambiadaRecientemente(proveedor, hoy);
   lista[idx] = {
     ...factura,
     estado: 'aprobada_pago',

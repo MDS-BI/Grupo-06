@@ -54,16 +54,17 @@ Las colecciones del módulo se guardan en `localStorage` con el prefijo `erp_com
 
 Estado al cierre de esta iteración:
 
-- `npx vitest run`: **138 pruebas aprobadas** y 56 omitidas (corresponden a las pruebas heredadas del template base).
-- `npm run lint`: **0 errores**; permanecen 6 advertencias preexistentes en `src/storage.js` y `tests/unit/storage.test.js`.
-- `npm run format:check`: aún reporta diferencias de formato en varios archivos, incluidos artefactos de Speckit.
+- `npx vitest run`: **139 pruebas aprobadas** y 56 omitidas (corresponden a las pruebas heredadas del template base).
+- `npm run lint`: **0 errores**.
+- `npm run format:check`: **sin diferencias**.
 
 Tareas registradas como pendientes en [`tasks.md`](specs/002-modulo-adquisiciones-compras/tasks.md):
 
 - **US5**: T043-T050 (verificación integrada del panel y sus seis escenarios; la limpieza de la interfaz T111 y los datos simulados T112 ya están completados).
 - **US11**: T100, T101 y T110 (daño detectado después de la aceptación, cierre de OC con saldo pendiente y crédito a favor).
-- **Trazabilidad**: T102-T106 y T109 (registro de auditoría, cadena documental, anulaciones y pruebas de punta a punta).
-- **Calidad**: T107 (lint y formato) y T108 (accesibilidad WCAG 2.1 AA).
+- **Trazabilidad**: T102-T106, T109 y T118 (registro de auditoría, cadena documental, anulaciones y pruebas de punta a punta).
+- **Modelo de datos**: T101 y T118 (pendientes 2 y 3 de `data-model.md` §10); T117 y T119 están cerradas.
+- **Calidad**: T108 (accesibilidad WCAG 2.1 AA); T107 está cerrada.
 
 ## Problema y solución (Resumen)
 

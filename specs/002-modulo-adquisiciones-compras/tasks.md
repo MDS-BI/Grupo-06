@@ -303,19 +303,19 @@
 
 ## Fase 15: Cierre de pendientes del modelo de datos
 
-**Objetivo**: resolver las cuatro diferencias registradas en `data-model.md`, sección 10, y cerrar la cobertura de FR-029 con tareas explícitas y trazabilidad.
+**Objetivo**: resolver las cuatro diferencias registradas en `data-model.md`, sección 10, y cerrar la cobertura de FR-029 con tareas explícitas y trazabilidad. Las decisiones 1 y 4 (T117 y T119) quedan cerradas en esta iteración; continúan abiertas las decisiones 2 y 3 (T101 y T118).
 
-- [ ] T117 [FR-015] Unificar el estado inicial de la factura entre código y modelo (`registrada` frente a `recibida`) según `data-model.md` §10, pendiente 1. Actualizar `src/compras/reglas.js`, `src/compras/facturas.js` y las pruebas correspondientes. **Deuda conocida**: decisión de nomenclatura pendiente de aprobación del grupo.
+- [x] T117 [FR-015] Unificar el estado inicial de la factura entre código y modelo según `data-model.md` §10, pendiente 1. Decisión aplicada: `registrada` en código y modelo. `src/compras/reglas.js`, `src/compras/facturas.js` y las pruebas ya usaban ese valor; se actualizan `data-model.md` §3.11/regla 6 y §10.
 - [ ] T118 [FR-029] Alinear los estados de devolución con `data-model.md` §10, pendiente 2: incorporar `anulada` con `motivo_anulacion` y registrarlo en `src/compras/trazabilidad.js`. Extender la anulación con motivo a facturas y devoluciones, además de solicitudes, cotizaciones y recepciones, para cerrar T104 y T109. **Deuda conocida**: hoy solo OC y solicitudes guardan `motivo_anulacion`; el resto usa `descartar`/`rechazar`.
-- [ ] T119 [FR-010] Resolver `data-model.md` §10, pendiente 4: decidir entre agregar el estado `borrador` a la OC o eliminarlo del modelo; sincronizar `src/compras/reglas.js`, `plan.md` y `data-model.md`. **Deuda conocida**: la spec US3 solo usa `emitida` y el plan ya no describe el ciclo de vida por configuración.
+- [x] T119 [FR-010] Resolver `data-model.md` §10, pendiente 4. Decisión aplicada: eliminar `borrador` del modelo de OC y mantener `emitida` como estado inicial, en línea con la spec US3, `src/compras/reglas.js` y `src/module-config.js`. Sincronizados `plan.md` y `data-model.md` §3.9/regla 4 y §10.
 
-**Punto de control**: `data-model.md` §10 queda sin decisiones abiertas y FR-029 tiene cobertura explícita.
+**Punto de control**: las decisiones 1 y 4 de `data-model.md` §10 quedan cerradas; las decisiones 2 y 3 siguen registradas como deuda conocida y FR-029 mantiene cobertura explícita mediante T118.
 
 ---
 
 ## Deuda conocida
 
-Estas tareas permanecen sin marcar deliberadamente. Su estado se registra aquí y se replica en `plan.md` para que el congelamiento no esconda trabajo pendiente.
+El estado de estas tareas se registra aquí y se replica en `plan.md` para que el congelamiento no esconda trabajo pendiente. T107, T117 y T119 figuran como cerradas; el resto permanece abierto.
 
 | Tarea | Estado  | Justificación de la deuda                                                                                                                                                                                                                    | Referencia                          |
 | ----- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
@@ -325,9 +325,9 @@ Estas tareas permanecen sin marcar deliberadamente. Su estado se registra aquí 
 | T108  | Abierta | No se completó la revisión de accesibilidad pantalla por pantalla ni la verificación de contraste 4,5:1.                                                                                                                                     | SC-013                              |
 | T109  | Abierta | Solo la solicitud guarda `motivo_anulacion`; faltan cotizaciones y recepciones.                                                                                                                                                              | FR-029, T118                        |
 | T110  | Abierta | `credito_a_favor` no está implementado ni mostrado en factura/cadena documental.                                                                                                                                                             | FR-026, SC-011                      |
-| T117  | Abierta | Pendiente 1 de `data-model.md` §10: nombre del estado inicial de factura sin unificar.                                                                                                                                                       | FR-015                              |
+| T117  | Cerrada | Decisión aplicada: `registrada` como estado inicial de factura en código y modelo; `data-model.md` sincronizado en §3.11/regla 6 y §10.                                                                                                    | FR-015                              |
 | T118  | Abierta | Pendiente 2 de `data-model.md` §10: estados de devolución y anulación con motivo incompletos.                                                                                                                                                | FR-029                              |
-| T119  | Abierta | Pendiente 4 de `data-model.md` §10: estado `borrador` de OC sin decidir.                                                                                                                                                                     | FR-010                              |
+| T119  | Cerrada | Decisión aplicada: se elimina `borrador` del modelo de OC y se conserva `emitida` como estado inicial; `data-model.md` y `plan.md` sincronizados.                                                                                          | FR-010                              |
 
 ---
 
