@@ -126,6 +126,7 @@ Los flujos de cada historia están en `tests/integration/compras/`: `proveedores
 
 ## Cobertura aún pendiente
 
-- T043 a T050, T100, T101, T102 a T106, T109, T110 y T118: verificaciones adicionales del panel, daño posterior a la aceptación, crédito a favor, anulación con motivo y trazabilidad registradas en `tasks.md`.
+- T101 y T110: cierre de OC con saldo pendiente y cálculo y visualización de `credito_a_favor` cuando una devolución `defectuosa` descuenta una factura ya aprobada.
+- T104, T109 y T118: anulación con `motivo_anulacion` en facturas, devoluciones, cotizaciones y recepciones, con su registro en trazabilidad.
 
 T107, T108 y T120 están cerradas: `npm run format:check` pasa sin diferencias en el alcance de `.prettierignore`, la accesibilidad (SC-013) se verifica en `vista.test.js` y la auditoría de SC-003 en `flujo-compras.test.js`.
