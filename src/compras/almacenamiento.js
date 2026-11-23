@@ -1,6 +1,6 @@
 import semilla from './semilla.json';
 import { loadEntities, saveEntities } from '../storage.js';
-import { ROLES, diasEntre, hoyISO, sumarDias } from './reglas.js';
+import { ROLES, ROLES_CON_NOMBRE, diasEntre, hoyISO, sumarDias } from './reglas.js';
 
 const PREFIX = 'erp_compras:';
 const memoria = new Map();
@@ -224,7 +224,23 @@ export function asegurarSemilla() {
 }
 
 const SESION_KEY = 'sesion';
+const AUTENTICACION_KEY = 'autenticado';
 const SESION_DEFAULT = Object.freeze({ usuario_id: 'u-solicitante-1', rol: 'solicitante' });
+
+/** Indica si la sesión de demostración fue iniciada con la clave genérica. */
+export function estaAutenticado() {
+  try {
+    return leerCrudo(AUTENTICACION_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+/** Registra el estado de autenticación de la sesión de demostración. */
+export function marcarAutenticacion(valor = true) {
+  escribirCrudo(AUTENTICACION_KEY, valor ? 'true' : 'false');
+  return Boolean(valor);
+}
 
 export function getSesion() {
   try {
@@ -251,13 +267,42 @@ export function setSesion(sesion) {
 export function getUsuarioActivo() {
   const sesion = getSesion();
   const usuarios = leer('usuarios');
-  const usuario = usuarios.find((u) => u.id === sesion.usuario_id) ||
-    usuarios.find((u) => u.rol === sesion.rol) || {
-      id: sesion.usuario_id,
-      nombre: sesion.rol,
-      rol: sesion.rol
-    };
-  return { ...usuario, rol: sesion.rol };
+  const candidato =
+    usuarios.find((u) => u.id === sesion.usuario_id) ||
+    usuarios.find((u) => u.rol === sesion.rol);
+  const conNombre = ROLES_CON_NOMBRE.includes(sesion.rol);
+  const usuario = candidato || {
+    id: sesion.usuario_id,
+    nombre: sesion.rol,
+    rol: sesion.rol
+  };
+  return {
+    ...usuario,
+    nombre: conNombre ? usuario.nombre || etiquetaRolTexto(sesion.rol) : sesion.rol,
+    rol: sesion.rol
+  };
+}
+
+function etiquetaRolTexto(rol) {
+  return (
+    {
+      solicitante: 'Solicitante',
+      comprador: 'Comprador',
+      jefe_compras: 'Jefe de Compras',
+      bodega: 'Encargado de Bodega',
+      admin_ti: 'Administrador TI'
+    }[rol] || rol
+  );
+}
+
+/** Etiqueta visible de un usuario: persona solo en solicitante/comprador, rol en el resto. */
+export function etiquetaUsuario(id) {
+  const usuario = leer('usuarios').find((u) => u.id === id);
+  if (!usuario) return id || '';
+  if (ROLES_CON_NOMBRE.includes(usuario.rol)) {
+    return usuario.nombre || etiquetaRolTexto(usuario.rol);
+  }
+  return etiquetaRolTexto(usuario.rol);
 }
 
 export function setRolActivo(rol) {

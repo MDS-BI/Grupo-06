@@ -60,7 +60,8 @@ describe('vista de compras', () => {
     selector.value = 'jefe_compras';
     selector.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
     const sesion = qs('compras-root').querySelector('.compras-session').textContent;
-    expect(sesion).toContain('Marta Ruiz · Jefe de Compras');
+    expect(sesion).toContain('Jefe de Compras');
+    expect(sesion).not.toContain('Marta Ruiz');
     expect(sesion).not.toContain('jefe_compras');
   });
 

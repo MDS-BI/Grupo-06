@@ -3,10 +3,92 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      name="description"
+      content="Módulo de Adquisiciones y Compras para pymes: solicitudes, cotizaciones, órdenes, recepciones, facturas y devoluciones."
+    />
     <title>Adquisiciones y Compras</title>
   </head>
   <body>
     <div id="config-errors" class="config-error" role="alert" hidden></div>
+
+    <section
+      id="login-overlay"
+      class="login-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="login-titulo"
+      aria-describedby="login-descripcion"
+    >
+      <div class="login-card">
+        <div class="login-brand">
+          <span id="login-logo" class="logo-mark" aria-hidden="true"></span>
+          <div>
+            <h1 id="login-titulo">Adquisiciones y Compras</h1>
+            <p id="login-descripcion" class="muted">
+              Ingresa con tu usuario de demostración para acceder al módulo.
+            </p>
+          </div>
+        </div>
+
+        <form id="login-form" novalidate>
+          <div>
+            <label for="login-rol">Rol</label>
+            <select id="login-rol" name="rol" required>
+              <option value="">-- Selecciona un rol --</option>
+              <option value="solicitante">Solicitante</option>
+              <option value="comprador">Comprador</option>
+              <option value="jefe_compras">Jefe de Compras</option>
+              <option value="bodega">Encargado de Bodega</option>
+              <option value="admin_ti">Administrador TI</option>
+            </select>
+          </div>
+
+          <div id="campo-nombre" hidden>
+            <label for="login-nombre">Nombre</label>
+            <input
+              id="login-nombre"
+              name="nombre"
+              type="text"
+              list="nombres-demo"
+              autocomplete="name"
+            />
+            <datalist id="nombres-demo"></datalist>
+            <p class="muted campo-ayuda">Ingresa el nombre del solicitante o comprador.</p>
+          </div>
+
+          <div>
+            <label for="login-clave">Clave</label>
+            <div class="login-password">
+              <input
+                id="login-clave"
+                name="clave"
+                type="password"
+                required
+                autocomplete="current-password"
+              />
+              <button type="button" id="login-mostrar-clave" class="link" aria-pressed="false">
+                Mostrar
+              </button>
+            </div>
+          </div>
+
+          <p id="login-error" class="error" role="alert" hidden></p>
+
+          <div class="form-actions">
+            <button type="submit" class="primary">Ingresar</button>
+          </div>
+        </form>
+
+        <details class="login-hint">
+          <summary>¿Necesitas la clave de demostración?</summary>
+          <p>
+            Elige un rol y usa la clave genérica <strong>Compras2026</strong>. Solo
+            Solicitante y Comprador piden nombre; los demás roles ingresan sin él.
+          </p>
+        </details>
+      </div>
+    </section>
 
     <div class="workspace">
       <header class="topbar">
@@ -15,21 +97,31 @@
           <span id="brand-name" class="brand-name">Adquisiciones y Compras</span>
         </div>
 
-        <div class="topbar-rol">
-          <label for="rol-activo">Rol Activo</label>
-          <select id="rol-activo" class="rol-select" aria-label="Rol Activo">
-            <option value="solicitante">Solicitante</option>
-            <option value="comprador">Comprador</option>
-            <option value="jefe_compras">Jefe de Compras</option>
-            <option value="bodega">Encargado de Bodega</option>
-            <option value="admin_ti">Administrador TI</option>
-          </select>
+        <div class="topbar-actions">
+          <div class="topbar-rol">
+            <label for="rol-activo">Rol Activo</label>
+            <select id="rol-activo" class="rol-select">
+              <option value="solicitante">Solicitante</option>
+              <option value="comprador">Comprador</option>
+              <option value="jefe_compras">Jefe de Compras</option>
+              <option value="bodega">Encargado de Bodega</option>
+              <option value="admin_ti">Administrador TI</option>
+            </select>
+          </div>
+          <button type="button" id="btn-logout" class="btn-logout" hidden>Cerrar sesión</button>
         </div>
       </header>
 
       <aside class="sidebar">
         <nav class="side-nav" aria-label="Secciones de Adquisiciones y Compras">
-          <button type="button" class="nav-module active" data-module="compras" id="nav-compras" aria-current="page">
+          <button
+            type="button"
+            class="nav-module active"
+            data-module="compras"
+            id="nav-compras"
+            aria-label="Compras"
+            aria-current="page"
+          >
             <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h2l1.5 9h8.5l1.5-6H6"></path><circle cx="8" cy="16" r="1.2"></circle><circle cx="14" cy="16" r="1.2"></circle></svg>
             <span class="nav-label" id="nav-compras-label">Compras</span>
           </button>

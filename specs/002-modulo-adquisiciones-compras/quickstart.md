@@ -8,7 +8,7 @@
 
 - Node.js y npm compatibles con las versiones de Vite y Vitest declaradas en `package.json`.
 - Un navegador de escritorio moderno con `localStorage` disponible.
-- No se necesita backend, base de datos, cuenta de usuario ni conexión a internet después de instalar dependencias.
+- No se necesita backend, base de datos ni conexión a internet después de instalar dependencias. El acceso es simulado: elige un rol y usa la clave genérica `Compras2026`. Solo Solicitante y Comprador piden nombre.
 
 ## Configuración
 
@@ -25,6 +25,7 @@
    ```
 
 3. Abra la URL local que muestra Vite (por defecto `http://localhost:5173`).
+4. En la pantalla de acceso elija **Comprador**, escriba `Carla Díaz` e ingrese la clave genérica `Compras2026`. Si elige **Jefe de Compras**, **Encargado de Bodega** o **Administrador TI**, el campo de nombre se oculta y la sesión muestra solo el rol. El botón **Mostrar** permite verificar la clave y **Cerrar sesión** devuelve a esta pantalla sin borrar los datos.
 
 La primera visita carga automáticamente `src/compras/semilla.json`: 6 usuarios, 4 centros de costo, 20 productos, 8 proveedores, 10 solicitudes, 7 cotizaciones, 8 órdenes de compra, 5 recepciones, 7 documentos de facturación, 2 devoluciones, 10 referencias de catálogo y 2 evaluaciones. Todos los datos son ficticios y las fechas se ajustan al día actual.
 
@@ -40,18 +41,18 @@ Después recargue la página para que se vuelva a cargar la semilla.
 
 | Comando                | Resultado esperado                                                                                              |
 | ---------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `npm run dev`          | Servidor Vite activo; la interfaz muestra solo el módulo Adquisiciones y Compras.                               |
-| `npx vitest run`       | 138 pruebas aprobadas y 56 omitidas (las omitidas pertenecen al template base).                                 |
-| `npm run lint`         | 0 errores; pueden aparecer las 6 advertencias preexistentes de `src/storage.js` y `tests/unit/storage.test.js`. |
+| `npm run dev`          | Servidor Vite activo; la interfaz pide acceso y luego muestra solo el módulo Adquisiciones y Compras.          |
+| `npx vitest run`       | 145 pruebas aprobadas y 56 omitidas (las omitidas pertenecen al template base).                                 |
+| `npm run lint`         | 0 errores.                                                                                                      |
 | `npm run build`        | Build de producción sin errores.                                                                                |
 | `npm run preview`      | El build se sirve en `http://localhost:4173` con el mismo comportamiento.                                       |
-| `npm run format:check` | Puede reportar diferencias de formato; no es bloqueante para la demo (T107 sigue pendiente).                    |
+| `npm run format:check` | Sin diferencias; T107 quedó cerrado.                                                                            |
 
 ## Escenarios de validación
 
 ### 1. Arranque, navegación y rol activo (FR-018, SC-002)
 
-1. Confirme que la barra superior muestra la marca **Adquisiciones y Compras** y el selector **Rol Activo**, y que la barra lateral solo tiene la sección **Compras**.
+1. Ingrese con un rol y la clave `Compras2026` (con nombre si es Solicitante o Comprador). Confirme que la barra superior muestra la marca **Adquisiciones y Compras**, el selector **Rol Activo** y **Cerrar sesión**, y que la barra lateral solo tiene la sección **Compras**.
 2. Compruebe las diez pestañas: Panel, Proveedores, Solicitudes, Cotizaciones, Órdenes de compra, Recepciones, Facturas, Devoluciones, Catálogo y Evaluaciones.
 3. En el Panel, verifique los pendientes por rol, las alertas de vencimiento y los indicadores del período.
 4. Cambie el **Rol Activo** de `solicitante` a `jefe_compras` y luego a `bodega`.
@@ -122,10 +123,9 @@ npx vitest run tests/unit/compras/reglas.test.js
 npx vitest run tests/integration/compras
 ```
 
-Los flujos de cada historia están en `tests/integration/compras/`: `proveedores.test.js`, `flujo-compras.test.js`, `catalogo-panel.test.js`, `casos-limite.test.js`, `vista.test.js`, `almacenamiento.test.js`, `trazabilidad.test.js` y `rendimiento.test.js`.
+Los flujos de cada historia están en `tests/integration/compras/`: `proveedores.test.js`, `flujo-compras.test.js`, `catalogo-panel.test.js`, `casos-limite.test.js`, `vista.test.js`, `autenticacion.test.js`, `almacenamiento.test.js`, `trazabilidad.test.js` y `rendimiento.test.js`.
 
 ## Cobertura aún pendiente
 
-- T107: dejar `npm run format:check` sin diferencias.
-- T108: revisión de accesibilidad WCAG 2.1 AA de todas las pantallas (SC-013).
 - T043 a T050, T100, T101, T102 a T106 y T109: verificaciones adicionales del panel, daño posterior a la aceptación, crédito a favor y trazabilidad registradas en `tasks.md`.
+- T107 y T108 están cerrados: formato sin diferencias y accesibilidad WCAG 2.1 AA revisada en todas las pantallas (SC-013).

@@ -23,21 +23,18 @@
     },
     {
       "id": "u-jefe-1",
-      "nombre": "Marta Ruiz",
       "rol": "jefe_compras",
       "centro_costo_id": "cc-003",
-      "email": "marta.ruiz@example.com"
+      "email": "jefe.compras@example.com"
     },
     {
       "id": "u-bodega-1",
-      "nombre": "Pedro Gil",
       "rol": "bodega",
       "centro_costo_id": "cc-004",
-      "email": "pedro.gil@example.com"
+      "email": "bodega@example.com"
     },
     {
       "id": "u-admin-1",
-      "nombre": "Admin TI",
       "rol": "admin_ti",
       "centro_costo_id": "cc-003",
       "email": "admin.ti@example.com"

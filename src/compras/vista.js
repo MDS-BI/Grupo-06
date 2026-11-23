@@ -1,5 +1,10 @@
-import { getUsuarioActivo, asegurarSemilla, leer, puede } from './almacenamiento.js';
-import { hoyISO, UMBRAL_COTIZACIONES, validarVisibilidadDatosBancarios } from './reglas.js';
+import { getUsuarioActivo, asegurarSemilla, etiquetaUsuario, leer, puede } from './almacenamiento.js';
+import {
+  hoyISO,
+  requiereNombre,
+  UMBRAL_COTIZACIONES,
+  validarVisibilidadDatosBancarios
+} from './reglas.js';
 import {
   listarProveedores,
   buscarProveedores,
@@ -149,7 +154,7 @@ function badge(estado) {
   return `<span class="badge badge-${esc(estado)}">${esc(estado)}</span>`;
 }
 function nombreUsuario(id) {
-  return leer('usuarios').find((u) => u.id === id)?.nombre || id || '';
+  return etiquetaUsuario(id);
 }
 function nombreProveedor(id) {
   return obtenerProveedor(id)?.name || id || '';
@@ -163,6 +168,13 @@ function pedirTexto(mensaje) {
     : '';
 }
 function aviso(mensaje) {
+  const banner = qs('compras-aviso');
+  if (banner) {
+    banner.textContent = mensaje;
+    banner.hidden = false;
+    banner.focus();
+    return;
+  }
   if (typeof window !== 'undefined' && typeof window.alert === 'function') window.alert(mensaje);
   else console.warn(mensaje);
 }
@@ -181,6 +193,43 @@ function opciones(items, seleccionado, vacio = '-- Selecciona --') {
     .join('')}`;
 }
 
+let contadorCampos = 0;
+
+/** Asocia etiquetas huérfanas y nombres accesibles a los controles del módulo. */
+function mejorarAccesibilidad(root) {
+  const controles = 'input:not([type="hidden"]), select, textarea';
+
+  root.querySelectorAll('th').forEach((th) => th.setAttribute('scope', 'col'));
+
+  root.querySelectorAll('label:not([for])').forEach((etiqueta) => {
+    const control = etiqueta.parentElement?.querySelector(controles);
+    if (!control) return;
+    contadorCampos += 1;
+    control.id = control.id || `campo-${contadorCampos}`;
+    etiqueta.setAttribute('for', control.id);
+  });
+
+  const etiquetasPorId = new Map(
+    [...root.querySelectorAll('label[for]')].map((etiqueta) => [
+      etiqueta.getAttribute('for'),
+      etiqueta.textContent.replace(/\*/g, '').trim()
+    ])
+  );
+
+  root.querySelectorAll(controles).forEach((control) => {
+    const nombre =
+      control.getAttribute('aria-label') ||
+      control.getAttribute('aria-labelledby') ||
+      etiquetasPorId.get(control.id);
+    if (nombre) return;
+    const texto =
+      control.getAttribute('placeholder') ||
+      control.closest('div')?.querySelector('label')?.textContent ||
+      'Campo del formulario';
+    control.setAttribute('aria-label', texto.replace(/\*/g, '').trim());
+  });
+}
+
 function ejecutar(fn) {
   try {
     fn();
@@ -196,30 +245,56 @@ export function renderComprasView() {
   asegurarSemilla();
   const usuario = getUsuarioActivo();
   if (!TABS.some((t) => t.id === tab)) tab = 'panel';
+  const indiceActivo = TABS.findIndex((t) => t.id === tab);
+
   root.innerHTML = `
+    <div id="compras-aviso" class="compras-aviso" role="alert" aria-live="assertive" tabindex="-1" hidden></div>
     <div class="compras-header">
       <div>
-        <h1>Adquisiciones y Compras</h1>
+        <h1 id="compras-titulo" tabindex="-1">Adquisiciones y Compras</h1>
         <p class="muted">Ciclo completo de compra: solicitud, cotización, OC, recepción, factura y devolución.</p>
       </div>
       <div class="compras-session" aria-live="polite">
         <span class="muted">Sesión activa</span>
-        <strong>${esc(usuario.nombre)} · ${esc(etiquetaRol(usuario.rol))}</strong>
+        <strong>${esc(
+          requiereNombre(usuario.rol)
+            ? `${usuario.nombre} · ${etiquetaRol(usuario.rol)}`
+            : etiquetaRol(usuario.rol)
+        )}</strong>
       </div>
     </div>
     <nav class="compras-tabs" role="tablist" aria-label="Secciones de compras">
-      ${TABS.map((t) => `<button type="button" role="tab" class="compras-tab${t.id === tab ? ' active' : ''}" data-tab="${t.id}" aria-selected="${t.id === tab}">${esc(t.label)}</button>`).join('')}
+      ${TABS.map(
+        (t, indice) =>
+          `<button type="button" role="tab" id="tab-${t.id}" class="compras-tab${t.id === tab ? ' active' : ''}" data-tab="${t.id}" aria-controls="compras-content" aria-selected="${t.id === tab}" tabindex="${indice === indiceActivo ? 0 : -1}">${esc(t.label)}</button>`
+      ).join('')}
     </nav>
-    <div id="compras-content" class="compras-content"></div>
+    <div id="compras-content" class="compras-content" role="tabpanel" aria-labelledby="tab-${tab}" tabindex="0"></div>
   `;
-  root.querySelectorAll('[data-tab]').forEach((btn) =>
+
+  const botonesTab = [...root.querySelectorAll('[data-tab]')];
+  botonesTab.forEach((btn, indice) => {
     btn.addEventListener('click', () => {
       tab = btn.dataset.tab;
       renderComprasView();
-    })
-  );
+    });
+    btn.addEventListener('keydown', (evento) => {
+      if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(evento.key)) return;
+      evento.preventDefault();
+      let destino = indice;
+      if (evento.key === 'ArrowRight') destino = (indice + 1) % botonesTab.length;
+      if (evento.key === 'ArrowLeft') destino = (indice - 1 + botonesTab.length) % botonesTab.length;
+      if (evento.key === 'Home') destino = 0;
+      if (evento.key === 'End') destino = botonesTab.length - 1;
+      tab = botonesTab[destino].dataset.tab;
+      renderComprasView();
+      qs(`tab-${tab}`)?.focus();
+    });
+  });
+
   renderComprasTab();
   renderTrazaCadena();
+  mejorarAccesibilidad(root);
   root.querySelectorAll('[data-traza]').forEach((btn) =>
     btn.addEventListener('click', () => {
       traza = { tipo: btn.dataset.traza, id: btn.dataset.id };

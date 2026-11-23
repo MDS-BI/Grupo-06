@@ -6,7 +6,7 @@ Trabajo grupal de **Modelación de Sistemas 2026-2**, Departamento de Ingenierí
 
 ## Estado del Repositorio
 
-**MVP funcional y probado en su núcleo, con tareas de cierre pendientes.** La aplicación ya no expone el template base en la interfaz: `index.html` contiene una única navegación (**Compras**) y un selector **Rol Activo** en la barra superior. El módulo cubre US1 a US11: el ciclo solicitud → cotización → orden de compra → recepción → factura → devolución, además del panel por rol, catálogo, evaluaciones y exportación CSV.
+**MVP funcional y probado en su núcleo, con tareas de cierre pendientes.** La aplicación ya no expone el template base en la interfaz: `index.html` contiene una única navegación (**Compras**) y un selector **Rol Activo** en la barra superior. El acceso se realiza eligiendo un rol y usando la clave genérica de demostración **`Compras2026`** (no protege datos reales; los roles siguen siendo simulados). Solo **Solicitante** y **Comprador** piden nombre; Jefatura, Bodega y Admin TI ingresan únicamente con su rol. El módulo cubre US1 a US11: el ciclo solicitud → cotización → orden de compra → recepción → factura → devolución, además del panel por rol, catálogo, evaluaciones y exportación CSV.
 
 El código de soporte del template base (`src/storage.js`, `src/module-config.js` y `src/components/`) se conserva como dependencia técnica, pero sus vistas (Panel, Entidades, Documentos y Búsqueda) ya no forman parte de la interfaz. Las pruebas de integración heredadas se mantienen en el repositorio con `describe.skip` y una nota que explica el motivo. El nombre por defecto de la aplicación es **Adquisiciones y Compras**.
 
@@ -27,8 +27,9 @@ npm run preview       # vista previa del build (http://localhost:4173)
 
 ### Interfaz actual
 
-- **Barra superior**: marca *Adquisiciones y Compras* con logotipo monograma SVG y selector **Rol Activo**. Al cambiar el rol se recalculan los permisos y el contenido del panel en vivo, sin recargar la página.
-- **Barra lateral**: una sola sección, **Compras**, marcada como página activa (`aria-current="page"`).
+- **Acceso**: pantalla de ingreso con selector de rol, campo de nombre condicional (solo Solicitante y Comprador), clave genérica `Compras2026`, opción para mostrar/ocultar la clave y cierre de sesión desde la barra superior. Los demás roles no tienen nombre: la sesión muestra únicamente su rol.
+- **Barra superior**: marca *Adquisiciones y Compras* con logotipo monograma SVG, selector **Rol Activo** y botón **Cerrar sesión**. Al cambiar el rol se recalculan los permisos y el contenido del panel en vivo, sin recargar la página.
+- **Barra lateral**: una sola sección, **Compras**, marcada como página activa (`aria-current="page"`) y con nombre accesible también cuando el icono se colapsa.
 - **Pestañas del módulo**: Panel, Proveedores, Solicitudes, Cotizaciones, Órdenes de compra, Recepciones, Facturas, Devoluciones, Catálogo y Evaluaciones. La exportación CSV está disponible desde el módulo.
 - **Panel**: pendientes por rol con contador y acceso directo, alertas de facturas por vencer, seguimiento de OC sin recepción, indicadores del mes y acciones rápidas.
 
@@ -54,9 +55,10 @@ Las colecciones del módulo se guardan en `localStorage` con el prefijo `erp_com
 
 Estado al cierre de esta iteración:
 
-- `npx vitest run`: **139 pruebas aprobadas** y 56 omitidas (corresponden a las pruebas heredadas del template base).
+- `npx vitest run`: **145 pruebas aprobadas** y 56 omitidas (corresponden a las pruebas heredadas del template base).
 - `npm run lint`: **0 errores**.
 - `npm run format:check`: **sin diferencias**.
+- `npm run build`: **build de producción sin errores**.
 
 Tareas registradas como pendientes en [`tasks.md`](specs/002-modulo-adquisiciones-compras/tasks.md):
 
@@ -64,7 +66,7 @@ Tareas registradas como pendientes en [`tasks.md`](specs/002-modulo-adquisicione
 - **US11**: T100, T101 y T110 (daño detectado después de la aceptación, cierre de OC con saldo pendiente y crédito a favor).
 - **Trazabilidad**: T102-T106, T109 y T118 (registro de auditoría, cadena documental, anulaciones y pruebas de punta a punta).
 - **Modelo de datos**: T101 y T118 (pendientes 2 y 3 de `data-model.md` §10); T117 y T119 están cerradas.
-- **Calidad**: T108 (accesibilidad WCAG 2.1 AA); T107 está cerrada.
+- **Calidad**: T107 y T108 están cerradas: lint y formato sin diferencias, y accesibilidad WCAG 2.1 AA revisada (etiquetas asociadas, navegación por teclado en pestañas, errores en banner `role="alert"`, contraste mínimo 4,5:1 y respeto a `prefers-reduced-motion`).
 
 ## Problema y solución (Resumen)
 
@@ -124,7 +126,7 @@ specs/
         └── checklists/
                 └── requirements.md
 src/
-├── app.js                          ← Arranque de la aplicación y selector de Rol Activo
+├── app.js                          ← Arranque, acceso simulado y selector de Rol Activo
 ├── main.js                         ← Punto de entrada Vite
 ├── module-config.js                ← Configuración heredada del template base
 ├── storage.js                      ← Persistencia heredada del template base
@@ -132,6 +134,7 @@ src/
 └── compras/                        ← Módulo US1-US11
         ├── vista.js                ← Navegación, pestañas y renderizado
         ├── almacenamiento.js       ← Sesión, permisos y persistencia del módulo
+        ├── autenticacion.js        ← Acceso simulado con clave genérica de demostración
         ├── semilla.json            ← Datos ficticios de demostración
         └── reglas.js, proveedores.js, solicitudes.js, cotizaciones.js,
             ordenes-compra.js, recepciones.js, facturas.js, devoluciones.js,
