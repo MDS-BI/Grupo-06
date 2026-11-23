@@ -145,6 +145,14 @@ function clp(v) {
 function fecha(v) {
   return v ? String(v).split('-').reverse().join('-') : '';
 }
+function textoPlazo(dias, conUnidad = false) {
+  const n = Number(dias) || 0;
+  if (n < 0) {
+    const retraso = Math.abs(n);
+    return `retraso de ${retraso} ${retraso === 1 ? 'día' : 'días'}`;
+  }
+  return conUnidad ? `${n} ${n === 1 ? 'día' : 'días'}` : String(n);
+}
 function badge(estado) {
   return `<span class="badge badge-${esc(estado)}">${esc(estado)}</span>`;
 }
@@ -345,7 +353,7 @@ function renderPanel() {
           ? '<div class="empty">No hay facturas próximas a vencer.</div>'
           : `
         <table><thead><tr><th>Proveedor</th><th>Folio</th><th>Vence</th><th>Días restantes</th><th>Estado</th></tr></thead><tbody>
-        ${panel.alertas.map((f) => `<tr><td>${esc(nombreProveedor(f.proveedor_id))}</td><td>${esc(f.folio)}</td><td>${fecha(f.fecha_vencimiento)}</td><td>${f.dias_restantes}</td><td>${badge(f.estado)}</td></tr>`).join('')}
+        ${panel.alertas.map((f) => `<tr><td>${esc(nombreProveedor(f.proveedor_id))}</td><td>${esc(f.folio)}</td><td>${fecha(f.fecha_vencimiento)}</td><td>${textoPlazo(f.dias_restantes)}</td><td>${badge(f.estado)}</td></tr>`).join('')}
         </tbody></table>`
       }
     </div>
@@ -1013,7 +1021,7 @@ function renderFacturas() {
   content.innerHTML = `
     <div class="card">
       <h2>Alertas de vencimiento</h2>
-      ${alertas.length === 0 ? '<div class="empty">Sin facturas próximas a vencer.</div>' : `<ul>${alertas.map((f) => `<li>${esc(nombreProveedor(f.proveedor_id))} · folio ${esc(f.folio)} · vence ${fecha(f.fecha_vencimiento)} (${f.dias_restantes} días) ${badge(f.estado)}</li>`).join('')}</ul>`}
+      ${alertas.length === 0 ? '<div class="empty">Sin facturas próximas a vencer.</div>' : `<ul>${alertas.map((f) => `<li>${esc(nombreProveedor(f.proveedor_id))} · folio ${esc(f.folio)} · vence ${fecha(f.fecha_vencimiento)} (${textoPlazo(f.dias_restantes, true)}) ${badge(f.estado)}</li>`).join('')}</ul>`}
     </div>
     ${
       puede('registrar_factura', usuario)
