@@ -39,6 +39,18 @@
 - [x] La sección Clarifications explicita el flujo completo de dañados y devoluciones con su enmascaramiento, trazabilidad, cadena documental, anulación y cambios bancarios (FR-025 a FR-030).
 - [x] Existe un requisito de interfaz explícito (FR-032) que prohíbe las vistas genéricas del template base, con escenario de aceptación en US5 y criterio medible SC-014.
 
+## Rediseño de permisos y navegación por rol (2026-11-23)
+
+- [x] La tabla de roles ya no describe a `admin_ti` como "Acceso total"; lo define como administrador del sistema, y FR-004 enumera lo que conserva y lo que pierde.
+- [x] La segregación de funciones se aplica sin excepciones por rol (FR-014, US4 escenario 4, data-model regla 8) y tiene criterio medible (SC-016).
+- [x] FR-033 incluye la matriz de visibilidad de 10 vistas × 5 roles con leyenda ✏️ / 👁️ / —; US12 la cubre con escenarios y SC-015 la mide.
+- [x] FR-034 define la navegación Panel / Adquisiciones / Compras con escenarios en US5 (7) y US12 (1, 3).
+- [x] FR-035 define los pendientes e indicadores del panel por rol según data-model §8, con escenario en US5 (8).
+- [x] FR-036 cubre las mejoras de UI (descripción en las acciones rápidas, sin tarjeta "Sesión activa", sección en el encabezado), con escenarios en US12 (7, 8, 9) y SC-017.
+- [x] Las historias US1, US2, US4, US7, US8, US9 y US11 se alinearon con la matriz (sin contradicciones de actor ni de aprobador).
+- [x] data-model.md v1.3 documenta en §6 el riesgo asumido de conciliación por el comprador y el cambio en §9; las reglas 2, 8 y 10 y las secciones §3.9 y §3.13 se alinearon.
+- [x] US12 usa la misma estructura canónica que US1 a US11.
+
 ## Notas
 
 - La codificación y el separador de las exportaciones CSV están explicitados en la sección Clarifications (UTF-8 con BOM y `;`) y se mantienen delegados a `plan.md` como fuente técnica detallada en FR-024, US10 y SC-010.

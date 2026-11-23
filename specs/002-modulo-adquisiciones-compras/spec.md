@@ -2,7 +2,7 @@
 
 **Rama de la funcionalidad**: 002-modulo-adquisiciones-compras  
 **Creada**: 2026-10-27  
-**Estado**: Aprobada; implementación con deuda documentada en `plan.md`
+**Estado**: Aprobada; implementación con deuda documentada en `plan.md`. Rediseño de permisos y navegación por rol (2026-11-23) pendiente de implementar
 
 **Entrada**: Descripción del grupo: "Construir, sobre el módulo base del curso, un módulo de Adquisiciones y Compras para una pyme chilena que cubra el ciclo completo: solicitud de compra, cotizaciones de proveedores, orden de compra, recepción y factura del proveedor, junto con la gestión y evaluación de proveedores."
 
@@ -41,11 +41,13 @@ Para asegurar el control de acceso y la integración fluida con otros módulos d
 
 | Usuario                      | Rol técnico    | Nivel de Acceso y Propósito                                                                                                                |
 | :--------------------------- | :------------- | :----------------------------------------------------------------------------------------------------------------------------------------- |
-| Solicitante (cualquier área) | `solicitante`  | **Restringido:** Solo ve y crea sus propias solicitudes.                                                                                   |
-| Comprador                    | `comprador`    | **Ejecutor:** Cotiza, emite Órdenes de Compra (OC) y mantiene el catálogo de proveedores. No ve datos bancarios completos.                 |
-| Jefe de compras              | `jefe_compras` | **Aprobador:** Autoriza solicitudes, aprueba facturas y gestiona excepciones comerciales. Ve datos bancarios completos, pero no los edita. |
-| Encargado de bodega          | `bodega`       | **Restringido (Físico):** Solo interactúa con el registro de recepciones de una OC emitida.                                                |
-| Administrador                | `admin_ti`     | **Acceso total:** Puede auditar logs, desbloquear proveedores y ver datos sensibles (ej. cuentas bancarias completas sin enmascarar).      |
+| Solicitante (cualquier área) | `solicitante`  | **Restringido:** Crea y ve solo sus propias solicitudes; consulta en solo lectura las OC y recepciones originadas en ellas, y el catálogo.                                                                                       |
+| Comprador                    | `comprador`    | **Ejecutor:** Cotiza, emite Órdenes de Compra (OC), registra y concilia facturas, mantiene proveedores y catálogo y evalúa proveedores. Ve solicitudes, recepciones y devoluciones en solo lectura. No ve datos bancarios completos. |
+| Jefe de compras              | `jefe_compras` | **Aprobador:** Aprueba o rechaza solicitudes, aprueba el pago de facturas y las devoluciones, evalúa proveedores y consulta la trazabilidad. Ve el resto en solo lectura, con datos bancarios completos, pero no los edita.      |
+| Encargado de bodega          | `bodega`       | **Restringido (Físico):** Registra recepciones y devoluciones de OC emitidas; ve las OC en solo lectura.                                                                                                                        |
+| Administrador                | `admin_ti`     | **Administrador del sistema:** Edita datos bancarios, desbloquea proveedores y consulta y exporta la trazabilidad; ve el resto del módulo en solo lectura. No emite OC, no registra recepciones ni aprueba solicitudes, pagos ni devoluciones. |
+
+El detalle por vista está en la [Matriz de visibilidad por rol](#matriz-de-visibilidad-por-rol-fr-033) (FR-033).
 
 ### Fuera de alcance
 
@@ -73,6 +75,7 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 ### Session 2026-11-23
 
 - Q: ¿Cómo se incorpora el acceso pedido para la demostración sin implementar autenticación real? → A: Se agrega una pantalla de ingreso simulada con selector de rol, campo de nombre condicional y una clave genérica única (`Compras2026`) centralizada en `src/compras/autenticacion.js`. Solo los roles `solicitante` y `comprador` piden y muestran nombre (validado contra los usuarios semilla); `jefe_compras`, `bodega` y `admin_ti` ingresan y se muestran únicamente por su rol, sin nombre. No valida identidad real, no sustituye a un proveedor de identidad y no modifica los permisos por rol: solo controla la visibilidad de la interfaz, permite cerrar sesión y deja intacta la simulación de roles del MVP. La clave se documenta en `README.md` y `quickstart.md`.
+- Q: ¿Cómo se rediseñan los permisos y la navegación por rol? (FR-004, FR-014, FR-033 a FR-036) → A: `admin_ti` pasa a ser **administrador del sistema** y no operador de compras: conserva la edición de datos bancarios, el desbloqueo de proveedores y la consulta y exportación de la trazabilidad, y ve todo lo demás en solo lectura; pierde emitir OC, registrar recepciones y aprobar solicitudes, pagos y devoluciones. La segregación de funciones (regla 8) se aplica **sin excepciones** para ningún rol. Cada rol ve y opera según la matriz de visibilidad (FR-033); la barra lateral se agrupa en Panel / Adquisiciones / Compras (FR-034); el panel muestra pendientes e indicadores propios de cada rol (FR-035); las acciones rápidas muestran una descripción legible, se elimina la tarjeta "Sesión activa" y el encabezado muestra la sección actual (FR-036). El comprador concilia facturas de OC que él emitió como riesgo asumido de pyme (data-model §6). Resoluciones de consistencia: solo `admin_ti` desbloquea proveedores (vuelven a `aprobado`) y el comprador puede bloquearlos; solo el `comprador` emite OC; el solicitante ve el precio de referencia del catálogo, pero no las cotizaciones; bodega registra las devoluciones y `jefe_compras` las aprueba; en trazabilidad, `admin_ti` consulta y exporta (el historial es inmutable) y `jefe_compras` solo consulta.
 
 ## Escenarios de Usuario y Pruebas _(obligatorio)_
 
@@ -80,7 +83,7 @@ _Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo u
 
 ### Historia de Usuario 1 - Gestionar proveedores (Prioridad: P1)
 
-**Como** Administrador o Comprador, **necesito** mantener un registro único, validado y seguro de nuestros proveedores, **para** tener la tranquilidad de que estamos haciendo negocios con entidades legales formales y evitar fraudes o pagos a cuentas incorrectas.
+**Como** Comprador (y el Administrador TI para datos bancarios y desbloqueo), **necesito** mantener un registro único, validado y seguro de nuestros proveedores, **para** tener la tranquilidad de que estamos haciendo negocios con entidades legales formales y evitar fraudes o pagos a cuentas incorrectas.
 
 **Por qué esta prioridad**: Sin proveedores no se puede cotizar ni emitir órdenes de compra. Es el dato maestro del módulo y genera el `id_proveedor`.
 
@@ -93,6 +96,8 @@ _Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo u
 3. **Dado** un proveedor con condición de pago de 45 días, **cuando** no tiene marcado `acuerdo_plazo_mayor`, **entonces** el sistema no permite guardar (cumplimiento Ley 21.131).
 4. **Dado** un proveedor con órdenes de compra, **cuando** el usuario intenta eliminarlo, **entonces** el sistema lo impide para proteger la integridad de los datos y ofrece bloquearlo.
 5. **Dado** un usuario con rol `comprador`, `bodega` o `solicitante`, **cuando** ve la ficha de un proveedor, **entonces** el número de cuenta bancaria aparece enmascarado (ej. `****5678`) y no es editable.
+6. **Dado** un proveedor en estado `bloqueado`, **cuando** un usuario `admin_ti` lo desbloquea, **entonces** el proveedor vuelve a `aprobado` y el cambio queda registrado en la trazabilidad.
+7. **Dado** un usuario `comprador`, **cuando** abre la ficha de un proveedor `bloqueado`, **entonces** no dispone de la acción de desbloquear; y **dado** un usuario `admin_ti`, **cuando** abre la lista de proveedores, **entonces** no puede crear proveedores ni editar sus datos generales (solo datos bancarios y desbloqueo).
 
 ---
 
@@ -111,6 +116,7 @@ _Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo u
 3. **Dada** una solicitud `enviada`, **cuando** el jefe de compras la rechaza, **entonces** el sistema exige escribir un motivo de rechazo.
 4. **Dado** que el jefe de compras es también el solicitante, **cuando** intenta aprobar su propia solicitud, **entonces** el sistema se lo impide (segregación de funciones).
 5. **Dada** una solicitud sin productos, **cuando** el solicitante intenta enviarla, **entonces** el sistema lo impide.
+6. **Dada** una solicitud `enviada`, **cuando** un usuario `admin_ti` la abre, **entonces** la ve en solo lectura y no dispone de las acciones de aprobar ni rechazar.
 
 ---
 
@@ -145,15 +151,16 @@ _Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo u
 1. **Dada** una OC `emitida`, **cuando** bodega registra una recepción parcial, **entonces** la OC pasa a `recibida_parcial` mostrando lo pendiente.
 2. **Dada** una línea con 4 unidades pendientes, **cuando** bodega intenta aceptar 5, **entonces** el sistema lo impide.
 3. **Dada** una recepción con rechazos, **cuando** el bodeguero no indica el motivo, **entonces** el sistema lo exige obligatoriamente.
-4. **Dado** que el usuario que registra es el mismo comprador que emitió la OC, **cuando** intenta registrar la recepción, **entonces** el sistema se lo deniega (separación de compras y bodega).
+4. **Dado** que el usuario que intenta registrar la recepción es quien emitió la OC, cualquiera sea su rol, **cuando** intenta registrarla, **entonces** el sistema se lo deniega sin excepciones (regla 8, separación de compras y bodega).
 5. **Dada** una OC `emitida`, **cuando** bodega detecta al recibir unidades dañadas, **entonces** las registra como rechazadas con motivo `danado`, no las cuenta como recibidas, no las incluye en el valor a facturar y las deja pendientes en la OC para reposición.
 6. **Dada** una recepción con unidades rechazadas por motivo `danado`, **cuando** se consulta el valor a facturar de la OC, **entonces** dicho valor excluye las unidades dañadas y la OC mantiene la cantidad pendiente para reposición.
+7. **Dado** un usuario `admin_ti`, **cuando** abre la vista de Recepciones, **entonces** ve las recepciones en solo lectura y no puede registrar ninguna.
 
 ---
 
 ### Historia de Usuario 5 - Panel de pendientes y alertas por rol (Prioridad: P1)
 
-**Como** usuario del módulo (solicitante, comprador, jefe de compras o bodega), **necesito** ver al ingresar solo lo que me corresponde atender y lo que está por vencer, **para** priorizar mi trabajo diario y no dejar pasar plazos legales ni solicitudes detenidas.
+**Como** usuario del módulo (solicitante, comprador, jefe de compras, bodega o administrador TI), **necesito** ver al ingresar solo lo que me corresponde atender y lo que está por vencer, **para** priorizar mi trabajo diario y no dejar pasar plazos legales ni solicitudes detenidas.
 
 **Por qué esta prioridad**: Es la pantalla de entrada del módulo y convierte el registro pasivo de datos en trabajo accionable. Sin ella, cada rol debe revisar listas completas para descubrir qué le toca; con ella se cumple el requisito de alertas de vencimiento (FR-017) y el criterio de éxito SC-005.
 
@@ -161,13 +168,14 @@ _Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo u
 
 **Escenarios de Aceptación**:
 
-1. **Dado** un usuario con un rol activo, **cuando** abre el panel de inicio, **entonces** ve solo los pendientes que su rol puede atender (solicitudes por aprobar, OC sin recepción, recepciones por registrar o facturas por conciliar) con su contador y un acceso directo a cada registro. Las acciones rápidas son botones etiquetados, ubicados en la sección "Acciones rápidas" del panel, que abren la vista destino con el filtro ya aplicado.
+1. **Dado** un usuario con un rol activo, **cuando** abre el panel de inicio, **entonces** ve solo los pendientes e indicadores que corresponden a su rol según FR-035, con su contador y un acceso directo a cada registro. Las acciones rápidas son botones ubicados en la sección "Acciones rápidas" del panel, etiquetados con una descripción legible para el usuario (p. ej., "Crear solicitud de compra") y nunca con el identificador interno del permiso (p. ej., `crear_solicitud`), que abren la vista destino con el filtro ya aplicado.
 2. **Dada** una factura no aprobada que vence en 5 días o menos, **cuando** el usuario abre el panel, **entonces** aparece una alerta destacada —bloque con borde de color de alerta, texto "Vence en N días" y enlaces al proveedor y al folio— ubicada antes de la lista de pendientes, con los días restantes.
 3. **Dado** un solicitante, **cuando** revisa el panel, **entonces** solo ve sus propias solicitudes y no los pendientes de otros usuarios ni datos de otras áreas (acceso restringido).
 4. **Dadas** órdenes de compra emitidas sin recepción registrada por más de 7 días, **cuando** el encargado de bodega o el comprador abre el panel, **entonces** el sistema las lista como pendientes de seguimiento.
 5. **Dado** un período seleccionado (mes actual), **cuando** el panel carga, **entonces** muestra indicadores de monto comprometido en OC, órdenes abiertas y facturas aprobadas para pago, calculados con los datos existentes.
-6. **Dado** que no hay pendientes para el rol, **cuando** el usuario abre el panel, **entonces** ve un estado vacío claro que lo invita a crear una solicitud u orden según corresponda.
-7. **Dado** que la aplicación se abre en un navegador, **cuando** se revisan la navegación lateral y el contenido principal, **entonces** solo aparecen las vistas del módulo de Adquisiciones y Compras (Panel, Proveedores, Solicitudes, Cotizaciones, Órdenes de compra, Recepciones, Facturas, Devoluciones, Catálogo y Evaluaciones) y no se muestran ni se puede navegar a las vistas genéricas Entidades, Documentos ni Búsqueda del template base.
+6. **Dado** que no hay pendientes para el rol, **cuando** el usuario abre el panel, **entonces** ve un estado vacío claro que solo lo invita a acciones que su rol puede ejecutar (p. ej., crear una solicitud u orden); para `bodega` y `admin_ti` el estado vacío informa que no hay pendientes, sin invitar a crear documentos.
+7. **Dado** que la aplicación se abre en un navegador, **cuando** se revisan la navegación lateral y el contenido principal, **entonces** solo aparecen las vistas del módulo de Adquisiciones y Compras, agrupadas en Panel / Adquisiciones / Compras según FR-034 y filtradas por el rol activo, y no se muestran ni se puede navegar a las vistas genéricas Entidades, Documentos ni Búsqueda del template base.
+8. **Dado** cada uno de los cinco roles, **cuando** abre el panel, **entonces** ve exactamente los pendientes e indicadores asignados a su rol en FR-035 y ninguno de los asignados a otros roles.
 
 ---
 
@@ -193,7 +201,7 @@ _Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo u
 
 ### Historia de Usuario 7 - Registrar y conciliar facturas (Prioridad: P2)
 
-**Como** Jefe de Compras, **necesito** cruzar la factura del proveedor con la Orden y lo recibido en Bodega, **para** autorizar el pago a Contabilidad solo si los montos coinciden y hacerlo en plazo.
+**Como** Comprador, **necesito** registrar la factura del proveedor y cruzarla con la Orden y lo recibido en Bodega, y **como** Jefe de Compras aprobar su pago, **para** autorizar el pago a Contabilidad solo si los montos coinciden y hacerlo en plazo.
 
 **Por qué esta prioridad**: Cierra el ciclo de compras y prepara el pase de datos hacia el Módulo de Contabilidad.
 
@@ -206,6 +214,7 @@ _Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo u
 3. **Dada** una factura `con_discrepancia`, **cuando** se intenta aprobarla para pago, **entonces** el sistema lo impide.
 4. **Dado** un folio de factura ya registrado para ese proveedor, **cuando** se intenta ingresar nuevamente, **entonces** el sistema evita la duplicidad.
 5. **Dado** un proveedor cuya cuenta bancaria cambió hace menos de 30 días, **cuando** se aprueba su factura, **entonces** el sistema emite una alerta de posible riesgo de fraude.
+6. **Dada** una factura `conciliada`, **cuando** un usuario `comprador` la abre, **entonces** no dispone de la acción de aprobar el pago (exclusiva de `jefe_compras`); y **cuando** la abre un usuario `admin_ti`, **entonces** la ve en solo lectura.
 
 ---
 
@@ -222,14 +231,14 @@ _Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo u
 1. **Dado** un proveedor y un producto activo, **cuando** el comprador agrega la relación, **entonces** se guarda una única entrada proveedor-producto con precio de referencia, plazo de entrega y fecha de actualización.
 2. **Dado** un producto ya asociado a ese proveedor, **cuando** se intenta agregar de nuevo, **entonces** el sistema lo impide.
 3. **Dado** un precio de referencia con más de 90 días desde su actualización, **cuando** se consulta el catálogo, **entonces** aparece marcado como desactualizado.
-4. **Dado** que el comprador crea una línea de solicitud, **cuando** el producto está en el catálogo, **entonces** el sistema sugiere el menor precio de referencia vigente.
+4. **Dado** que el solicitante crea una línea de solicitud, **cuando** el producto está en el catálogo, **entonces** el sistema sugiere el menor precio de referencia vigente.
 5. **Dado** un producto desactivado en Inventario, **cuando** se consulta el catálogo, **entonces** no se ofrece para nuevas líneas.
 
 ---
 
 ### Historia de Usuario 9 - Evaluación de desempeño de proveedores (Prioridad: P2)
 
-**Como** Jefe de Compras, **necesito** evaluar el desempeño de cada proveedor por orden recibida, **para** decidir con datos a quién seguir comprando y mostrar ese historial al comparar cotizaciones.
+**Como** Comprador o Jefe de Compras, **necesito** evaluar el desempeño de cada proveedor por orden recibida, **para** decidir con datos a quién seguir comprando y mostrar ese historial al comparar cotizaciones.
 
 **Por qué esta prioridad**: Convierte el histórico de órdenes en información de decisión. Depende de las recepciones de US4 y alimenta la comparativa de US6 y la ficha del proveedor de US1.
 
@@ -237,7 +246,7 @@ _Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo u
 
 **Escenarios de Aceptación**:
 
-1. **Dada** una OC en estado `recibida_total` o `cerrada`, **cuando** el jefe de compras registra una evaluación, **entonces** se guarda con sus puntajes y comentario.
+1. **Dada** una OC en estado `recibida_total` o `cerrada`, **cuando** el comprador o el jefe de compras registra una evaluación, **entonces** se guarda con sus puntajes y comentario.
 2. **Dado** que ya existe una evaluación para esa OC, **cuando** se intenta registrar otra, **entonces** el sistema lo impide (una evaluación por OC).
 3. **Dado** el atraso entre la fecha comprometida y la fecha de recepción, **cuando** se calcula la nota, **entonces** se aplica la escala: 0 días → 5; 1-3 → 4; 4-7 → 3; 8-14 → 2; más de 14 → 1.
 4. **Dado** un proveedor con evaluaciones, **cuando** se abre su ficha o la comparativa de cotizaciones, **entonces** se muestra el promedio actualizado.
@@ -266,7 +275,7 @@ _Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo u
 
 ### Historia de Usuario 11 - Registrar devoluciones y notas de crédito (Prioridad: P2)
 
-**Como** Jefe de Compras, **necesito** registrar devoluciones y notas de crédito contra una Orden de Compra ya recibida y facturada, **para** descontar de lo facturado aquello que no cumple y no pagar de más al proveedor.
+**Como** Encargado de Bodega, **necesito** registrar devoluciones contra una Orden de Compra ya recibida y facturada, y **como** Jefe de Compras aprobarlas, **para** descontar de lo facturado aquello que no cumple y no pagar de más al proveedor.
 
 **Por qué esta prioridad**: Cierra el hueco entre la recepción (US4) y la conciliación de facturas (US7). El caso límite de la nota de crédito no tiene flujo definido; sin esta historia, una devolución posterior a la recepción no se refleja en el saldo por pagar. Depende de que existan OC con recepciones y facturas registradas.
 
@@ -274,14 +283,36 @@ _Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo u
 
 **Escenarios de Aceptación**:
 
-1. **Dada** una OC con unidades aceptadas, **cuando** el jefe de compras registra una devolución indicando línea, cantidad y motivo, **entonces** el sistema genera un documento de devolución con correlativo `DEV-AAAA-NNNN` y descuenta la cantidad del saldo recibido.
+1. **Dada** una OC con unidades aceptadas, **cuando** bodega registra una devolución indicando línea, cantidad y motivo, **entonces** el sistema genera un documento de devolución con correlativo `DEV-AAAA-NNNN` y descuenta la cantidad del saldo recibido.
 2. **Dada** una factura ya registrada, **cuando** se ingresa una nota de crédito del mismo proveedor, **entonces** se descuenta del monto facturado y no se permite que el crédito supere dicho monto.
 3. **Dada** una nota de crédito sin OC o sin factura asociada, **cuando** se intenta registrar, **entonces** el sistema lo impide y exige el documento de origen.
 4. **Dado** un folio de nota de crédito ya registrado para ese proveedor, **cuando** se intenta ingresar nuevamente, **entonces** el sistema evita la duplicidad.
 5. **Dado** que la devolución reduce el saldo pendiente a cero, **cuando** se guarda, **entonces** la OC queda `cerrada` y la factura queda saldada sin pasar a `aprobada_pago` por el monto descontado.
-6. **Dado** que quien registró la recepción es también quien intenta registrar la devolución, **cuando** lo hace, **entonces** el sistema exige la aprobación de un `jefe_compras` o `admin_ti` distinto (segregación de funciones).
-7. **Dada** una OC con unidades aceptadas y facturadas, **cuando** el daño se detecta después de la aceptación, **entonces** el jefe de compras registra una devolución con motivo `defectuoso` que descuenta la cantidad del saldo recibido y del monto facturado.
+6. **Dado** que quien registró la recepción es también quien intenta registrar la devolución, **cuando** lo hace, **entonces** el sistema exige la aprobación de un `jefe_compras` distinto (segregación de funciones).
+7. **Dada** una OC con unidades aceptadas y facturadas, **cuando** el daño se detecta después de la aceptación, **entonces** bodega registra una devolución con motivo `defectuoso` que descuenta la cantidad del saldo recibido y del monto facturado.
 8. **Dada** una devolución con motivo `defectuoso` registrada, **cuando** se consulta el saldo pendiente, **entonces** el saldo recibido y facturado refleja el descuento y no se factura ni paga lo devuelto.
+
+---
+
+### Historia de Usuario 12 - Navegación y visibilidad por rol (Prioridad: P1)
+
+**Como** usuario del módulo (cualquiera de los cinco roles), **necesito** ver en la navegación y en cada vista solo lo que mi rol puede operar o consultar, **para** encontrar rápido mi trabajo, no ver acciones que no me corresponden y respetar la segregación de funciones.
+
+**Por qué esta prioridad**: Es el control de acceso visible del módulo. Sin él, roles como `admin_ti` pueden operar el ciclo de compras y se rompe la segregación de funciones (regla 8); además la navegación mezcla vistas que el rol no usa.
+
+**Prueba Independiente**: Se recorre la aplicación con cada uno de los cinco roles y se comprueba, vista por vista, que la barra lateral, las acciones disponibles y los registros visibles coinciden con la matriz de visibilidad (FR-033).
+
+**Escenarios de Aceptación**:
+
+1. **Dado** un rol activo, **cuando** el usuario abre la aplicación, **entonces** la barra lateral muestra Panel y los grupos Adquisiciones y Compras solo con las vistas que la matriz marca como ✏️ o 👁️ para ese rol; un grupo sin vistas visibles no aparece.
+2. **Dado** un rol con 👁️ sobre una vista, **cuando** la abre, **entonces** ve y puede exportar los registros, pero no dispone de acciones para crear, editar, aprobar ni anular.
+3. **Dado** un rol con — sobre una vista, **cuando** intenta llegar a ella mediante un enlace interno, una acción rápida o la cadena documental, **entonces** el sistema no la muestra e informa que su rol no tiene acceso.
+4. **Dado** un usuario `solicitante`, **cuando** abre Órdenes de compra o Recepciones, **entonces** ve solo las originadas en sus propias solicitudes.
+5. **Dado** un usuario `admin_ti`, **cuando** recorre el módulo, **entonces** solo puede editar datos bancarios, desbloquear proveedores y consultar y exportar la trazabilidad; todo lo demás lo ve en solo lectura.
+6. **Dado** un documento con historial, **cuando** lo abre un usuario `solicitante`, `comprador` o `bodega`, **entonces** no ve el historial de eventos; **cuando** lo abre un `jefe_compras`, **entonces** lo consulta sin poder exportarlo; y **cuando** lo abre un `admin_ti`, **entonces** lo consulta y puede exportarlo.
+7. **Dada** cualquier vista del módulo, **cuando** el usuario la abre, **entonces** el encabezado muestra la sección actual (p. ej., "Compras › Órdenes de compra").
+8. **Dado** el panel de inicio, **cuando** se muestran las acciones rápidas, **entonces** cada una tiene una descripción legible para el usuario y ninguna muestra el identificador interno del permiso.
+9. **Dada** una sesión iniciada, **cuando** el usuario revisa la pantalla, **entonces** no aparece la tarjeta "Sesión activa" y el rol se muestra solo en el selector de rol.
 
 ---
 
@@ -315,6 +346,12 @@ _Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo u
 - ¿Qué pasa si el daño se detecta con la factura ya aprobada para pago? Se registra una devolución con motivo `defectuoso` que descuenta el saldo recibido y facturado; el monto aprobado para pago se ajusta y la diferencia queda como crédito a favor o pendiente de nota de crédito, sin pagar lo dañado.
 - ¿Qué pasa si el proveedor no repone lo dañado? La OC se cierra con saldo pendiente, dejando registrada la cantidad no repuesta, y no se factura ni paga lo dañado.
 
+**Permisos y navegación**
+
+- ¿Qué pasa si se cambia de rol estando en una vista que el nuevo rol no ve? La aplicación vuelve al Panel del nuevo rol.
+- ¿Qué pasa si una acción rápida apunta a una vista o acción que el rol no tiene? La acción rápida no se muestra.
+- ¿Qué pasa con documentos emitidos por `admin_ti` antes de este rediseño (datos semilla o historial)? Se conservan con el `rol_usuario` registrado en su momento, y la regla 8 se les aplica igual: quien emitió una OC no puede registrar su recepción.
+
 ## Requisitos _(obligatorio)_
 
 ### Requisitos Funcionales
@@ -322,9 +359,9 @@ _Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo u
 - **FR-001**: El sistema DEBE permitir crear, editar, buscar y cambiar de estado proveedores, validando RUT (formato y dígito verificador) y su unicidad.
 - **FR-002**: El sistema DEBE impedir una condición de pago mayor a 30 días si el proveedor no tiene registrado un acuerdo de plazo mayor (Ley 21.131).
 - **FR-003**: El sistema DEBE impedir eliminar proveedores con órdenes de compra; en su lugar DEBE permitir bloquearlos.
-- **FR-004**: El sistema DEBE permitir a `admin_ti` y `jefe_compras` ver sin enmascarar el RUT de personas naturales y el número de cuenta bancaria; los demás roles los ven enmascarados. Solo `admin_ti` puede editar los datos bancarios y cada cambio actualiza `fecha_cambio_cuenta`. La aplicación del enmascaramiento en todos los canales se rige por FR-025 y su registro por FR-030.
+- **FR-004**: El sistema DEBE permitir a `admin_ti` y `jefe_compras` ver sin enmascarar el RUT de personas naturales y el número de cuenta bancaria; los demás roles los ven enmascarados. Solo `admin_ti` puede editar los datos bancarios y desbloquear proveedores; cada cambio bancario actualiza `fecha_cambio_cuenta`. `admin_ti` es el administrador del sistema: no emite OC, no registra recepciones ni aprueba solicitudes, pagos ni devoluciones, y ve el resto del módulo en solo lectura (FR-033). La aplicación del enmascaramiento en todos los canales se rige por FR-025 y su registro por FR-030.
 - **FR-005**: El sistema DEBE permitir crear solicitudes de compra con una o más líneas y numeración correlativa `SC-AAAA-NNNN`.
-- **FR-006**: El sistema DEBE impedir que un usuario apruebe su propia solicitud y DEBE exigir motivo al rechazar.
+- **FR-006**: El sistema DEBE permitir aprobar o rechazar solicitudes solo a un usuario `jefe_compras` distinto del solicitante, DEBE impedir que un usuario apruebe su propia solicitud y DEBE exigir motivo al rechazar.
 - **FR-007**: El sistema DEBE permitir registrar cotizaciones solo para solicitudes aprobadas, con una cotización por proveedor y solicitud.
 - **FR-008**: El sistema DEBE exigir al menos 3 cotizaciones, o una justificación de proveedor único, para seleccionar una cotización en solicitudes cuyo monto estimado iguale o supere UMBRAL_COTIZACIONES.
 - **FR-009**: El sistema DEBE exigir motivo al descartar una cotización y DEBE marcar como vencidas las cotizaciones cuya fecha de validez pasó.
@@ -332,11 +369,11 @@ _Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo u
 - **FR-011**: El sistema DEBE impedir más de una orden de compra no anulada por solicitud y más de una orden por cotización.
 - **FR-012**: El sistema DEBE calcular subtotales, neto, IVA (19 %) y total en CLP enteros.
 - **FR-013**: El sistema DEBE registrar recepciones parciales por línea, impedir aceptar más de lo pendiente y actualizar el estado de la orden automáticamente.
-- **FR-014**: El sistema DEBE impedir que quien emitió una orden registre su recepción.
+- **FR-014**: El sistema DEBE impedir que quien emitió una orden registre su recepción, sin excepciones para ningún rol (regla 8).
 - **FR-015**: El sistema DEBE registrar facturas y notas de crédito solo contra órdenes con recepciones, con folio único por proveedor y tipo de documento.
 - **FR-016**: El sistema DEBE conciliar cada factura contra el valor recibido pendiente de facturar y clasificarla como `conciliada` o `con_discrepancia` según TOLERANCIA_CONCILIACION.
 - **FR-017**: El sistema DEBE calcular la `fecha_vencimiento` de cada factura desde su `fecha_recepcion` (fecha de recepción del documento, registrada al crear la factura) aplicando la condición de pago de la orden de compra de origen, y DEBE alertar las facturas no aprobadas que vencen en 5 días o menos.
-- **FR-018**: El sistema DEBE mostrar un panel de inicio con acciones rápidas, pendientes por rol, alertas e indicadores del período.
+- **FR-018**: El sistema DEBE mostrar un panel de inicio con acciones rápidas, pendientes por rol, alertas e indicadores del período, según FR-035 (contenido por rol) y FR-036 (presentación).
 - **FR-019**: El sistema DEBE permitir una evaluación por orden recibida, calculando la nota de plazo a partir de las fechas.
 - **FR-020**: El sistema DEBE funcionar con datos semilla completamente ficticios.
 - **FR-021**: El sistema DEBE usar `UMBRAL_COTIZACIONES = 1.000.000 CLP neto` para exigir tres cotizaciones o una justificación de proveedor único.
@@ -349,8 +386,41 @@ _Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo u
 - **FR-028**: El sistema DEBE permitir navegar, desde cualquier documento, la cadena completa solicitud, cotización, orden de compra, recepción, factura y devolución.
 - **FR-029**: El sistema DEBE impedir la eliminación de documentos con historial y DEBE permitir solo su anulación con motivo registrado.
 - **FR-030**: El sistema DEBE registrar cada cambio de datos bancarios con el valor enmascarado, nunca con el número completo.
-- **FR-031**: El sistema DEBE permitir registrar devoluciones de unidades aceptadas contra una orden de compra con recepciones, indicando línea, cantidad y motivo, con correlativo `DEV-AAAA-NNNN`; DEBE impedir devolver más de lo aceptado pendiente de devolver, descontar la cantidad del saldo recibido y facturado, cerrar la OC cuando el saldo pendiente llegue a cero y exigir la aprobación de un `jefe_compras` o `admin_ti` distinto cuando quien registró la recepción intente registrar la devolución.
-- **FR-032**: La aplicación DEBE mostrar exclusivamente las vistas del módulo de Adquisiciones y Compras (Panel, Proveedores, Solicitudes, Cotizaciones, Órdenes de compra, Recepciones, Facturas, Devoluciones, Catálogo y Evaluaciones). NO DEBE mostrar, enlazar desde la navegación ni permitir acceder mediante acciones internas a las vistas genéricas del template base (Entidades, Documentos y Búsqueda).
+- **FR-031**: El sistema DEBE permitir registrar devoluciones de unidades aceptadas contra una orden de compra con recepciones, indicando línea, cantidad y motivo, con correlativo `DEV-AAAA-NNNN`; DEBE impedir devolver más de lo aceptado pendiente de devolver, descontar la cantidad del saldo recibido y facturado, cerrar la OC cuando el saldo pendiente llegue a cero y exigir la aprobación de un `jefe_compras` distinto cuando quien registró la recepción intente registrar la devolución.
+- **FR-032**: La aplicación DEBE mostrar exclusivamente las vistas del módulo de Adquisiciones y Compras (Panel, Proveedores, Solicitudes, Cotizaciones, Órdenes de compra, Recepciones, Facturas, Devoluciones, Catálogo y Evaluaciones). NO DEBE mostrar, enlazar desde la navegación ni permitir acceder mediante acciones internas a las vistas genéricas del template base (Entidades, Documentos y Búsqueda). Las vistas se agrupan según FR-034.
+- **FR-033**: El sistema DEBE aplicar la [Matriz de visibilidad por rol](#matriz-de-visibilidad-por-rol-fr-033) a cada vista y acción: ✏️ significa que el rol opera (con el alcance indicado en la celda); 👁️, que solo ve y exporta lo visible, sin crear, editar, aprobar ni anular; —, que la vista no aparece ni es accesible por ningún enlace, acción rápida o cadena documental. La restricción DEBE validarse tanto en la interfaz como en cada operación.
+- **FR-034**: La barra lateral DEBE organizarse en Panel / **Adquisiciones** (Proveedores, Catálogo, Evaluaciones) / **Compras** (Solicitudes, Cotizaciones, Órdenes de compra, Recepciones, Facturas, Devoluciones), según data-model §1. Cada rol DEBE ver solo las vistas que la matriz (FR-033) le asigna como ✏️ o 👁️; un grupo sin vistas visibles NO DEBE mostrarse. Al cambiar de rol, si la vista actual no es visible para el nuevo rol, la aplicación DEBE volver al Panel.
+- **FR-035**: El panel de inicio DEBE mostrar a cada rol solo los pendientes e indicadores siguientes (los indicadores se calculan según data-model §8):
+
+  | Rol            | Pendientes                                                                                                           | Indicadores                                          |
+  | -------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+  | `solicitante`  | Estado de sus propias solicitudes                                                                                    | —                                                    |
+  | `comprador`    | Solicitudes aprobadas sin cotizar, OC sin recepción, facturas con discrepancia                                       | Facturas con discrepancia                            |
+  | `jefe_compras` | Aprobaciones pendientes: solicitudes por aprobar, facturas conciliadas por aprobar pago y devoluciones por aprobar   | Gasto del período, Facturas en riesgo de pago tardío |
+  | `bodega`       | OC esperando entrega, recepciones parciales                                                                          | Tasa de rechazo en recepción                         |
+  | `admin_ti`     | Cambios bancarios de los últimos 30 días, alertas de fraude (facturas no aprobadas de proveedores con cambio de cuenta hace menos de 30 días) | —                                                    |
+
+  La alerta de vencimiento de FR-017 se muestra solo a los roles con acceso a Facturas.
+- **FR-036**: La interfaz DEBE: (a) mostrar en cada acción rápida una descripción legible para el usuario y nunca el identificador interno del permiso; (b) no mostrar la tarjeta "Sesión activa", ya que el rol se ve en el selector de rol; (c) mostrar en el encabezado la sección actual (grupo y vista).
+
+#### Matriz de visibilidad por rol (FR-033)
+
+Leyenda: ✏️ opera · 👁️ solo lectura · — no ve.
+
+| Vista              | `solicitante`                   | `comprador`                           | `jefe_compras`                       | `bodega`       | `admin_ti`                                 |
+| ------------------ | ------------------------------- | ------------------------------------- | ------------------------------------ | -------------- | ------------------------------------------ |
+| Solicitudes        | ✏️ solo propias                 | 👁️                                    | ✏️ aprueba / rechaza                 | —              | 👁️                                         |
+| Cotizaciones       | —                               | ✏️                                    | 👁️                                   | —              | 👁️                                         |
+| Órdenes de compra  | 👁️ las de sus solicitudes       | ✏️                                    | 👁️                                   | 👁️             | 👁️                                         |
+| Recepciones        | 👁️ las de sus solicitudes       | 👁️                                    | 👁️                                   | ✏️             | 👁️                                         |
+| Facturas           | —                               | ✏️ registra y concilia                | ✏️ aprueba pago                      | —              | 👁️                                         |
+| Devoluciones       | —                               | 👁️                                    | ✏️ aprueba                           | ✏️ registra    | 👁️                                         |
+| Proveedores        | —                               | ✏️ sin datos bancarios completos      | 👁️ con datos bancarios completos     | —              | ✏️ solo datos bancarios y desbloqueo       |
+| Catálogo           | 👁️                              | ✏️                                    | 👁️                                   | —              | 👁️                                         |
+| Evaluaciones       | —                               | ✏️                                    | ✏️                                   | —              | 👁️                                         |
+| Trazabilidad       | —                               | —                                     | 👁️ consulta                          | —              | ✏️ consulta y exporta                      |
+
+En Trazabilidad, ✏️ significa consultar y exportar: el historial es inmutable y nadie edita sus eventos. La navegación de la cadena documental (FR-028) se mantiene para cada rol sobre los documentos que ya puede ver; lo que se restringe es el historial de eventos.
 
 ### Requisitos de Integración
 
@@ -394,6 +464,9 @@ El detalle de atributos, cardinalidades y reglas está en [data-model.md](data-m
 - **SC-012**: El 100 % de los cambios de estado de solicitud, cotización, OC, recepción, factura y devolución registra quién, cuándo y qué acción, y desde cualquier documento se puede navegar la cadena completa sin búsquedas manuales, verificado con una prueba de auditoría de punta a punta.
 - **SC-013**: El 100 % de las pantallas del módulo (Panel, Proveedores, Solicitudes, Cotizaciones, Órdenes de compra, Recepciones, Facturas, Devoluciones, Catálogo y Evaluaciones) tiene una etiqueta asociada a cada campo, se puede operar solo con teclado, muestra los mensajes de error junto al campo afectado y cumple un contraste mínimo de 4,5:1 en texto normal (WCAG 2.1 AA), verificado en una revisión de accesibilidad de cada pantalla.
 - **SC-014**: El 100 % de la navegación y del contenido visible de la aplicación corresponde a vistas del módulo de Adquisiciones y Compras; no aparece ninguna vista genérica del template base (Entidades, Documentos o Búsqueda), verificado al abrir la aplicación y revisar la barra lateral y las acciones disponibles.
+- **SC-015**: El 100 % de las 50 combinaciones rol × vista (5 roles × 10 vistas) se comporta según la matriz de visibilidad (FR-033): opera, solo lectura o no ve, verificado con pruebas automatizadas.
+- **SC-016**: `admin_ti` no puede ejecutar ninguna de las cinco operaciones de compra que pierde (emitir OC, registrar recepciones, aprobar pagos, aprobar devoluciones y aprobar solicitudes), y ningún rol puede registrar la recepción de una OC que emitió, verificado con pruebas automatizadas.
+- **SC-017**: El 0 % de las acciones rápidas muestra un identificador interno de permiso y el 100 % de las vistas muestra su sección en el encabezado, verificado al recorrer la aplicación con los cinco roles.
 
 ## Suposiciones
 
@@ -404,3 +477,6 @@ El detalle de atributos, cardinalidades y reglas está en [data-model.md](data-m
 - Productos, usuarios y centros de costo vienen como datos semilla mientras los módulos de Inventario, RR.HH. y Contabilidad no estén conectados.
 - La codificación y el separador de los archivos CSV exportados son los definidos en [plan.md](plan.md); un cambio de esa codificación se realiza en el plan y no en esta especificación.
 - El módulo se construye sobre el template del curso (`specs/001-erp-base-module`); ver [plan.md](plan.md).
+- El permiso de solo lectura (👁️) incluye exportar a CSV lo que el rol ve (FR-024), salvo el historial de trazabilidad, que solo exporta `admin_ti`.
+- El comprador puede bloquear proveedores; solo `admin_ti` puede desbloquearlos, y un proveedor desbloqueado vuelve a `aprobado`.
+- El comprador concilia facturas de OC que él mismo emitió. En una pyme se acepta como riesgo asumido, mitigado porque la recepción la registra bodega y la aprobación del pago es exclusiva de `jefe_compras` (data-model §6).
