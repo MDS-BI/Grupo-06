@@ -2,7 +2,8 @@
 
 **Rama de la funcionalidad**: 002-modulo-adquisiciones-compras  
 **Creada**: 2026-10-27  
-**Estado**: Borrador  
+**Estado**: Aprobada; implementación con deuda documentada en `plan.md`
+
 **Entrada**: Descripción del grupo: "Construir, sobre el módulo base del curso, un módulo de Adquisiciones y Compras para una pyme chilena que cubra el ciclo completo: solicitud de compra, cotizaciones de proveedores, orden de compra, recepción y factura del proveedor, junto con la gestión y evaluación de proveedores."
 
 ## Propósito
@@ -160,8 +161,8 @@ _Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo u
 
 **Escenarios de Aceptación**:
 
-1. **Dado** un usuario con un rol activo, **cuando** abre el panel de inicio, **entonces** ve solo los pendientes que su rol puede atender (solicitudes por aprobar, OC sin recepción, recepciones por registrar o facturas por conciliar) con su contador y un acceso directo a cada registro.
-2. **Dada** una factura no aprobada que vence en 5 días o menos, **cuando** el usuario abre el panel, **entonces** aparece una alerta destacada con el proveedor, el folio y los días restantes.
+1. **Dado** un usuario con un rol activo, **cuando** abre el panel de inicio, **entonces** ve solo los pendientes que su rol puede atender (solicitudes por aprobar, OC sin recepción, recepciones por registrar o facturas por conciliar) con su contador y un acceso directo a cada registro. Las acciones rápidas son botones etiquetados, ubicados en la sección "Acciones rápidas" del panel, que abren la vista destino con el filtro ya aplicado.
+2. **Dada** una factura no aprobada que vence en 5 días o menos, **cuando** el usuario abre el panel, **entonces** aparece una alerta destacada —bloque con borde de color de alerta, texto "Vence en N días" y enlaces al proveedor y al folio— ubicada antes de la lista de pendientes, con los días restantes.
 3. **Dado** un solicitante, **cuando** revisa el panel, **entonces** solo ve sus propias solicitudes y no los pendientes de otros usuarios ni datos de otras áreas (acceso restringido).
 4. **Dadas** órdenes de compra emitidas sin recepción registrada por más de 7 días, **cuando** el encargado de bodega o el comprador abre el panel, **entonces** el sistema las lista como pendientes de seguimiento.
 5. **Dado** un período seleccionado (mes actual), **cuando** el panel carga, **entonces** muestra indicadores de monto comprometido en OC, órdenes abiertas y facturas aprobadas para pago, calculados con los datos existentes.
@@ -321,7 +322,7 @@ _Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo u
 - **FR-001**: El sistema DEBE permitir crear, editar, buscar y cambiar de estado proveedores, validando RUT (formato y dígito verificador) y su unicidad.
 - **FR-002**: El sistema DEBE impedir una condición de pago mayor a 30 días si el proveedor no tiene registrado un acuerdo de plazo mayor (Ley 21.131).
 - **FR-003**: El sistema DEBE impedir eliminar proveedores con órdenes de compra; en su lugar DEBE permitir bloquearlos.
-- **FR-004**: El sistema DEBE enmascarar el RUT de personas naturales y el número de cuenta bancaria para todos los roles excepto `admin_ti` y `jefe_compras`, y DEBE registrar la fecha del último cambio de datos bancarios. Solo `admin_ti` puede editar los datos bancarios.
+- **FR-004**: El sistema DEBE permitir a `admin_ti` y `jefe_compras` ver sin enmascarar el RUT de personas naturales y el número de cuenta bancaria; los demás roles los ven enmascarados. Solo `admin_ti` puede editar los datos bancarios y cada cambio actualiza `fecha_cambio_cuenta`. La aplicación del enmascaramiento en todos los canales se rige por FR-025 y su registro por FR-030.
 - **FR-005**: El sistema DEBE permitir crear solicitudes de compra con una o más líneas y numeración correlativa `SC-AAAA-NNNN`.
 - **FR-006**: El sistema DEBE impedir que un usuario apruebe su propia solicitud y DEBE exigir motivo al rechazar.
 - **FR-007**: El sistema DEBE permitir registrar cotizaciones solo para solicitudes aprobadas, con una cotización por proveedor y solicitud.
@@ -334,7 +335,7 @@ _Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo u
 - **FR-014**: El sistema DEBE impedir que quien emitió una orden registre su recepción.
 - **FR-015**: El sistema DEBE registrar facturas y notas de crédito solo contra órdenes con recepciones, con folio único por proveedor y tipo de documento.
 - **FR-016**: El sistema DEBE conciliar cada factura contra el valor recibido pendiente de facturar y clasificarla como `conciliada` o `con_discrepancia` según TOLERANCIA_CONCILIACION.
-- **FR-017**: El sistema DEBE calcular la fecha de vencimiento de cada factura desde su fecha de recepción y DEBE alertar las no aprobadas que vencen en 5 días o menos.
+- **FR-017**: El sistema DEBE calcular la `fecha_vencimiento` de cada factura desde su `fecha_recepcion` (fecha de recepción del documento, registrada al crear la factura) aplicando la condición de pago de la orden de compra de origen, y DEBE alertar las facturas no aprobadas que vencen en 5 días o menos.
 - **FR-018**: El sistema DEBE mostrar un panel de inicio con acciones rápidas, pendientes por rol, alertas e indicadores del período.
 - **FR-019**: El sistema DEBE permitir una evaluación por orden recibida, calculando la nota de plazo a partir de las fechas.
 - **FR-020**: El sistema DEBE funcionar con datos semilla completamente ficticios.
@@ -343,7 +344,7 @@ _Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo u
 - **FR-023**: El sistema DEBE mantener un catálogo proveedor-producto único por par, con precio de referencia, plazo de entrega y fecha de actualización; DEBE marcar como desactualizados los precios con más de 90 días y sugerir el menor precio vigente al crear líneas de solicitud.
 - **FR-024**: El sistema DEBE permitir exportar a CSV los listados y reportes que cada rol ya puede ver, usando la codificación y el separador definidos en [plan.md](plan.md), respetando los filtros y permisos del rol activo, con escapado correcto de comas, comillas y saltos de línea.
 - **FR-025**: El sistema DEBE aplicar el enmascaramiento de RUT de personas naturales y de números de cuenta en el origen de los datos, de modo que un rol sin permiso nunca reciba el valor completo en vistas, búsquedas, tooltips, mensajes de error, el historial de trazabilidad (FR-027 a FR-030) ni archivos CSV exportados.
-- **FR-026**: El sistema DEBE permitir registrar unidades dañadas en la recepción como rechazadas con motivo `danado`, de modo que no cuenten como recibidas ni entren al valor a facturar y queden pendientes en la OC para reposición; cuando el daño se detecte después de aceptar, DEBE registrar una devolución con motivo `defectuoso` que descuente el saldo recibido y facturado.
+- **FR-026**: El sistema DEBE permitir registrar unidades dañadas en la recepción como rechazadas con motivo `danado`, de modo que no cuenten como recibidas ni entren al valor a facturar y queden pendientes en la OC para reposición. Cuando el daño se detecte después de aceptar, DEBE registrar una devolución con motivo `defectuoso` conforme a FR-031, que descuente el saldo recibido y facturado.
 - **FR-027**: El sistema DEBE registrar, para todo cambio de estado de solicitud, cotización, orden de compra, recepción, factura y devolución, quién lo realizó, cuándo ocurrió y qué acción se ejecutó.
 - **FR-028**: El sistema DEBE permitir navegar, desde cualquier documento, la cadena completa solicitud, cotización, orden de compra, recepción, factura y devolución.
 - **FR-029**: El sistema DEBE impedir la eliminación de documentos con historial y DEBE permitir solo su anulación con motivo registrado.
@@ -391,7 +392,7 @@ El detalle de atributos, cardinalidades y reglas está en [data-model.md](data-m
 - **SC-010**: El 100 % de los archivos exportados con la codificación definida en [plan.md](plan.md) se abre en una planilla de cálculo en español sin caracteres corruptos (tildes, ñ y símbolos), verificado con datos acentuados.
 - **SC-011**: El 100 % de las unidades dañadas registradas con motivo `danado` o devueltas con motivo `defectuoso` queda excluido del valor a facturar y del saldo pagado, verificado con entregas parciales, entregas totalmente dañadas y facturas ya aprobadas para pago.
 - **SC-012**: El 100 % de los cambios de estado de solicitud, cotización, OC, recepción, factura y devolución registra quién, cuándo y qué acción, y desde cualquier documento se puede navegar la cadena completa sin búsquedas manuales, verificado con una prueba de auditoría de punta a punta.
-- **SC-013**: El 100 % de las pantallas del módulo (proveedores, solicitudes, cotizaciones, órdenes de compra, recepciones, facturas, devoluciones y panel) tiene una etiqueta asociada a cada campo, se puede operar solo con teclado, muestra los mensajes de error junto al campo afectado y cumple un contraste mínimo de 4,5:1 en texto normal (WCAG 2.1 AA), verificado en una revisión de accesibilidad de cada pantalla.
+- **SC-013**: El 100 % de las pantallas del módulo (Panel, Proveedores, Solicitudes, Cotizaciones, Órdenes de compra, Recepciones, Facturas, Devoluciones, Catálogo y Evaluaciones) tiene una etiqueta asociada a cada campo, se puede operar solo con teclado, muestra los mensajes de error junto al campo afectado y cumple un contraste mínimo de 4,5:1 en texto normal (WCAG 2.1 AA), verificado en una revisión de accesibilidad de cada pantalla.
 - **SC-014**: El 100 % de la navegación y del contenido visible de la aplicación corresponde a vistas del módulo de Adquisiciones y Compras; no aparece ninguna vista genérica del template base (Entidades, Documentos o Búsqueda), verificado al abrir la aplicación y revisar la barra lateral y las acciones disponibles.
 
 ## Suposiciones

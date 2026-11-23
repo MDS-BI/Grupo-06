@@ -5,7 +5,7 @@
 
 ## Resumen
 
-Construir el módulo Adquisiciones y Compras **sobre el módulo base ERP del curso** (`specs/001-erp-base-module`), sin reemplazar ni modificar su código central: `src/storage.js` y sus pruebas permanecen intactos. La interfaz final es **exclusiva del módulo**: `index.html` solo expone `#view-compras`, `#compras-root` y el selector de roles; no se muestran las vistas genéricas de Entidades, Documentos ni Búsqueda del template, conforme a FR-032 y SC-014.
+Construir el módulo Adquisiciones y Compras **sobre el módulo base ERP del curso** (`specs/001-erp-base-module`), sin reemplazar su código central: `src/storage.js` y sus pruebas permanecen sin cambios funcionales (solo se aplicó formateo con Prettier). La interfaz final es **exclusiva del módulo**: `index.html` solo expone `#view-compras`, `#compras-root` y el selector de roles; no se muestran las vistas genéricas de Entidades, Documentos ni Búsqueda del template, conforme a FR-032 y SC-014.
 
 Los proveedores reutilizan el contrato de Entidad del módulo base desde `src/compras/proveedores.js` sin tocar `src/storage.js`. El resto de documentos del ciclo (solicitudes, cotizaciones, OC, recepciones, facturas, devoluciones, catálogo, evaluaciones y trazabilidad) viven en colecciones propias `erp_compras:*` gestionadas desde `src/compras/almacenamiento.js`, siguiendo el mismo contrato de almacenamiento del template (`specs/001-erp-base-module/contracts/entity-storage.md`).
 
@@ -22,7 +22,8 @@ El trabajo se divide en iteraciones semanales; cada una termina con una versión
 **Pruebas**: Vitest con jsdom (ya configurado en `vitest.config.mjs`)  
 **Plataforma Objetivo**: Navegadores modernos de escritorio  
 **Tipo de Proyecto**: Aplicación web de una página, solo frontend  
-**Objetivos de Rendimiento**: listas y búsquedas en menos de 2 segundos con hasta 500 registros por colección, medidos con `performance.now()` en `tests/integration/compras/rendimiento.test.js` (SC-006)  
+**Objetivos de Rendimiento**: listas y búsquedas en menos de 2 segundos con hasta 500 registros por colección, medidos con `performance.now()` en `tests/integration/compras/rendimiento.test.js` (SC-006). Protocolo: cada caso replica 500 registros por colección, mide una ejecución con `performance.now()` alrededor de la operación y aprueba si el tiempo transcurrido es menor al umbral (2 000 ms para SC-006 y 1 000 ms para SC-008)
+
 **Restricciones**: Sin backend, sin autenticación real, sin conexión con el SII; no modificar el comportamiento del módulo base salvo donde se justifica en "Seguimiento de Complejidad"  
 **Escala/Alcance**: 19 entidades lógicas (ver `data-model.md`), 11 historias de usuario, 5 roles simulados
 
@@ -32,11 +33,11 @@ _Según `.specify/memory/constitution.md` v1.0.0._
 
 - **I. Calidad del código**: la lógica de negocio (cálculos, validaciones y transiciones de estado) vive en funciones puras en `src/compras/reglas.js`, separada de la interfaz y del almacenamiento.
 - **II. Pruebas primero**: cada regla de la sección 5 de `data-model.md` tiene prueba unitaria antes o junto con su implementación; cada historia P1 tiene al menos una prueba de integración de su flujo.
-- **III. Experiencia de usuario consistente**: todas las pantallas nuevas usan el marco del template (barra superior, barra lateral, tokens de `styles.css`), mensajes de validación en español y estados vacíos.
+- **III. Experiencia de usuario consistente**: todas las pantallas nuevas usan el marco del template (barra superior, barra lateral, tokens de `styles.css`), mensajes de validación en español y estados vacíos. La accesibilidad (SC-013) se verifica en `tests/integration/compras/vista.test.js`: etiqueta por campo en las diez vistas, foco por teclado, errores junto al campo y contraste ≥ 4,5:1.
 - **IV. Rendimiento**: las colecciones se leen una vez por pantalla y se filtran en memoria; el objetivo de 500 registros se verifica con los datos semilla ampliados.
-- **Estándares de calidad**: antes de la entrega se ejecutan `npm run lint` (ESLint) y `npm run format:check` (Prettier). El alcance de formato permitido es `src/compras/` y `specs/`; el chequeo global sigue reportando archivos del núcleo y de tooling fuera de ese alcance, por lo que T107 permanece como deuda conocida documentada. Lint termina sin errores, con 6 advertencias preexistentes en `src/storage.js` y `tests/unit/storage.test.js`, que no se modifican por el aislamiento del núcleo.
+- **Estándares de calidad**: antes de la entrega se ejecutan `npm run lint` (ESLint) y `npm run format:check` (Prettier). Ambos comandos pasan sin errores ni advertencias; T107 está cerrada. El alcance real de `format:check` es el que define `.prettierignore`: núcleo base (`src/storage.js` y `tests/unit/storage.test.js`); el resto de `src/**`, `tests/**`, `specs/**` y Markdown queda excluido.
 
-Resultado: **conforme con deuda documentada**. Los incumplimientos materiales quedan registrados en la sección «Deuda conocida» y en T107 de `tasks.md`; no se afirma que `format:check` esté en verde.
+Resultado: **conforme con deuda documentada**. Los incumplimientos materiales quedan registrados en la sección «Deuda conocida» y en `tasks.md`; `format:check` está en verde dentro del alcance configurado en `.prettierignore`.
 
 ## Arquitectura del módulo (`src/compras/`)
 
@@ -58,7 +59,7 @@ Cada colección nueva implementa las mismas operaciones del contrato del templat
 | DEVOLUCION + DETALLE_DEVOLUCION           | `erp_compras:devoluciones`, con `lineas`                                                                                                      |
 | PROVEEDOR_PRODUCTO                        | `erp_compras:catalogo`                                                                                                                        |
 | EVALUACION_PROVEEDOR                      | `erp_compras:evaluaciones`                                                                                                                    |
-| CONTACTO_PROVEEDOR                        | `erp_compras:contactos`                                                                                                                       |
+| CONTACTO_PROVEEDOR                        | No implementado en el MVP (modelado en `data-model.md`, fuera de alcance en `spec.md`)                                                       |
 | USUARIO, CENTRO_COSTO, PRODUCTO           | `erp_compras:usuarios`, `erp_compras:centros_costo`, `erp_compras:productos` (datos semilla hasta conectar RR.HH., Contabilidad e Inventario) |
 | HISTORIAL_TRAZABILIDAD                    | `erp_compras:trazabilidad` (eventos inmutables: quién, cuándo, qué acción; cambios bancarios con valor enmascarado)                           |
 
@@ -131,24 +132,27 @@ Cada historia se asigna a un responsable en un Issue de GitHub con la etiqueta d
 
 ## Deuda conocida
 
-Las siguientes tareas se documentan también en `tasks.md`: T101, T104, T109, T110 y T118 siguen abiertas; T107, T108, T117 y T119 ya están cerradas. El núcleo base (`src/storage.js` y `tests/unit/storage.test.js`) fue formateado con Prettier y verificado junto al resto del proyecto.
+Las siguientes tareas se documentan también en `tasks.md`: T101, T104, T109, T110 y T118 siguen abiertas; T107, T108, T117, T119 y T120 ya están cerradas. El núcleo base (`src/storage.js` y `tests/unit/storage.test.js`) fue formateado con Prettier y es el único código cubierto por `format:check` según `.prettierignore`.
 
 | Tarea | Estado  | Justificación                                                                                                                                                                                                                                                                                                                                       | Referencia                          |
 | ----- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
 | T101  | Abierta | La prueba de cierre con saldo pendiente pasa, pero `cerrarSiSaldada()` muta el estado directamente; falta declarar `recibida_parcial → cerrada` en `TRANSICIONES`.                                                                                                                                                                                  | `data-model.md` §10, pendiente 3    |
 | T104  | Abierta | Bloqueo de eliminación y anulación de OC verificados; falta `motivo_anulacion` en facturas y devoluciones.                                                                                                                                                                                                                                          | FR-029, T118                        |
-| T107  | Cerrada | Se formatearon `src/storage.js` y `tests/unit/storage.test.js`; `npm run format:check` pasa sin diferencias y `npm run lint` sin errores.                                                                                                                                                                                                                                                | Constitución, Estándares de Calidad |
-| T108  | Cerrada | Accesibilidad revisada: encabezado del panel asociado, pestañas navegables con teclado, etiquetas y tablas accesibles, errores en banner y contraste 4,5:1.                                                                                                                                                                                      | SC-013                              |
+| T107  | Cerrada | Se formatearon `src/storage.js` y `tests/unit/storage.test.js`; `npm run format:check` pasa sin diferencias en el alcance de `.prettierignore` y `npm run lint` sin errores ni advertencias.                                                                                                                                                                               | Constitución, Estándares de Calidad |
+| T108  | Cerrada | Accesibilidad revisada: encabezado del panel asociado, pestañas navegables con teclado, etiquetas y tablas accesibles, errores de validación junto al campo con `role="alert"`/`aria-describedby` y banner para errores globales, y contraste 4,5:1. | SC-013 |
 | T109  | Abierta | Solo la solicitud guarda `motivo_anulacion`; faltan cotizaciones y recepciones.                                                                                                                                                                                                                                                                     | FR-029, T118                        |
 | T110  | Abierta | `credito_a_favor` no está implementado ni mostrado en factura/cadena documental.                                                                                                                                                                                                                                                                    | FR-026, SC-011                      |
 | T117  | Cerrada | Decisión aplicada: `registrada` como estado inicial de factura en código y modelo; `data-model.md` sincronizado en §3.11/regla 6 y §10.                                                                                                                                                                                                      | FR-015                              |
 | T118  | Abierta | Pendiente 2 de `data-model.md` §10: estados de devolución y anulación con motivo incompletos.                                                                                                                                                                                                                                                       | FR-029                              |
 | T119  | Cerrada | Decisión aplicada: se elimina `borrador` del modelo de OC y se conserva `emitida` como estado inicial; `data-model.md` y `plan.md` sincronizados.                                                                                                                                                                                                | FR-010                              |
+| T120  | Cerrada | Auditoría global de SC-003 en `flujo-compras.test.js`: se validan las dos vías de cumplimiento sobre todas las OC no anuladas.                                                                                                                                                                                                                | SC-003                              |
 
 ## Plan de Pruebas
 
 - **Unitarias** (`tests/unit/compras/`): cálculo de neto, IVA y total con redondeo; validación de RUT; transiciones permitidas y prohibidas de cada estado; regla de 3 cotizaciones; tope de recepción por línea; conciliación con y sin discrepancia; nota de plazo según días de atraso; plazo de pago máximo sin acuerdo.
 - **Integración** (`tests/integration/compras/`): un flujo por historia P1 y P2 siguiendo sus escenarios de aceptación de `spec.md`, y una prueba de auditoría de punta a punta (SC-012) en `trazabilidad.test.js`.
+- **Auditoría SC-003** (`tests/integration/compras/flujo-compras.test.js`): cobertura del 100 % de las OC sobre el umbral con tres cotizaciones vigentes o justificación de proveedor único.
+- **Accesibilidad** (`tests/integration/compras/vista.test.js`): etiquetas asociadas en las diez vistas, foco y operación por teclado, errores junto al campo con `role="alert"` y revisión automatizada de contraste (WCAG 2.1 AA).
 - **Manual**: guion de la demo de 5 minutos del criterio SC-002 y escenarios de validación por historia, documentados en [quickstart.md](quickstart.md).
 
 ## Datos Semilla

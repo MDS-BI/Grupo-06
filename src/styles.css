@@ -610,7 +610,7 @@ button.danger:hover { background: #fae3df; }
 
 .badge-anulada, .badge-rechazada, .badge-bloqueado, .badge-con_discrepancia { background: rgba(180, 35, 24, 0.12); color: #b42318; }
 .badge-aprobada, .badge-aprobado, .badge-conciliada, .badge-aprobada_pago, .badge-recibida_total, .badge-cerrada { background: rgba(5, 150, 105, 0.12); color: #047857; }
-.badge-enviada, .badge-en_cotizacion, .badge-emitida, .badge-recibida_parcial { background: rgba(217, 119, 6, 0.14); color: #b45309; }
+.badge-enviada, .badge-en_cotizacion, .badge-emitida, .badge-recibida_parcial { background: rgba(217, 119, 6, 0.14); color: #a34a06; }
 
 .pending-block { margin-bottom: 16px; }
 .pending-block h3 { margin-bottom: 2px; }

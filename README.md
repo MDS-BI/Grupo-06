@@ -55,9 +55,9 @@ Las colecciones del módulo se guardan en `localStorage` con el prefijo `erp_com
 
 Estado al cierre de esta iteración:
 
-- `npx vitest run`: **145 pruebas aprobadas** y 56 omitidas (corresponden a las pruebas heredadas del template base).
-- `npm run lint`: **0 errores**.
-- `npm run format:check`: **sin diferencias**.
+- `npx vitest run`: **150 pruebas aprobadas** y 56 omitidas (corresponden a las pruebas heredadas del template base).
+- `npm run lint`: **0 errores y 0 advertencias**.
+- `npm run format:check`: **sin diferencias** en el alcance de `.prettierignore` (núcleo base `src/storage.js` y `tests/unit/storage.test.js`).
 - `npm run build`: **build de producción sin errores**.
 
 Tareas registradas como pendientes en [`tasks.md`](specs/002-modulo-adquisiciones-compras/tasks.md):
@@ -66,7 +66,7 @@ Tareas registradas como pendientes en [`tasks.md`](specs/002-modulo-adquisicione
 - **US11**: T100, T101 y T110 (daño detectado después de la aceptación, cierre de OC con saldo pendiente y crédito a favor).
 - **Trazabilidad**: T102-T106, T109 y T118 (registro de auditoría, cadena documental, anulaciones y pruebas de punta a punta).
 - **Modelo de datos**: T101 y T118 (pendientes 2 y 3 de `data-model.md` §10); T117 y T119 están cerradas.
-- **Calidad**: T107 y T108 están cerradas: lint y formato sin diferencias, y accesibilidad WCAG 2.1 AA revisada (etiquetas asociadas, navegación por teclado en pestañas, errores en banner `role="alert"`, contraste mínimo 4,5:1 y respeto a `prefers-reduced-motion`).
+- **Calidad**: T107 y T108 están cerradas: lint y formato sin diferencias en el alcance configurado, y accesibilidad WCAG 2.1 AA revisada (etiquetas asociadas, navegación por teclado en pestañas, errores de validación junto al campo con `role="alert"`/`aria-describedby` y banner para errores globales, contraste mínimo 4,5:1 y respeto a `prefers-reduced-motion`). T120 también está cerrada (auditoría de SC-003).
 
 ## Problema y solución (Resumen)
 
