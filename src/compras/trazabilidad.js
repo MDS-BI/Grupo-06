@@ -83,7 +83,7 @@ function solicitudDeDocumento(entidad, id) {
 
 function nodo(tipo, documento) {
   const meta = TIPOS_DOCUMENTO[tipo];
-  return {
+  const resultado = {
     tipo,
     id: documento.id,
     numero: documento.numero || documento.folio || documento.id,
@@ -91,6 +91,11 @@ function nodo(tipo, documento) {
     etiqueta: `${meta.etiqueta} ${documento.numero || documento.folio || documento.id}`,
     tab: meta.tab
   };
+  if (tipo === 'factura') {
+    resultado.credito_a_favor = Number(documento.credito_a_favor || 0);
+    resultado.saldada = Boolean(documento.saldada);
+  }
+  return resultado;
 }
 
 export function cadenaDocumental(entidad, id) {

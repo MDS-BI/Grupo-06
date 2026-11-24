@@ -1,5 +1,12 @@
-import { leer, guardar, generarId, exigirPermiso, getUsuarioActivo } from './almacenamiento.js';
-import { generarNumero, siguienteSecuencia, hoyISO } from './reglas.js';
+import {
+  leer,
+  guardar,
+  generarId,
+  exigirPermiso,
+  exigirMotivoAnulacion,
+  getUsuarioActivo
+} from './almacenamiento.js';
+import { generarNumero, siguienteSecuencia, hoyISO, puedeTransicionar } from './reglas.js';
 import { obtenerOrden, lineasPendientes, recepcionesDeOrden } from './ordenes-compra.js';
 import { registrarEvento } from './trazabilidad.js';
 
@@ -22,7 +29,12 @@ function actualizarEstadoOrden(ordenId, usuario = getUsuarioActivo()) {
   let estado = orden.estado;
   if (totalRecibido) estado = 'recibida_total';
   else if (algoRecibido) estado = 'recibida_parcial';
-  if (estado !== orden.estado) {
+  else estado = 'emitida';
+  if (
+    !['cerrada', 'anulada'].includes(orden.estado) &&
+    estado !== orden.estado &&
+    puedeTransicionar('orden', orden.estado, estado)
+  ) {
     const lista = leer('ordenes');
     const idx = lista.findIndex((o) => o.id === ordenId);
     if (idx !== -1) {
@@ -136,6 +148,36 @@ export function registrarRecepcion(datos, usuario = getUsuarioActivo()) {
     detalle: `OC ${orden.numero}`
   });
   return recepcion;
+}
+
+export function anularRecepcion(id, motivo, usuario = getUsuarioActivo()) {
+  exigirPermiso('registrar_recepcion', usuario);
+  const motivoNormalizado = exigirMotivoAnulacion(motivo);
+  const lista = leer('recepciones');
+  const idx = lista.findIndex((r) => r.id === id);
+  if (idx === -1) throw new Error('Recepción no encontrada');
+  const recepcion = lista[idx];
+  if (recepcion.estado === 'anulada') throw new Error('La recepción ya está anulada');
+  if (!puedeTransicionar('recepcion', recepcion.estado || 'registrada', 'anulada')) {
+    throw new Error(`No se puede anular una recepción en estado "${recepcion.estado}"`);
+  }
+  lista[idx] = {
+    ...recepcion,
+    estado: 'anulada',
+    motivo_anulacion: motivoNormalizado,
+    anulada_por: usuario.id,
+    fecha_anulacion: hoyISO(),
+    updatedAt: new Date().toISOString()
+  };
+  guardar('recepciones', lista);
+  registrarEvento('recepcion', id, 'anulacion', {
+    usuario,
+    anterior: recepcion.estado,
+    nuevo: 'anulada',
+    detalle: motivoNormalizado
+  });
+  actualizarEstadoOrden(recepcion.orden_id, usuario);
+  return lista[idx];
 }
 
 export function unidadesAceptadasPorProducto(ordenId) {

@@ -1,4 +1,11 @@
-import { leer, guardar, generarId, getUsuarioActivo, exigirPermiso } from './almacenamiento.js';
+import {
+  leer,
+  guardar,
+  generarId,
+  getUsuarioActivo,
+  exigirPermiso,
+  exigirMotivoAnulacion
+} from './almacenamiento.js';
 import {
   calcularTotales,
   generarNumero,
@@ -21,10 +28,15 @@ export function centrosCosto() {
   return leer('centros_costo');
 }
 
+function veSoloPropias(usuario) {
+  return ['solicitante', 'bodega'].includes(usuario?.rol);
+}
+
 export function listarSolicitudes(usuario = getUsuarioActivo()) {
   const lista = leer('solicitudes');
-  const visibles =
-    usuario?.rol === 'solicitante' ? lista.filter((s) => s.solicitante_id === usuario.id) : lista;
+  const visibles = veSoloPropias(usuario)
+    ? lista.filter((s) => s.solicitante_id === usuario.id)
+    : lista;
   return [...visibles].sort((a, b) =>
     String(b.fecha_creacion).localeCompare(String(a.fecha_creacion))
   );
@@ -35,10 +47,7 @@ export function obtenerSolicitud(id) {
 }
 
 export function puedeVerSolicitud(solicitud, usuario = getUsuarioActivo()) {
-  return (
-    Boolean(solicitud) &&
-    (usuario?.rol !== 'solicitante' || solicitud.solicitante_id === usuario.id)
-  );
+  return Boolean(solicitud) && (!veSoloPropias(usuario) || solicitud.solicitante_id === usuario.id);
 }
 
 function validarCabecera(datos) {
@@ -107,8 +116,7 @@ export function crearSolicitud(datos, usuario = getUsuarioActivo()) {
   if (Object.keys(errors).length > 0) throw new Error(Object.values(errors)[0]);
   const anio = Number(String(datos.fecha_creacion || hoyISO()).slice(0, 4));
   const ahora = hoyISO();
-  const solicitanteId =
-    usuario.rol === 'solicitante' ? usuario.id : datos.solicitante_id || usuario.id;
+  const solicitanteId = usuario.id;
   const solicitud = {
     id: generarId('sol'),
     numero: siguienteNumero(anio),
@@ -143,7 +151,7 @@ export function actualizarSolicitud(id, cambios, usuario = getUsuarioActivo()) {
   const solicitud = lista[idx];
   if (solicitud.estado !== 'borrador')
     throw new Error('Solo se pueden editar solicitudes en borrador');
-  if (usuario.rol === 'solicitante' && solicitud.solicitante_id !== usuario.id) {
+  if (solicitud.solicitante_id !== usuario.id) {
     throw new Error('No puedes editar una solicitud de otro usuario');
   }
   const datos = { ...solicitud, ...cambios };
@@ -189,7 +197,7 @@ function cambiarEstado(id, nuevoEstado, extra = {}, usuario = getUsuarioActivo()
     updatedAt: new Date().toISOString()
   };
   guardar('solicitudes', lista);
-  registrarEvento('solicitud', id, 'cambio_estado', {
+  registrarEvento('solicitud', id, nuevoEstado === 'anulada' ? 'anulacion' : 'cambio_estado', {
     usuario,
     anterior: solicitud.estado,
     nuevo: nuevoEstado,
@@ -201,7 +209,7 @@ function cambiarEstado(id, nuevoEstado, extra = {}, usuario = getUsuarioActivo()
 export function enviarSolicitud(id, usuario = getUsuarioActivo()) {
   const solicitud = obtenerSolicitud(id);
   if (!solicitud) throw new Error('Solicitud no encontrada');
-  if (usuario.rol === 'solicitante' && solicitud.solicitante_id !== usuario.id) {
+  if (solicitud.solicitante_id !== usuario.id) {
     throw new Error('No puedes enviar una solicitud de otro usuario');
   }
   if (!solicitud.lineas || solicitud.lineas.length === 0)
@@ -251,11 +259,11 @@ export function anularSolicitud(id, usuario = getUsuarioActivo(), motivo = '') {
   const autorizado =
     usuario.rol === 'jefe_compras' || solicitud.solicitante_id === usuario.id;
   if (!autorizado) throw new Error('No puedes anular esta solicitud');
-  if (!String(motivo ?? '').trim()) throw new Error('La anulación exige un motivo');
+  const motivoNormalizado = exigirMotivoAnulacion(motivo);
   return cambiarEstado(
     id,
     'anulada',
-    { anulada_por: usuario.id, fecha_anulacion: hoyISO(), motivo_anulacion: String(motivo).trim() },
+    { anulada_por: usuario.id, fecha_anulacion: hoyISO(), motivo_anulacion: motivoNormalizado },
     usuario
   );
 }

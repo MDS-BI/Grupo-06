@@ -1,4 +1,11 @@
-import { leer, guardar, generarId, exigirPermiso, getUsuarioActivo } from './almacenamiento.js';
+import {
+  leer,
+  guardar,
+  generarId,
+  exigirPermiso,
+  exigirMotivoAnulacion,
+  getUsuarioActivo
+} from './almacenamiento.js';
 import {
   calcularTotales,
   calcularLinea,
@@ -31,7 +38,7 @@ export function ordenNoAnuladaDeSolicitud(solicitudId) {
 }
 
 export function recepcionesDeOrden(ordenId) {
-  return leer('recepciones').filter((r) => r.orden_id === ordenId);
+  return leer('recepciones').filter((r) => r.orden_id === ordenId && r.estado !== 'anulada');
 }
 
 export function lineasPendientes(orden) {
@@ -202,12 +209,12 @@ export function anularOrdenCompra(id, usuario = getUsuarioActivo(), motivo = '')
     throw new Error('No se puede anular una OC con recepciones registradas');
   if (!puedeTransicionar('orden', orden.estado, 'anulada'))
     throw new Error(`No se puede anular una OC en estado "${orden.estado}"`);
-  if (!String(motivo ?? '').trim()) throw new Error('La anulación exige un motivo');
+  const motivoNormalizado = exigirMotivoAnulacion(motivo);
   const hoy = hoyISO();
   lista[idx] = {
     ...orden,
     estado: 'anulada',
-    motivo_anulacion: String(motivo).trim(),
+    motivo_anulacion: motivoNormalizado,
     anulada_por: usuario.id,
     fecha_anulacion: hoy,
     updatedAt: new Date().toISOString()

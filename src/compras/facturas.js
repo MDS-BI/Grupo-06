@@ -1,10 +1,18 @@
-import { leer, guardar, generarId, exigirPermiso, getUsuarioActivo } from './almacenamiento.js';
+import {
+  leer,
+  guardar,
+  generarId,
+  exigirPermiso,
+  exigirMotivoAnulacion,
+  getUsuarioActivo
+} from './almacenamiento.js';
 import {
   conciliarFactura as conciliarRegla,
   calcularVencimiento,
   diasHasta,
   DIAS_ALERTA_VENCIMIENTO,
-  hoyISO
+  hoyISO,
+  puedeTransicionar
 } from './reglas.js';
 import { obtenerOrden, valorRecibidoNeto } from './ordenes-compra.js';
 import { obtenerProveedor, cuentaCambiadaRecientemente } from './proveedores.js';
@@ -27,7 +35,7 @@ export function obtenerFactura(id) {
 }
 
 function facturaTieneRecepcion(ordenId) {
-  return leer('recepciones').some((r) => r.orden_id === ordenId);
+  return leer('recepciones').some((r) => r.orden_id === ordenId && r.estado !== 'anulada');
 }
 
 function notasCreditoDeFactura(facturaId) {
@@ -35,7 +43,7 @@ function notasCreditoDeFactura(facturaId) {
     (f) =>
       f.tipo_documento === 'nota_credito' &&
       f.factura_referencia_id === facturaId &&
-      f.estado !== 'rechazada'
+      !['rechazada', 'anulada'].includes(f.estado)
   );
 }
 
@@ -112,6 +120,23 @@ export function registrarFactura(datos, usuario = getUsuarioActivo()) {
     nuevo: factura.estado,
     detalle: `${tipo} folio ${folio}`
   });
+  const creditoDisponible = Number(referencia?.credito_a_favor || 0);
+  if (tipo === 'nota_credito' && creditoDisponible > 0) {
+    const compensado = Math.min(neto, creditoDisponible);
+    const idxReferencia = lista.findIndex((f) => f.id === referencia.id);
+    if (idxReferencia !== -1) {
+      lista[idxReferencia] = {
+        ...lista[idxReferencia],
+        credito_a_favor: creditoDisponible - compensado,
+        updatedAt: new Date().toISOString()
+      };
+      guardar('facturas', lista);
+      registrarEvento('factura', referencia.id, 'compensacion_credito', {
+        usuario,
+        detalle: `Nota de crédito ${folio}: ${compensado}`
+      });
+    }
+  }
   if (tipo === 'nota_credito') cerrarSiSaldada(orden.id, usuario);
   return factura;
 }
@@ -137,7 +162,7 @@ export function conciliarFactura(id, usuario = getUsuarioActivo()) {
         f.id !== factura.id &&
         f.orden_id === factura.orden_id &&
         f.tipo_documento === 'factura' &&
-        f.estado !== 'rechazada'
+        !['rechazada', 'anulada'].includes(f.estado)
     )
     .reduce((sum, f) => sum + Number(f.neto || 0), 0);
   const notasCredito = lista
@@ -145,7 +170,7 @@ export function conciliarFactura(id, usuario = getUsuarioActivo()) {
       (f) =>
         f.orden_id === factura.orden_id &&
         f.tipo_documento === 'nota_credito' &&
-        f.estado !== 'rechazada'
+        !['rechazada', 'anulada'].includes(f.estado)
     )
     .reduce((sum, f) => sum + Number(f.neto || 0), 0);
   const devoluciones = leer('devoluciones')
@@ -235,6 +260,35 @@ export function rechazarFactura(id, motivo, usuario = getUsuarioActivo()) {
   return lista[idx];
 }
 
+export function anularFactura(id, motivo, usuario = getUsuarioActivo()) {
+  exigirPermiso('conciliar_factura', usuario);
+  const motivoNormalizado = exigirMotivoAnulacion(motivo);
+  const lista = leer('facturas');
+  const idx = lista.findIndex((f) => f.id === id);
+  if (idx === -1) throw new Error('Factura no encontrada');
+  const factura = lista[idx];
+  if (factura.estado === 'anulada') throw new Error('La factura ya está anulada');
+  if (!puedeTransicionar('factura', factura.estado, 'anulada')) {
+    throw new Error(`No se puede anular una factura en estado "${factura.estado}"`);
+  }
+  lista[idx] = {
+    ...factura,
+    estado: 'anulada',
+    motivo_anulacion: motivoNormalizado,
+    anulada_por: usuario.id,
+    fecha_anulacion: hoyISO(),
+    updatedAt: new Date().toISOString()
+  };
+  guardar('facturas', lista);
+  registrarEvento('factura', id, 'anulacion', {
+    usuario,
+    anterior: factura.estado,
+    nuevo: 'anulada',
+    detalle: motivoNormalizado
+  });
+  return lista[idx];
+}
+
 export function facturasPorConciliar() {
   return listarFacturas().filter(
     (f) => f.tipo_documento === 'factura' && ['registrada', 'con_discrepancia'].includes(f.estado)
@@ -248,7 +302,7 @@ export function facturasAprobadasParaPago() {
 export function alertasVencimiento(hoy = hoyISO(), dias = DIAS_ALERTA_VENCIMIENTO) {
   return listarFacturas()
     .filter((f) => f.tipo_documento === 'factura')
-    .filter((f) => !['aprobada_pago', 'rechazada'].includes(f.estado))
+    .filter((f) => !['aprobada_pago', 'rechazada', 'anulada'].includes(f.estado))
     .map((f) => ({ ...f, dias_restantes: diasHasta(f.fecha_vencimiento, hoy) }))
     .filter((f) => f.dias_restantes <= dias)
     .sort((a, b) => a.dias_restantes - b.dias_restantes);
@@ -257,7 +311,10 @@ export function alertasVencimiento(hoy = hoyISO(), dias = DIAS_ALERTA_VENCIMIENT
 export function saldoFacturadoNeto(ordenId) {
   return leer('facturas')
     .filter(
-      (f) => f.orden_id === ordenId && f.tipo_documento === 'factura' && f.estado !== 'rechazada'
+      (f) =>
+        f.orden_id === ordenId &&
+        f.tipo_documento === 'factura' &&
+        !['rechazada', 'anulada'].includes(f.estado)
     )
     .reduce((sum, f) => sum + Number(f.neto || 0), 0);
 }

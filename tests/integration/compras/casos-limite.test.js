@@ -25,8 +25,10 @@ import {
   registrarDevolucion
 } from '../../../src/compras/devoluciones.js';
 import { exportarProveedores, exportarSolicitudes } from '../../../src/compras/exportacion.js';
-import { guardar, leer } from '../../../src/compras/almacenamiento.js';
+import { guardar, leer, puede } from '../../../src/compras/almacenamiento.js';
 import { cambiarEstadoProveedor } from '../../../src/compras/proveedores.js';
+import { nivelVista } from '../../../src/compras/visibilidad.js';
+import { cadenaDocumental, historialDe } from '../../../src/compras/trazabilidad.js';
 import { cargarDatos, USUARIOS } from './helpers.js';
 
 describe('segregación de funciones', () => {
@@ -697,8 +699,82 @@ describe('casos límite de compras', () => {
     expect(devolucion.estado).toBe('aprobada');
     expect(devolucionesAprobadasNeto(orden.id)).toBe(100000);
     expect(obtenerOrden(orden.id).estado).toBe('cerrada');
+    expect(obtenerOrden(orden.id).cantidad_no_repuesta).toBe(1);
     expect(lineasPendientes(obtenerOrden(orden.id))[0].cantidad_pendiente).toBe(1);
     expect(obtenerFactura(factura.id).saldada).toBe(true);
     expect(obtenerFactura(factura.id).estado).toBe('aprobada_pago');
+    const cierre = historialDe('orden', orden.id).find((e) => e.accion === 'cierre');
+    expect(cierre.estado_anterior).toBe('recibida_parcial');
+    expect(cierre.detalle).toMatch(/unidades no repuestas/);
+  });
+
+  it('genera crédito a favor por devolución defectuosa y lo compensa con nota de crédito', () => {
+    const orden = ordenEmitida({ monto: 100000, cantidad: 1 });
+    registrarRecepcion(
+      {
+        orden_id: orden.id,
+        lineas: [
+          {
+            orden_linea_id: orden.lineas[0].linea_id,
+            cantidad_recibida: 1,
+            cantidad_aceptada: 1
+          }
+        ]
+      },
+      USUARIOS.bodega
+    );
+    const factura = registrarFactura(
+      { orden_id: orden.id, folio: 'F-CREDITO', neto: 100000 },
+      USUARIOS.comprador
+    );
+    conciliarFactura(factura.id, USUARIOS.comprador);
+    aprobarPago(factura.id, USUARIOS.jefe);
+    registrarDevolucion(
+      {
+        orden_id: orden.id,
+        aprobador_id: USUARIOS.jefe.id,
+        lineas: [{ orden_linea_id: orden.lineas[0].linea_id, cantidad: 1, motivo: 'defectuoso' }]
+      },
+      USUARIOS.bodega
+    );
+
+    expect(obtenerFactura(factura.id).credito_a_favor).toBe(100000);
+    const nodoFactura = cadenaDocumental('factura', factura.id).find((n) => n.tipo === 'factura');
+    expect(nodoFactura.credito_a_favor).toBe(100000);
+    expect(nodoFactura.saldada).toBe(true);
+
+    registrarFactura(
+      {
+        orden_id: orden.id,
+        tipo_documento: 'nota_credito',
+        folio: 'NC-CREDITO',
+        factura_referencia_id: factura.id,
+        neto: 100000
+      },
+      USUARIOS.comprador
+    );
+
+    expect(obtenerFactura(factura.id).credito_a_favor).toBe(0);
+    expect(historialDe('factura', factura.id).map((e) => e.accion)).toContain(
+      'compensacion_credito'
+    );
+  });
+
+  it('impide que el comprador apruebe pagos', () => {
+    const { orden } = ordenConRecepcion({ monto: 100000, producto: 'prod-008' });
+    const factura = registrarFactura(
+      { orden_id: orden.id, folio: 'F-SIN-PAGO', neto: 100000 },
+      USUARIOS.comprador
+    );
+    conciliarFactura(factura.id, USUARIOS.comprador);
+    expect(() => aprobarPago(factura.id, USUARIOS.comprador)).toThrow(
+      /no puede ejecutar esta acción/
+    );
+  });
+
+  it('deja a administración de TI solo lectura en facturas', () => {
+    expect(nivelVista('facturas', USUARIOS.admin)).toBe('lectura');
+    expect(puede('registrar_factura', USUARIOS.admin)).toBe(false);
+    expect(puede('conciliar_factura', USUARIOS.admin)).toBe(false);
   });
 });

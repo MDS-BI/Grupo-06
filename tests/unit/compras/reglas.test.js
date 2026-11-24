@@ -3,6 +3,7 @@ import {
   IVA,
   UMBRAL_COTIZACIONES,
   TOLERANCIA_CONCILIACION,
+  calcularCreditoAFavor,
   calcularLinea,
   calcularTotales,
   calcularVencimiento,
@@ -144,6 +145,14 @@ describe('reglas de compras', () => {
       expect(puedeTransicionar('solicitud', 'adjudicada', 'en_cotizacion')).toBe(true);
       expect(puedeTransicionar('solicitud', 'anulada', 'enviada')).toBe(false);
       expect(puedeTransicionar('solicitud', 'borrador', 'borrador')).toBe(true);
+      expect(puedeTransicionar('orden', 'recibida_parcial', 'cerrada')).toBe(true);
+      expect(puedeTransicionar('orden', 'emitida', 'cerrada')).toBe(false);
+      expect(puedeTransicionar('cotizacion', 'recibida', 'anulada')).toBe(true);
+      expect(puedeTransicionar('recepcion', 'total', 'anulada')).toBe(true);
+      expect(puedeTransicionar('orden', 'recibida_total', 'recibida_parcial')).toBe(true);
+      expect(puedeTransicionar('factura', 'aprobada_pago', 'anulada')).toBe(true);
+      expect(puedeTransicionar('factura', 'rechazada', 'anulada')).toBe(false);
+      expect(puedeTransicionar('devolucion', 'aprobada', 'anulada')).toBe(true);
       expect(puedeTransicionar('desconocido', 'a', 'b')).toBe(false);
     });
   });
@@ -198,6 +207,18 @@ describe('reglas de compras', () => {
       expect(conPrevios.pendiente).toBe(35000);
       expect(conPrevios.diferencia).toBe(65000);
       expect(conPrevios.estado).toBe('con_discrepancia');
+    });
+  });
+
+  describe('crédito a favor', () => {
+    it('solo nace de devoluciones defectuosas sobre facturas aprobadas para pago', () => {
+      const lineas = [
+        { motivo: 'defectuoso', neto: 100000 },
+        { motivo: 'no_corresponde', neto: 25000 }
+      ];
+      expect(calcularCreditoAFavor({ lineas, estadoFactura: 'aprobada_pago' })).toBe(100000);
+      expect(calcularCreditoAFavor({ lineas, estadoFactura: 'conciliada' })).toBe(0);
+      expect(calcularCreditoAFavor({ lineas: [], estadoFactura: 'aprobada_pago' })).toBe(0);
     });
   });
 

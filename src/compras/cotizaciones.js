@@ -1,4 +1,11 @@
-import { leer, guardar, generarId, exigirPermiso, getUsuarioActivo } from './almacenamiento.js';
+import {
+  leer,
+  guardar,
+  generarId,
+  exigirPermiso,
+  exigirMotivoAnulacion,
+  getUsuarioActivo
+} from './almacenamiento.js';
 import {
   calcularTotales,
   generarNumero,
@@ -173,6 +180,35 @@ export function descartarCotizacion(id, motivo, usuario = getUsuarioActivo()) {
     anterior: cotizacion.estado,
     nuevo: 'descartada',
     detalle: lista[idx].motivo_descarte
+  });
+  return lista[idx];
+}
+
+export function anularCotizacion(id, motivo, usuario = getUsuarioActivo()) {
+  exigirPermiso('gestionar_cotizaciones', usuario);
+  const motivoNormalizado = exigirMotivoAnulacion(motivo);
+  const lista = leer('cotizaciones');
+  const idx = lista.findIndex((c) => c.id === id);
+  if (idx === -1) throw new Error('Cotización no encontrada');
+  const cotizacion = lista[idx];
+  if (cotizacion.estado === 'anulada') throw new Error('La cotización ya está anulada');
+  if (!puedeTransicionar('cotizacion', cotizacion.estado, 'anulada')) {
+    throw new Error(`No se puede anular una cotización en estado "${cotizacion.estado}"`);
+  }
+  lista[idx] = {
+    ...cotizacion,
+    estado: 'anulada',
+    motivo_anulacion: motivoNormalizado,
+    anulada_por: usuario.id,
+    fecha_anulacion: hoyISO(),
+    updatedAt: new Date().toISOString()
+  };
+  guardar('cotizaciones', lista);
+  registrarEvento('cotizacion', id, 'anulacion', {
+    usuario,
+    anterior: cotizacion.estado,
+    nuevo: 'anulada',
+    detalle: motivoNormalizado
   });
   return lista[idx];
 }

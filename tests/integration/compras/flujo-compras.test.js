@@ -1,10 +1,13 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
+  actualizarSolicitud,
   anularSolicitud,
   aprobarSolicitud,
   crearSolicitud,
   enviarSolicitud,
-  obtenerSolicitud
+  listarSolicitudes,
+  obtenerSolicitud,
+  puedeVerSolicitud
 } from '../../../src/compras/solicitudes.js';
 import {
   descartarCotizacion,
@@ -485,5 +488,111 @@ describe('flujo completo de compras', () => {
     expect(
       obtenerSolicitud(conJustificacion.solicitud.id).justificacion_proveedor_unico
     ).toContain('Único proveedor certificado');
+  });
+
+  it('permite a los cinco roles crear y enviar solicitudes propias', () => {
+    const usuarios = [
+      USUARIOS.solicitante,
+      USUARIOS.comprador,
+      USUARIOS.jefe,
+      USUARIOS.bodega,
+      USUARIOS.admin
+    ];
+    for (const usuario of usuarios) {
+      const solicitud = crearSolicitud(
+        {
+          justificacion: `Solicitud de ${usuario.rol}`,
+          fecha_requerida: '2026-12-01',
+          centro_costo_id: 'cc-001',
+          lineas: [{ producto_id: 'prod-001', cantidad: 1, precio_estimado: 100000 }]
+        },
+        usuario
+      );
+      expect(solicitud.solicitante_id).toBe(usuario.id);
+      expect(enviarSolicitud(solicitud.id, usuario).estado).toBe('enviada');
+    }
+  });
+
+  it('limita a solicitante y bodega a listar solo sus solicitudes', () => {
+    const propiaSolicitante = crearSolicitud(
+      {
+        justificacion: 'Propia del solicitante',
+        fecha_requerida: '2026-12-01',
+        centro_costo_id: 'cc-001',
+        lineas: [{ producto_id: 'prod-001', cantidad: 1, precio_estimado: 100000 }]
+      },
+      USUARIOS.solicitante
+    );
+    const propiaBodega = crearSolicitud(
+      {
+        justificacion: 'Propia de bodega',
+        fecha_requerida: '2026-12-01',
+        centro_costo_id: 'cc-001',
+        lineas: [{ producto_id: 'prod-001', cantidad: 1, precio_estimado: 100000 }]
+      },
+      USUARIOS.bodega
+    );
+    const ajena = crearSolicitud(
+      {
+        justificacion: 'Solicitud ajena',
+        fecha_requerida: '2026-12-01',
+        centro_costo_id: 'cc-001',
+        lineas: [{ producto_id: 'prod-001', cantidad: 1, precio_estimado: 100000 }]
+      },
+      USUARIOS.solicitante2
+    );
+
+    for (const [usuario, propia] of [
+      [USUARIOS.solicitante, propiaSolicitante],
+      [USUARIOS.bodega, propiaBodega]
+    ]) {
+      const visibles = listarSolicitudes(usuario).map((s) => s.id);
+      expect(visibles).toContain(propia.id);
+      expect(visibles).not.toContain(ajena.id);
+      expect(puedeVerSolicitud(obtenerSolicitud(ajena.id), usuario)).toBe(false);
+    }
+    const visiblesComprador = listarSolicitudes(USUARIOS.comprador).map((s) => s.id);
+    expect(visiblesComprador).toEqual(
+      expect.arrayContaining([propiaSolicitante.id, propiaBodega.id, ajena.id])
+    );
+  });
+
+  it('impide que cualquier usuario edite o envíe una solicitud ajena', () => {
+    const ajena = crearSolicitud(
+      {
+        justificacion: 'Solicitud de otro usuario',
+        fecha_requerida: '2026-12-01',
+        centro_costo_id: 'cc-001',
+        lineas: [{ producto_id: 'prod-001', cantidad: 1, precio_estimado: 100000 }]
+      },
+      USUARIOS.solicitante
+    );
+    for (const usuario of [
+      USUARIOS.solicitante2,
+      USUARIOS.comprador,
+      USUARIOS.jefe,
+      USUARIOS.bodega,
+      USUARIOS.admin
+    ]) {
+      expect(() =>
+        actualizarSolicitud(ajena.id, { justificacion: 'Editada' }, usuario)
+      ).toThrow(/otro usuario/);
+      expect(() => enviarSolicitud(ajena.id, usuario)).toThrow(/otro usuario/);
+    }
+  });
+
+  it('permite que un jefe distinto apruebe la solicitud de otro jefe', () => {
+    const solicitud = crearSolicitud(
+      {
+        justificacion: 'Solicitud creada por jefe 1',
+        fecha_requerida: '2026-12-01',
+        centro_costo_id: 'cc-001',
+        lineas: [{ producto_id: 'prod-001', cantidad: 1, precio_estimado: 100000 }]
+      },
+      USUARIOS.jefe
+    );
+    enviarSolicitud(solicitud.id, USUARIOS.jefe);
+    expect(() => aprobarSolicitud(solicitud.id, USUARIOS.jefe)).toThrow(/propia solicitud/);
+    expect(aprobarSolicitud(solicitud.id, USUARIOS.jefe2).estado).toBe('aprobada');
   });
 });

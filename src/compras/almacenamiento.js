@@ -343,3 +343,14 @@ export function exigirPermiso(accion, usuario = getUsuarioActivo()) {
   if (!puede(accion, usuario))
     throw new Error(`El rol ${usuario?.rol || 'desconocido'} no puede ejecutar esta acción`);
 }
+
+/** Valida el motivo obligatorio de cualquier anulación y lo devuelve normalizado. */
+export function exigirMotivoAnulacion(motivo) {
+  const texto = String(motivo ?? '').trim();
+  if (!texto) {
+    const error = new Error('La anulación exige un motivo');
+    error.codigo = 'MOTIVO_ANULACION_REQUERIDO';
+    throw error;
+  }
+  return texto;
+}

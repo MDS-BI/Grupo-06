@@ -41,29 +41,38 @@ export const TRANSICIONES = Object.freeze({
     anulada: []
   },
   cotizacion: {
-    recibida: ['seleccionada', 'descartada', 'vencida'],
-    vencida: ['descartada'],
+    recibida: ['seleccionada', 'descartada', 'vencida', 'anulada'],
+    vencida: ['descartada', 'anulada'],
     seleccionada: [],
-    descartada: []
+    descartada: ['anulada'],
+    anulada: []
   },
   orden: {
     emitida: ['recibida_parcial', 'recibida_total', 'anulada'],
-    recibida_parcial: ['recibida_total'],
-    recibida_total: ['cerrada'],
+    recibida_parcial: ['recibida_total', 'cerrada', 'emitida'],
+    recibida_total: ['recibida_parcial', 'emitida', 'cerrada'],
     cerrada: [],
     anulada: []
   },
+  recepcion: {
+    registrada: ['parcial', 'total', 'anulada'],
+    parcial: ['total', 'anulada'],
+    total: ['anulada'],
+    anulada: []
+  },
   factura: {
-    registrada: ['conciliada', 'con_discrepancia', 'rechazada'],
-    con_discrepancia: ['conciliada', 'rechazada'],
-    conciliada: ['aprobada_pago', 'rechazada'],
-    aprobada_pago: [],
-    rechazada: []
+    registrada: ['conciliada', 'con_discrepancia', 'rechazada', 'anulada'],
+    con_discrepancia: ['conciliada', 'rechazada', 'anulada'],
+    conciliada: ['aprobada_pago', 'rechazada', 'anulada'],
+    aprobada_pago: ['anulada'],
+    rechazada: [],
+    anulada: []
   },
   devolucion: {
-    pendiente_aprobacion: ['aprobada', 'rechazada'],
-    aprobada: [],
-    rechazada: []
+    pendiente_aprobacion: ['aprobada', 'rechazada', 'anulada'],
+    aprobada: ['anulada'],
+    rechazada: [],
+    anulada: []
   }
 });
 
@@ -251,6 +260,14 @@ export function conciliarFactura({
   const toleranciaMonto = redondearCLP(Math.abs(neto) * Number(tolerancia));
   const estado = Math.abs(diferencia) <= toleranciaMonto ? 'conciliada' : 'con_discrepancia';
   return { neto, pendiente, diferencia, toleranciaMonto, estado };
+}
+
+export function calcularCreditoAFavor({ lineas = [], estadoFactura } = {}) {
+  if (estadoFactura !== 'aprobada_pago') return 0;
+  const netoDefectuoso = (lineas || [])
+    .filter((linea) => String(linea?.motivo ?? '').trim() === 'defectuoso')
+    .reduce((sum, linea) => sum + Number(linea?.neto || 0), 0);
+  return redondearCLP(netoDefectuoso);
 }
 
 export function generarNumero(prefijo, anio, secuencia) {

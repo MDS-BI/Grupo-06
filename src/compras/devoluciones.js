@@ -1,5 +1,19 @@
-import { leer, guardar, generarId, exigirPermiso, getUsuarioActivo } from './almacenamiento.js';
-import { generarNumero, siguienteSecuencia, hoyISO, calcularLinea } from './reglas.js';
+import {
+  leer,
+  guardar,
+  generarId,
+  exigirPermiso,
+  exigirMotivoAnulacion,
+  getUsuarioActivo
+} from './almacenamiento.js';
+import {
+  generarNumero,
+  siguienteSecuencia,
+  hoyISO,
+  calcularLinea,
+  calcularCreditoAFavor,
+  puedeTransicionar
+} from './reglas.js';
 import { obtenerOrden, valorRecibidoNeto, lineasPendientes } from './ordenes-compra.js';
 import { registrarEvento } from './trazabilidad.js';
 
@@ -26,13 +40,18 @@ export function saldoPendienteNeto(ordenId) {
   const valorRecibido = valorRecibidoNeto(orden);
   const facturado = leer('facturas')
     .filter(
-      (f) => f.orden_id === ordenId && f.tipo_documento === 'factura' && f.estado !== 'rechazada'
+      (f) =>
+        f.orden_id === ordenId &&
+        f.tipo_documento === 'factura' &&
+        !['rechazada', 'anulada'].includes(f.estado)
     )
     .reduce((sum, f) => sum + Number(f.neto || 0), 0);
   const notasCredito = leer('facturas')
     .filter(
       (f) =>
-        f.orden_id === ordenId && f.tipo_documento === 'nota_credito' && f.estado !== 'rechazada'
+        f.orden_id === ordenId &&
+        f.tipo_documento === 'nota_credito' &&
+        !['rechazada', 'anulada'].includes(f.estado)
     )
     .reduce((sum, f) => sum + Number(f.neto || 0), 0);
   const devoluciones = devolucionesAprobadasNeto(ordenId);
@@ -51,7 +70,7 @@ function devueltoPorLinea(ordenId, ordenLineaId, incluirPendientes = true) {
 
 function registrarRecepcionDe(ordenId) {
   return leer('recepciones')
-    .filter((r) => r.orden_id === ordenId)
+    .filter((r) => r.orden_id === ordenId && r.estado !== 'anulada')
     .map((r) => r.registrada_por);
 }
 
@@ -63,13 +82,18 @@ function cerrarSiSaldada(ordenId, usuario = getUsuarioActivo()) {
     idx !== -1 &&
     saldo <= 0 &&
     lista[idx].estado !== 'cerrada' &&
-    lista[idx].estado !== 'anulada'
+    puedeTransicionar('orden', lista[idx].estado, 'cerrada')
   ) {
     const anterior = lista[idx].estado;
+    const cantidadNoRepuesta = lineasPendientes(lista[idx]).reduce(
+      (sum, linea) => sum + Number(linea.cantidad_pendiente || 0),
+      0
+    );
     lista[idx] = {
       ...lista[idx],
       estado: 'cerrada',
       fecha_cierre: hoyISO(),
+      cantidad_no_repuesta: cantidadNoRepuesta,
       updatedAt: new Date().toISOString()
     };
     guardar('ordenes', lista);
@@ -77,14 +101,22 @@ function cerrarSiSaldada(ordenId, usuario = getUsuarioActivo()) {
       usuario,
       anterior,
       nuevo: 'cerrada',
-      detalle: 'Saldo pendiente en cero'
+      detalle:
+        cantidadNoRepuesta > 0
+          ? `Saldo pendiente en cero; ${cantidadNoRepuesta} unidades no repuestas`
+          : 'Saldo pendiente en cero'
     });
   }
   if (saldo <= 0) {
     const facturas = leer('facturas');
     let cambios = false;
     for (const f of facturas) {
-      if (f.orden_id === ordenId && f.tipo_documento === 'factura' && !f.saldada) {
+      if (
+        f.orden_id === ordenId &&
+        f.tipo_documento === 'factura' &&
+        !['rechazada', 'anulada'].includes(f.estado) &&
+        !f.saldada
+      ) {
         f.saldada = true;
         f.updatedAt = new Date().toISOString();
         cambios = true;
@@ -93,6 +125,57 @@ function cerrarSiSaldada(ordenId, usuario = getUsuarioActivo()) {
     if (cambios) guardar('facturas', facturas);
   }
   return saldo;
+}
+
+function aplicarCreditoAFavor(devolucion, usuario = getUsuarioActivo()) {
+  const facturas = leer('facturas')
+    .filter(
+      (f) =>
+        f.orden_id === devolucion.orden_id &&
+        f.tipo_documento === 'factura' &&
+        f.estado === 'aprobada_pago'
+    )
+    .sort((a, b) => String(b.fecha_recepcion).localeCompare(String(a.fecha_recepcion)));
+  const factura = facturas[0];
+  if (!factura) return null;
+  if ((factura.creditos_a_favor_ids || []).includes(devolucion.id)) return factura;
+  const monto = calcularCreditoAFavor({ lineas: devolucion.lineas, estadoFactura: factura.estado });
+  if (monto <= 0) return factura;
+  const lista = leer('facturas');
+  const idx = lista.findIndex((f) => f.id === factura.id);
+  if (idx === -1) return factura;
+  lista[idx] = {
+    ...factura,
+    credito_a_favor: Number(factura.credito_a_favor || 0) + monto,
+    creditos_a_favor_ids: [...(factura.creditos_a_favor_ids || []), devolucion.id],
+    updatedAt: new Date().toISOString()
+  };
+  guardar('facturas', lista);
+  registrarEvento('factura', factura.id, 'credito_a_favor', {
+    usuario,
+    detalle: `Devolución ${devolucion.numero}: ${monto}`
+  });
+  return lista[idx];
+}
+
+function revertirCreditoAFavor(devolucion, usuario = getUsuarioActivo()) {
+  const lista = leer('facturas');
+  let cambios = false;
+  for (const factura of lista) {
+    if (!(factura.creditos_a_favor_ids || []).includes(devolucion.id)) continue;
+    const monto = calcularCreditoAFavor({ lineas: devolucion.lineas, estadoFactura: 'aprobada_pago' });
+    factura.credito_a_favor = Math.max(0, Number(factura.credito_a_favor || 0) - monto);
+    factura.creditos_a_favor_ids = (factura.creditos_a_favor_ids || []).filter(
+      (id) => id !== devolucion.id
+    );
+    factura.updatedAt = new Date().toISOString();
+    cambios = true;
+    registrarEvento('factura', factura.id, 'reversion_credito', {
+      usuario,
+      detalle: `Devolución anulada ${devolucion.numero}: ${monto}`
+    });
+  }
+  if (cambios) guardar('facturas', lista);
 }
 
 export function registrarDevolucion(datos, usuario = getUsuarioActivo()) {
@@ -190,7 +273,10 @@ export function registrarDevolucion(datos, usuario = getUsuarioActivo()) {
     nuevo: devolucion.estado,
     detalle: `OC ${orden.numero}`
   });
-  if (estado === 'aprobada') cerrarSiSaldada(orden.id, usuario);
+  if (estado === 'aprobada') {
+    cerrarSiSaldada(orden.id, usuario);
+    aplicarCreditoAFavor(devolucion, usuario);
+  }
   return devolucion;
 }
 
@@ -223,6 +309,7 @@ export function aprobarDevolucion(id, usuario = getUsuarioActivo()) {
     nuevo: 'aprobada'
   });
   cerrarSiSaldada(devolucion.orden_id, usuario);
+  aplicarCreditoAFavor(lista[idx], usuario);
   return lista[idx];
 }
 
@@ -248,6 +335,36 @@ export function rechazarDevolucion(id, motivo, usuario = getUsuarioActivo()) {
     nuevo: 'rechazada',
     detalle: lista[idx].motivo_rechazo
   });
+  return lista[idx];
+}
+
+export function anularDevolucion(id, motivo, usuario = getUsuarioActivo()) {
+  exigirPermiso('aprobar_devolucion', usuario);
+  const motivoNormalizado = exigirMotivoAnulacion(motivo);
+  const lista = leer('devoluciones');
+  const idx = lista.findIndex((d) => d.id === id);
+  if (idx === -1) throw new Error('Devolución no encontrada');
+  const devolucion = lista[idx];
+  if (devolucion.estado === 'anulada') throw new Error('La devolución ya está anulada');
+  if (!puedeTransicionar('devolucion', devolucion.estado, 'anulada')) {
+    throw new Error(`No se puede anular una devolución en estado "${devolucion.estado}"`);
+  }
+  lista[idx] = {
+    ...devolucion,
+    estado: 'anulada',
+    motivo_anulacion: motivoNormalizado,
+    anulada_por: usuario.id,
+    fecha_anulacion: hoyISO(),
+    updatedAt: new Date().toISOString()
+  };
+  guardar('devoluciones', lista);
+  registrarEvento('devolucion', id, 'anulacion', {
+    usuario,
+    anterior: devolucion.estado,
+    nuevo: 'anulada',
+    detalle: motivoNormalizado
+  });
+  revertirCreditoAFavor(lista[idx], usuario);
   return lista[idx];
 }
 
