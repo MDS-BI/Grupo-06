@@ -55,8 +55,8 @@ Las colecciones del módulo se guardan en `localStorage` con el prefijo `erp_com
 
 Estado al cierre de esta iteración:
 
-- `npx vitest run`: **150 pruebas aprobadas** y 56 omitidas (corresponden a las pruebas heredadas del template base).
-- `npm run lint`: **0 errores y 0 advertencias**.
+- `npx vitest run`: pendiente revalidar suite completa tras cambios UI/sesi?n; ?ltima verificaci?n focalizada 2026-11-24: `tests/integration/compras/vista.test.js` + `autenticacion.test.js` **17/17 OK**.
+- `npm run lint`: **OK (2026-11-24)**.
 - `npm run format:check`: **sin diferencias** en el alcance de `.prettierignore` (núcleo base `src/storage.js` y `tests/unit/storage.test.js`).
 - `npm run build`: **build de producción sin errores**.
 

@@ -146,30 +146,55 @@ export function construirPanel(usuario = getUsuarioActivo(), hoy = hoyISO()) {
   if (puede('crear_solicitud', usuario))
     acciones.push({
       clave: 'crear_solicitud',
-      etiqueta: 'Nueva solicitud',
+      etiqueta: 'Iniciar nuevo requerimiento',
+      descripcion: 'Registra una solicitud de compra para tu área.',
+      icono: 'solicitud',
       vista: 'solicitudes',
       nuevo: true
     });
   if (puede('emitir_oc', usuario))
-    acciones.push({ clave: 'emitir_oc', etiqueta: 'Emitir OC', vista: 'ordenes', nuevo: true });
+    acciones.push({
+      clave: 'emitir_oc',
+      etiqueta: 'Generar orden a proveedor',
+      descripcion: 'Emite una OC formal desde una solicitud aprobada.',
+      icono: 'orden',
+      vista: 'ordenes',
+      nuevo: true
+    });
   if (puede('registrar_recepcion', usuario))
     acciones.push({
       clave: 'registrar_recepcion',
-      etiqueta: 'Registrar recepción',
+      etiqueta: 'Registrar recepción de mercadería',
+      descripcion: 'Ingresa cantidades recibidas y aceptadas en bodega.',
+      icono: 'recepcion',
       vista: 'recepciones',
       nuevo: true
     });
   if (puede('registrar_factura', usuario))
     acciones.push({
       clave: 'registrar_factura',
-      etiqueta: 'Registrar factura',
+      etiqueta: 'Ingresar factura del proveedor',
+      descripcion: 'Registra facturas o notas de crédito para conciliar.',
+      icono: 'factura',
       vista: 'facturas',
       nuevo: true
     });
   if (puede('aprobar_pago', usuario))
-    acciones.push({ clave: 'aprobar_pago', etiqueta: 'Facturas por aprobar', vista: 'facturas' });
+    acciones.push({
+      clave: 'aprobar_pago',
+      etiqueta: 'Revisar facturas para pago',
+      descripcion: 'Aprueba facturas conciliadas y listas para pago.',
+      icono: 'pago',
+      vista: 'facturas'
+    });
   if (puede('gestionar_proveedores', usuario))
-    acciones.push({ clave: 'proveedores', etiqueta: 'Proveedores', vista: 'proveedores' });
+    acciones.push({
+      clave: 'proveedores',
+      etiqueta: 'Gestionar proveedores',
+      descripcion: 'Administra fichas, condiciones y estado de proveedores.',
+      icono: 'proveedor',
+      vista: 'proveedores'
+    });
 
   return {
     rol,

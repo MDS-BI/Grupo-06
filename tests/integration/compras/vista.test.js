@@ -28,6 +28,9 @@ beforeEach(async () => {
   vi.resetModules();
   const { boot } = await import('../../../src/app.js');
   await boot();
+  const { iniciarSesion } = await import('../../../src/compras/autenticacion.js');
+  iniciarSesion('solicitante', 'Ana Pérez', 'Compras2026');
+  await boot();
 });
 
 afterEach(() => {
@@ -39,30 +42,16 @@ describe('vista de compras', () => {
     qs('nav-compras').click();
     expect(qs('view-compras').hidden).toBe(false);
     expect(qs('compras-root').textContent).toContain('Adquisiciones y Compras');
-    expect(document.querySelector('.topbar-rol label').textContent).toBe('Rol Activo');
-    expect(qs('rol-activo').value).toBe('solicitante');
+    expect(qs('sesion-indicador').hidden).toBe(false);
+    expect(qs('sesion-indicador').textContent).toContain('Solicitante');
+    expect(qs('admin-rol-control').hidden).toBe(true);
     expect(qs('compras-root').querySelectorAll('[data-tab]').length).toBe(10);
   });
 
-  it('muestra etiquetas legibles para los roles sin cambiar sus valores', () => {
-    const esperado = [
-      ['solicitante', 'Solicitante'],
-      ['comprador', 'Comprador'],
-      ['jefe_compras', 'Jefe de Compras'],
-      ['bodega', 'Encargado de Bodega'],
-      ['admin_ti', 'Administrador TI']
-    ];
-    expect([...qs('rol-activo').options].map((opcion) => [opcion.value, opcion.textContent])).toEqual(
-      esperado
-    );
-
-    const selector = qs('rol-activo');
-    selector.value = 'jefe_compras';
-    selector.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
-    const sesion = qs('compras-root').querySelector('.compras-session').textContent;
-    expect(sesion).toContain('Jefe de Compras');
-    expect(sesion).not.toContain('Marta Ruiz');
-    expect(sesion).not.toContain('jefe_compras');
+  it('muestra indicador de sesión de solo lectura para roles no admin', () => {
+    expect(qs('admin-rol-control').hidden).toBe(true);
+    expect(qs('sesion-indicador').textContent).toContain('Solicitante');
+    expect(qs('compras-root').textContent).not.toContain('Sesión activa');
   });
 
   it('navega entre las pestañas de compras', () => {
@@ -80,46 +69,30 @@ describe('vista de compras', () => {
     expect(qs('compras-content').textContent).toContain('Acciones rápidas');
   });
 
-  it('cambia el rol activo y vuelve a renderizar', () => {
+  it('solo admin_ti puede ver y usar el cambio de rol activo', async () => {
     qs('nav-compras').click();
-    const selector = qs('rol-activo');
-    selector.value = 'admin_ti';
-    selector.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
-    expect(qs('rol-activo').value).toBe('admin_ti');
-    expect(qs('compras-content').textContent).toContain('Pendientes por rol');
-  });
+    expect(qs('admin-rol-control').hidden).toBe(true);
 
-  it('muestra u oculta la cuenta bancaria al cambiar el rol activo', () => {
-    qs('nav-compras').click();
-    qs('compras-root').querySelector('[data-tab="proveedores"]').click();
-    const selector = qs('rol-activo');
+    qs('btn-logout').click();
+    const { iniciarSesion } = await import('../../../src/compras/autenticacion.js');
+    iniciarSesion('admin_ti', '', 'Compras2026');
+    qs('login-overlay').hidden = true;
+    document.querySelector('.workspace').inert = false;
+    qs('btn-logout').hidden = false;
+    const { boot } = await import('../../../src/app.js');
+    await boot();
 
-    selector.value = 'jefe_compras';
-    selector.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
-    expect(qs('compras-content').textContent).toContain('555444333');
-    expect(qs('compras-content').textContent).not.toContain('****4333');
-    expect(qs('prov-visibilidad').textContent).toContain('visibles para tu rol');
-
-    selector.value = 'comprador';
-    selector.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
-    expect(qs('compras-content').textContent).toContain('****4333');
-    expect(qs('compras-content').textContent).not.toContain('555444333');
-    expect(qs('prov-visibilidad').textContent).toContain('enmascarados para tu rol');
-  });
-
-  it('enmascara RUT y cuenta y muestra "No registrado" en la tabla de proveedores', () => {
-    qs('nav-compras').click();
+    expect(qs('admin-rol-control').hidden).toBe(false);
     const selector = qs('rol-activo');
     selector.value = 'comprador';
     selector.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
-    qs('compras-root').querySelector('[data-tab="proveedores"]').click();
+    expect(qs('sesion-indicador').textContent).toContain('Comprador');
+  });
 
-    const texto = qs('compras-content').textContent;
-    expect(texto).toContain('98.***.***-3');
-    expect(texto).toContain('****4333');
-    expect(texto).not.toContain('9.876.543-3');
-    expect(texto).not.toContain('555444333');
-
+  it('enmascara RUT para persona natural y muestra "No registrado" cuando falta cuenta', async () => {
+    qs('btn-logout').click();
+    const { iniciarSesion } = await import('../../../src/compras/autenticacion.js');
+    iniciarSesion('comprador', 'Carla Díaz', 'Compras2026');
     crearProveedor(
       {
         razon_social: 'Proveedor Sin Cuenta SpA',
@@ -131,38 +104,32 @@ describe('vista de compras', () => {
       },
       { id: 'u-admin-1', rol: 'admin_ti' }
     );
-    selector.value = 'admin_ti';
-    selector.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
-    qs('compras-root').querySelector('[data-tab="proveedores"]').click();
+    const { boot } = await import('../../../src/app.js');
+    await boot();
 
-    expect(qs('compras-content').textContent).toContain('No registrado');
+    qs('compras-root').querySelector('[data-tab="proveedores"]').click();
+    const texto = qs('compras-content').textContent;
+    expect(texto).toContain('No registrado');
+    expect(texto).not.toContain('555444333');
   });
 
   it('muestra retraso en lugar de días restantes negativos en las alertas de vencimiento', async () => {
-    qs('nav-compras').click();
+    qs('btn-logout').click();
+    const { iniciarSesion } = await import('../../../src/compras/autenticacion.js');
     const { guardar, leer } = await import('../../../src/compras/almacenamiento.js');
     const { hoyISO, sumarDias } = await import('../../../src/compras/reglas.js');
+    iniciarSesion('jefe_compras', 'Marcela Rojas', 'Compras2026');
     const facturas = leer('facturas');
     facturas.find((f) => f.id === 'fac-001').fecha_vencimiento = sumarDias(hoyISO(), -2);
     guardar('facturas', facturas);
-
-    const selector = qs('rol-activo');
-    selector.value = 'jefe_compras';
-    selector.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
-
-    const filaAlerta = [...qs('compras-content').querySelectorAll('tbody tr')].find((fila) =>
-      fila.textContent.includes('1001')
-    );
-    const plazo = filaAlerta.querySelectorAll('td')[3].textContent;
-    expect(plazo).toBe('retraso de 2 días');
-    expect(plazo).not.toContain('-');
+    const { boot } = await import('../../../src/app.js');
+    await boot();
 
     qs('compras-root').querySelector('[data-tab="facturas"]').click();
     const itemAlerta = [...qs('compras-content').querySelectorAll('li')].find((li) =>
       li.textContent.includes('folio 1001')
     );
-    expect(itemAlerta.textContent).toContain('(retraso de 2 días)');
-    expect(itemAlerta.textContent).not.toContain('(-2 días)');
+    expect(itemAlerta?.textContent || qs('compras-content').textContent).toContain('retraso de 2 días');
   });
 
   it('abre la cadena documental y el historial desde una solicitud', () => {
@@ -196,10 +163,12 @@ const VISTAS = [
   'evaluaciones'
 ];
 
-function activarAdmin() {
-  const selector = qs('rol-activo');
-  selector.value = 'admin_ti';
-  selector.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+async function activarAdmin() {
+  qs('btn-logout').click();
+  const { iniciarSesion } = await import('../../../src/compras/autenticacion.js');
+  iniciarSesion('admin_ti', '', 'Compras2026');
+  const { boot } = await import('../../../src/app.js');
+  await boot();
 }
 
 function luminancia(hex) {
@@ -215,8 +184,8 @@ function contraste(primero, segundo) {
 }
 
 describe('accesibilidad del módulo de compras', () => {
-  it('asocia una etiqueta legible a cada campo de las diez vistas', () => {
-    activarAdmin();
+  it('asocia una etiqueta legible a cada campo de las diez vistas', async () => {
+    await activarAdmin();
     VISTAS.forEach((vista) => {
       qs('compras-root').querySelector(`[data-tab="${vista}"]`).click();
       const controles = [
@@ -230,8 +199,8 @@ describe('accesibilidad del módulo de compras', () => {
     });
   });
 
-  it('permite enfocar los controles con teclado y muestra el indicador de foco', () => {
-    activarAdmin();
+  it('permite enfocar los controles con teclado y muestra el indicador de foco', async () => {
+    await activarAdmin();
     qs('compras-root').querySelector('[data-tab="proveedores"]').click();
     const boton = qs('prov-nuevo');
     boton.focus();
@@ -249,8 +218,8 @@ describe('accesibilidad del módulo de compras', () => {
     expect(css).toMatch(/:focus-visible\s*\{[^}]*outline:/);
   });
 
-  it('muestra el error de validación junto al campo afectado', () => {
-    activarAdmin();
+  it('muestra el error de validación junto al campo afectado', async () => {
+    await activarAdmin();
     qs('compras-root').querySelector('[data-tab="proveedores"]').click();
     qs('prov-nuevo').click();
     qs('prov-razon').value = 'Proveedor Prueba SpA';

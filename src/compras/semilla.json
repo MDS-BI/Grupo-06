@@ -25,7 +25,8 @@
       "id": "u-jefe-1",
       "rol": "jefe_compras",
       "centro_costo_id": "cc-003",
-      "email": "jefe.compras@example.com"
+      "email": "jefe.compras@example.com",
+      "nombre": "Marcela Rojas"
     },
     {
       "id": "u-bodega-1",
@@ -38,13 +39,40 @@
       "rol": "admin_ti",
       "centro_costo_id": "cc-003",
       "email": "admin.ti@example.com"
+    },
+    {
+      "id": "u-jefe-2",
+      "nombre": "Jorge Muñoz",
+      "rol": "jefe_compras",
+      "centro_costo_id": "cc-003",
+      "email": "jorge.munoz@example.com"
     }
   ],
   "centros_costo": [
-    { "id": "cc-001", "codigo": "CC-ADM", "nombre": "Administración", "activo": true },
-    { "id": "cc-002", "codigo": "CC-OPE", "nombre": "Operaciones", "activo": true },
-    { "id": "cc-003", "codigo": "CC-COM", "nombre": "Compras", "activo": true },
-    { "id": "cc-004", "codigo": "CC-BOD", "nombre": "Bodega", "activo": true }
+    {
+      "id": "cc-001",
+      "codigo": "CC-ADM",
+      "nombre": "Administración",
+      "activo": true
+    },
+    {
+      "id": "cc-002",
+      "codigo": "CC-OPE",
+      "nombre": "Operaciones",
+      "activo": true
+    },
+    {
+      "id": "cc-003",
+      "codigo": "CC-COM",
+      "nombre": "Compras",
+      "activo": true
+    },
+    {
+      "id": "cc-004",
+      "codigo": "CC-BOD",
+      "nombre": "Bodega",
+      "activo": true
+    }
   ],
   "productos": [
     {

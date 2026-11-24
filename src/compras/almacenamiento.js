@@ -306,6 +306,11 @@ export function etiquetaUsuario(id) {
 }
 
 export function setRolActivo(rol) {
+  // Con sesión iniciada, solo admin_ti puede cambiar el rol activo de demostración.
+  if (estaAutenticado()) {
+    const actual = getUsuarioActivo();
+    if (actual?.rol !== 'admin_ti') return getSesion();
+  }
   const usuarios = leer('usuarios');
   const usuario = usuarios.find((u) => u.rol === rol);
   return setSesion({ rol, usuario_id: usuario?.id });

@@ -53,7 +53,8 @@ describe('acceso a la interfaz de compras', () => {
     expect(qs('campo-nombre').hidden).toBe(true);
 
     elegirRol('jefe_compras');
-    expect(qs('campo-nombre').hidden).toBe(true);
+    expect(qs('campo-nombre').hidden).toBe(false);
+    qs('login-nombre').value = 'Marcela Rojas';
     qs('login-clave').value = 'clave-erronea';
     enviarLogin();
 
@@ -62,7 +63,7 @@ describe('acceso a la interfaz de compras', () => {
     expect(qs('login-overlay').hidden).toBe(false);
   });
 
-  it('pide nombre solo a solicitante y comprador', () => {
+  it('pide nombre para solicitante, comprador y jefatura', () => {
     elegirRol('solicitante');
     expect(qs('campo-nombre').hidden).toBe(false);
     expect([...qs('nombres-demo').options].map((opcion) => opcion.value)).toEqual([
@@ -78,6 +79,13 @@ describe('acceso a la interfaz de compras', () => {
     elegirRol('comprador');
     expect(qs('campo-nombre').hidden).toBe(false);
     expect([...qs('nombres-demo').options].map((opcion) => opcion.value)).toEqual(['Carla Díaz']);
+
+    elegirRol('jefe_compras');
+    expect(qs('campo-nombre').hidden).toBe(false);
+    expect([...qs('nombres-demo').options].map((opcion) => opcion.value)).toEqual([
+      'Marcela Rojas',
+      'Jorge Muñoz'
+    ]);
   });
 
   it('ingresa con nombre para comprador y muestra la sesión identificada', () => {
@@ -89,10 +97,9 @@ describe('acceso a la interfaz de compras', () => {
     expect(qs('login-error').hidden).toBe(true);
     expect(qs('login-overlay').hidden).toBe(true);
     expect(qs('btn-logout').hidden).toBe(false);
-    expect(qs('rol-activo').value).toBe('comprador');
-    expect(qs('compras-root').querySelector('.compras-session strong').textContent).toBe(
-      'Carla Díaz · Comprador'
-    );
+    expect(qs('admin-rol-control').hidden).toBe(true);
+    expect(qs('sesion-indicador').textContent).toContain('Carla Díaz');
+    expect(qs('sesion-indicador').textContent).toContain('Comprador');
 
     qs('btn-logout').click();
 
@@ -101,20 +108,17 @@ describe('acceso a la interfaz de compras', () => {
     expect(qs('campo-nombre').hidden).toBe(true);
   });
 
-  it('ingresa sin nombre para jefatura y muestra solo el rol', () => {
+  it('ingresa con nombre para jefatura y muestra la sesión identificada', () => {
     elegirRol('jefe_compras');
-    expect(qs('campo-nombre').hidden).toBe(true);
+    expect(qs('campo-nombre').hidden).toBe(false);
+    qs('login-nombre').value = 'Marcela Rojas';
     qs('login-clave').value = CLAVE_DEMO;
     enviarLogin();
 
     expect(qs('login-overlay').hidden).toBe(true);
-    expect(qs('rol-activo').value).toBe('jefe_compras');
-    expect(qs('compras-root').querySelector('.compras-session strong').textContent).toBe(
-      'Jefe de Compras'
-    );
-    expect(qs('compras-root').querySelector('.compras-session').textContent).not.toContain(
-      'Marta Ruiz'
-    );
+    expect(qs('admin-rol-control').hidden).toBe(true);
+    expect(qs('sesion-indicador').textContent).toContain('Marcela Rojas');
+    expect(qs('sesion-indicador').textContent).toContain('Jefe de Compras');
   });
 
   it('rechaza un nombre que no corresponde al rol', () => {

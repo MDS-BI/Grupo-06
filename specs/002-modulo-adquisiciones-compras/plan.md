@@ -1,11 +1,11 @@
 # Plan de Implementación: Módulo Adquisiciones y Compras
 
-**Rama**: `002-modulo-adquisiciones-compras` | **Fecha**: 2026-10-27 | **Especificación**: [spec.md](spec.md)
+**Rama**: `002-modulo-adquisiciones-compras` | **Fecha**: 2026-10-27 | **Actualizado**: 2026-11-24 | **Especificación**: [spec.md](spec.md)
 **Entrada**: Especificación de la funcionalidad desde `/specs/002-modulo-adquisiciones-compras/spec.md` y modelo de datos en [data-model.md](data-model.md)
 
 ## Resumen
 
-Construir el módulo Adquisiciones y Compras **sobre el módulo base ERP del curso** (`specs/001-erp-base-module`), sin reemplazar su código central: `src/storage.js` y sus pruebas permanecen sin cambios funcionales (solo se aplicó formateo con Prettier). La interfaz final es **exclusiva del módulo**: `index.html` solo expone `#view-compras`, `#compras-root` y el indicador de solo lectura del usuario y rol de la sesión (el rol queda fijo al ingresar, FR-037); no se muestran las vistas genéricas de Entidades, Documentos ni Búsqueda del template, conforme a FR-032 y SC-014.
+Construir el módulo Adquisiciones y Compras **sobre el módulo base ERP del curso** (`specs/001-erp-base-module`), sin reemplazar su código central: `src/storage.js` y sus pruebas permanecen sin cambios funcionales (solo se aplicó formateo con Prettier). La interfaz final es **exclusiva del módulo**: `index.html` solo expone `#view-compras`, `#compras-root` y el indicador de sesión del usuario y rol (FR-037); no se muestran las vistas genéricas de Entidades, Documentos ni Búsqueda del template, conforme a FR-032 y SC-014. **Actualización 2026-11-24**: el rol queda fijo para usuarios operativos; `admin_ti` conserva "Vista de rol" para demostración sin cambiar su identidad autenticada. Se aplicaron mejoras UI/UX (KPI, acciones rápidas legibles, pendientes/flujo, tablas, badges, modo oscuro e IBM Plex Sans) sin modificar `src/storage.js`.
 
 Los proveedores reutilizan el contrato de Entidad del módulo base desde `src/compras/proveedores.js` sin tocar `src/storage.js`. El resto de documentos del ciclo (solicitudes, cotizaciones, OC, recepciones, facturas, devoluciones, catálogo, evaluaciones y trazabilidad) viven en colecciones propias `erp_compras:*` gestionadas desde `src/compras/almacenamiento.js`, siguiendo el mismo contrato de almacenamiento del template (`specs/001-erp-base-module/contracts/entity-storage.md`).
 
@@ -128,6 +128,7 @@ tests/
 | 2. Ciclo operativo                  | 9 al 15-nov     | US2, US4, US3 completa                                                   | Solicitud → OC → recepción; la OC se valida contra la solicitud aprobada, con líneas e IVA calculado                                                                         |
 | 3. Adquisiciones y cierre del ciclo | 16 al 22-nov    | US6, US7, US8                                                            | Cotizaciones, conciliación de facturas, catálogo; demo del ciclo completo                                                                                                    |
 | 4. Calidad                          | 23 al 26-nov    | US9, US10, US11, trazabilidad transversal (FR-027 a FR-030), indicadores | Evaluación, devoluciones/notas de crédito, CSV, historial de auditoría y cadena documental, README final; congelamiento del repositorio el 26-nov                            |
+| 5. UI/UX y ajustes de sesión        | 24-nov          | Refuerzo parcial US5/US12, FR-036, FR-037, ajustes sesión/rol            | Mejoras UI/UX (KPI, acciones rápidas legibles, pendientes/flujo, tablas, badges), modo oscuro, IBM Plex Sans, tabs responsivas; rol fijo para no `admin_ti`; `admin_ti` con "Vista de rol" para demostración; `crear_solicitud` para cinco roles en permisos base. Fase 16 pendiente. |
 
 Cada historia se asigna a un responsable en un Issue de GitHub con la etiqueta de su iteración; los acuerdos de cada semana se registran en un Issue de seguimiento.
 
@@ -178,6 +179,24 @@ Todos ficticios: 4 centros de costo, 7 usuarios (uno por rol, un segundo solicit
 - **Integración**: solicitudes automáticas de reposición desde Inventario y control de presupuesto por centro de costo desde Contabilidad.
 - **Multiempresa**: agregar un identificador de empresa a cada colección.
 
+
+## An?lisis de arquitectura de navegaci?n (2026-11-24)
+
+- **Estado actual (implementado)**: navegaci?n de dos niveles ligera: barra lateral con una sola secci?n "Compras" (`index.html`) + pesta?as internas `TABS` en `#compras-root` (`src/compras/vista.js`) para las 10 vistas. Incluye scroll m?vil, teclado/ARIA y persistencia de tab por estado de vista.
+- **Estado objetivo (spec FR-034)**: barra lateral agrupada en Panel / Adquisiciones / Compras, con visibilidad por matriz FR-033 (`visibilidad.js`, Fase 16) y encabezado "Grupo > Vista".
+- **Decisi?n**: **no cambiar la arquitectura ahora**. Mantener pesta?as actuales hasta ejecutar Fase 16, porque el cambio estructural depende de `VISIBILIDAD`, filtros por rol, permisos y ajuste masivo de pruebas.
+- **Impacto si se cambia antes de Fase 16**: alto riesgo de regresi?n en `vista.test.js`, accesibilidad, deep-links `data-ir`, y cobertura SC-015/SC-016 sin matriz implementada.
+- **Actualizaciones necesarias**: spec/plan/tasks/research/quickstart/README documentan la arquitectura actual y el objetivo diferido; no se modifica c?digo de Fase 16.
+
+## Refinamiento UX (2026-11-24)
+
+- **Alcance**: `index.html`, `src/app.js`, `src/compras/vista.js`, `src/compras/panel.js`, `src/styles.css`, pruebas focalizadas de vista/autenticaci?n. Sin cambios en `src/storage.js`.
+- **Modo oscuro**: `data-theme` en `:root`, toggle accesible, persistencia `erp_compras:tema`, inicializaci?n por `prefers-color-scheme`.
+- **Tipograf?a**: IBM Plex Sans (400/500/600/700), jerarqu?a para KPI/t?tulos/cuerpo.
+- **Componentes**: KPI con iconos/acento sem?ntico; acciones r?pidas con etiqueta+descripci?n+icono y hover `translateY(-2px)`; pendientes por rol como tarjetas clicables; flujo con barras CSS; tablas con scroll horizontal, encabezado sticky y hover; badges con punto sem?ntico; tabs con scroll m?vil.
+- **Accesibilidad/responsive**: mantener contraste 4.5:1, foco visible, teclado/ARIA, y evitar overflow horizontal de p?gina.
+- **Validaci?n**: `npm run lint` OK; `npx vitest run tests/integration/compras/vista.test.js tests/integration/compras/autenticacion.test.js` 17/17 OK. Suite completa y recorrido manual por rol pendientes.
+
 ## Seguimiento de Complejidad
 
 | Desviación del módulo base                               | Por qué es necesaria                                                                                                       | Alternativa más simple descartada                                                       |
@@ -185,3 +204,11 @@ Todos ficticios: 4 centros de costo, 7 usuarios (uno por rol, un segundo solicit
 | Colecciones adicionales fuera de Entidad/Documento       | El ciclo de compras tiene 6 documentos encadenados; el template solo modela uno                                            | Forzar todo como Documento con un campo "tipo" mezclaría estados y reglas incompatibles |
 | Bloquear la eliminación en cascada de proveedores con OC | El template borra los documentos de una entidad eliminada; en compras eso destruiría la trazabilidad de órdenes y facturas | Advertir y borrar igual: inaceptable para auditoría                                     |
 | Líneas de detalle dentro de la OC                        | El template no tiene partidas; su propio data-model las señala como punto de extensión                                     | Una OC por producto: no refleja cómo compra una empresa                                 |
+
+## Actualización 2026-11-24
+
+- **UI/UX**: se mejoró `src/compras/vista.js` y `src/styles.css` (KPI con iconos/acento, acciones rápidas con descripción e icono, pendientes como tarjetas clicables, flujo con barras CSS, tablas responsivas, badges semánticos, tabs con scroll móvil, modo oscuro y IBM Plex Sans en `index.html`).
+- **Sesión/rol**: `src/app.js` muestra indicador compacto de sesión; `admin_ti` mantiene control "Vista de rol"; `src/compras/almacenamiento.js` impide cambio de rol en sesión para no `admin_ti`.
+- **Permisos base**: `crear_solicitud` incluye los cinco roles; semilla actualiza nombres de `jefe_compras`.
+- **Verificación**: `npm run lint` OK; `npx vitest run tests/integration/compras/vista.test.js tests/integration/compras/autenticacion.test.js` 17/17 OK.
+- **Pendiente crítico**: cerrar Fase 16 (FR-033/FR-034/SC-015-SC-017) antes de declarar cumplimiento de matriz de visibilidad por rol; revalidar suite completa `tests/integration/compras`.

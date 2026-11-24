@@ -1,7 +1,6 @@
 import { getUsuarioActivo, asegurarSemilla, etiquetaUsuario, leer, puede } from './almacenamiento.js';
 import {
   hoyISO,
-  requiereNombre,
   UMBRAL_COTIZACIONES,
   validarVisibilidadDatosBancarios
 } from './reglas.js';
@@ -100,17 +99,21 @@ export function etiquetaRol(rol) {
 }
 
 const TABS = [
-  { id: 'panel', label: 'Panel' },
-  { id: 'proveedores', label: 'Proveedores' },
-  { id: 'solicitudes', label: 'Solicitudes' },
-  { id: 'cotizaciones', label: 'Cotizaciones' },
-  { id: 'ordenes', label: 'Órdenes de compra' },
-  { id: 'recepciones', label: 'Recepciones' },
-  { id: 'facturas', label: 'Facturas' },
-  { id: 'devoluciones', label: 'Devoluciones' },
-  { id: 'catalogo', label: 'Catálogo' },
-  { id: 'evaluaciones', label: 'Evaluaciones' }
+  { id: 'panel', label: 'Panel', grupo: 'Panel' },
+  { id: 'proveedores', label: 'Proveedores', grupo: 'Adquisiciones' },
+  { id: 'catalogo', label: 'Catálogo', grupo: 'Adquisiciones' },
+  { id: 'evaluaciones', label: 'Evaluaciones', grupo: 'Adquisiciones' },
+  { id: 'solicitudes', label: 'Solicitudes', grupo: 'Compras' },
+  { id: 'cotizaciones', label: 'Cotizaciones', grupo: 'Compras' },
+  { id: 'ordenes', label: 'Órdenes de compra', grupo: 'Compras' },
+  { id: 'recepciones', label: 'Recepciones', grupo: 'Compras' },
+  { id: 'facturas', label: 'Facturas', grupo: 'Compras' },
+  { id: 'devoluciones', label: 'Devoluciones', grupo: 'Compras' }
 ];
+
+function grupoDeTab(id) {
+  return TABS.find((t) => t.id === id)?.grupo || 'Panel';
+}
 
 let tab = 'panel';
 let provFiltro = '';
@@ -315,26 +318,28 @@ export function renderComprasView() {
   const root = qs('compras-root');
   if (!root) return;
   asegurarSemilla();
-  const usuario = getUsuarioActivo();
+  getUsuarioActivo();
   if (!TABS.some((t) => t.id === tab)) tab = 'panel';
   const indiceActivo = TABS.findIndex((t) => t.id === tab);
 
+  const usuario = getUsuarioActivo();
+  const esAdminTI = usuario.rol === 'admin_ti';
   root.innerHTML = `
     <div id="compras-aviso" class="compras-aviso" role="alert" aria-live="assertive" tabindex="-1" hidden></div>
-    <div class="compras-header">
+    <div class="compras-header${esAdminTI ? ' admin-ti-activo' : ''}">
       <div>
-        <h1 id="compras-titulo" tabindex="-1">Adquisiciones y Compras</h1>
+        <p class="muted compras-seccion" aria-live="polite">${esc(seccionActual())}</p>
+        <div class="compras-titulo-fila">
+          <h1 id="compras-titulo" tabindex="-1">Adquisiciones y Compras</h1>
+          ${esAdminTI ? '<span class="admin-ti-badge" aria-label="Privilegios elevados: Administrador TI"><svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 1.5l1.8 3.6 4 .6-2.9 2.8.7 4L8 10.6 4.4 12.5l.7-4L2.2 5.7l4-.6L8 1.5z"></path></svg>Privilegios elevados</span>' : ''}
+        </div>
         <p class="muted">Ciclo completo de compra: solicitud, cotización, OC, recepción, factura y devolución.</p>
       </div>
-      <div class="compras-session" aria-live="polite">
-        <span class="muted">Sesión activa</span>
-        <strong>${esc(
-          requiereNombre(usuario.rol)
-            ? `${usuario.nombre} · ${etiquetaRol(usuario.rol)}`
-            : etiquetaRol(usuario.rol)
-        )}</strong>
+      <div class="compras-header-acciones">
+        <button type="button" class="link" id="compras-exportar-csv">Exportar CSV de esta vista</button>
       </div>
     </div>
+
     <nav class="compras-tabs" role="tablist" aria-label="Secciones de compras">
       ${TABS.map(
         (t, indice) =>
@@ -392,9 +397,76 @@ function renderComprasTab() {
   asociarEtiquetas(qs('compras-content'));
 }
 
+function seccionActual() {
+  const actual = TABS.find((t) => t.id === tab);
+  if (!actual) return 'Panel';
+  return tab === 'panel' ? 'Panel' : `${grupoDeTab(tab)} · ${actual.label}`;
+}
+
 function irA(nuevaTab) {
   tab = nuevaTab;
   renderComprasView();
+}
+
+function iconoSvg(nombre, tamano = 20) {
+  const attrs = `viewBox="0 0 24 24" width="${tamano}" height="${tamano}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"`;
+  const paths = {
+    solicitud:
+      '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M9 15h6"></path><path d="M12 12v6"></path>',
+    orden:
+      '<rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M7 8h10"></path><path d="M7 12h6"></path><path d="M16 16h2"></path>',
+    recepcion:
+      '<path d="M21 8l-9-5-9 5 9 5 9-5z"></path><path d="M3 8v8l9 5 9-5V8"></path><path d="M12 13v8"></path>',
+    factura:
+      '<path d="M14 2H6a2 2 0 0 0-2 2v16l3-2 3 2 3-2 3 2V8z"></path><path d="M14 2v6h6"></path><path d="M8 13h8"></path><path d="M8 17h5"></path>',
+    pago:
+      '<circle cx="12" cy="12" r="9"></circle><path d="M8.5 15.5c.7.9 1.9 1.5 3.5 1.5 2 0 3.5-1 3.5-2.6 0-1.5-1.1-2.3-3.2-2.7l-1-.2c-1.7-.3-2.5-.9-2.5-2 0-1.3 1.3-2.2 3-2.2 1.4 0 2.5.5 3.1 1.3"></path><path d="M12 6v2"></path><path d="M12 17v2"></path>',
+    proveedor:
+      '<path d="M3 21h18"></path><path d="M5 21V7l8-4 6 3v15"></path><path d="M9 10h1"></path><path d="M14 10h1"></path><path d="M9 14h1"></path><path d="M14 14h1"></path><path d="M10 21v-4h4v4"></path>',
+    comprometido:
+      '<path d="M3 17l5-5 4 4 7-9"></path><path d="M14 7h5v5"></path>',
+    abiertas:
+      '<circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path>',
+    aprobadas:
+      '<path d="M20 6L9 17l-5-5"></path>',
+    montoPago:
+      '<rect x="2" y="5" width="20" height="14" rx="2"></rect><path d="M2 10h20"></path><path d="M6 15h4"></path>'
+  };
+  return `<svg ${attrs}>${paths[nombre] || ''}</svg>`;
+}
+
+function resumenFlujo() {
+  const solicitudes = listarSolicitudes(getUsuarioActivo());
+  const ordenes = listarOrdenes();
+  const recepciones = leer('recepciones') || [];
+  const facturas = listarFacturas();
+  const etapas = [
+    {
+      id: 'solicitudes',
+      label: 'Solicitudes',
+      valor: solicitudes.filter((s) => ['aprobada', 'en_cotizacion', 'adjudicada'].includes(s.estado)).length,
+      total: solicitudes.length
+    },
+    { id: 'ordenes', label: 'Órdenes', valor: ordenes.filter((o) => o.estado !== 'anulada').length, total: ordenes.length },
+    { id: 'recepciones', label: 'Recepciones', valor: recepciones.length, total: Math.max(recepciones.length, ordenes.length) },
+    {
+      id: 'facturas',
+      label: 'Facturas',
+      valor: facturas.filter((f) => ['conciliada', 'aprobada_pago'].includes(f.estado)).length,
+      total: facturas.length
+    }
+  ];
+  const max = Math.max(1, ...etapas.map((e) => e.total));
+  return etapas
+    .map((e) => {
+      const pct = Math.round((e.valor / max) * 100);
+      return `<button type="button" class="flow-step" data-ir="${esc(e.id)}" aria-label="${esc(e.label)}: ${e.valor} de ${e.total}">
+        <span class="flow-step-head"><span>${esc(e.label)}</span><strong>${e.valor}</strong></span>
+        <span class="flow-bar" role="presentation"><span class="flow-bar-fill" style="width:${pct}%"></span></span>
+        <span class="muted flow-step-meta">${e.valor} de ${e.total}</span>
+      </button>`;
+    })
+    .join('');
 }
 
 function fechaHora(valor) {
@@ -453,40 +525,82 @@ function renderPanel() {
   const content = qs('compras-content');
   content.innerHTML = `
     <div class="stat-grid">
-      <div class="stat-card"><span class="stat-value">${clp(panel.indicadores.monto_comprometido)}</span><span class="stat-label">Monto comprometido (${esc(panel.indicadores.mes)})</span></div>
-      <div class="stat-card"><span class="stat-value">${panel.indicadores.ordenes_abiertas}</span><span class="stat-label">Órdenes abiertas</span></div>
-      <div class="stat-card"><span class="stat-value">${panel.indicadores.facturas_aprobadas_pago}</span><span class="stat-label">Facturas aprobadas para pago</span></div>
-      <div class="stat-card"><span class="stat-value">${clp(panel.indicadores.monto_aprobado_pago)}</span><span class="stat-label">Monto aprobado para pago</span></div>
+      <article class="stat-card stat-card--comprometido">
+        <div class="stat-card-head">
+          <span class="stat-icon" aria-hidden="true">${iconoSvg('comprometido')}</span>
+          <span class="stat-label">Monto comprometido (${esc(panel.indicadores.mes)})</span>
+        </div>
+        <span class="stat-value">${clp(panel.indicadores.monto_comprometido)}</span>
+      </article>
+      <article class="stat-card stat-card--abiertas">
+        <div class="stat-card-head">
+          <span class="stat-icon" aria-hidden="true">${iconoSvg('abiertas')}</span>
+          <span class="stat-label">Órdenes abiertas</span>
+        </div>
+        <span class="stat-value">${panel.indicadores.ordenes_abiertas}</span>
+      </article>
+      <article class="stat-card stat-card--aprobadas">
+        <div class="stat-card-head">
+          <span class="stat-icon" aria-hidden="true">${iconoSvg('aprobadas')}</span>
+          <span class="stat-label">Facturas aprobadas para pago</span>
+        </div>
+        <span class="stat-value">${panel.indicadores.facturas_aprobadas_pago}</span>
+      </article>
+      <article class="stat-card stat-card--monto-aprobado">
+        <div class="stat-card-head">
+          <span class="stat-icon" aria-hidden="true">${iconoSvg('montoPago')}</span>
+          <span class="stat-label">Monto aprobado para pago</span>
+        </div>
+        <span class="stat-value">${clp(panel.indicadores.monto_aprobado_pago)}</span>
+      </article>
     </div>
     ${panel.vacio ? '<div class="empty">No tienes pendientes para tu rol. ¡Todo al día!</div>' : ''}
     <div class="card">
       <h2>Acciones rápidas</h2>
       <div class="action-grid">
-        ${panel.acciones.map((a) => `<button type="button" class="action-card" data-ir="${esc(a.vista)}"><strong>${esc(a.etiqueta)}</strong><span class="muted">${esc(a.clave)}</span></button>`).join('')}
+        ${panel.acciones
+          .map(
+            (a) => `<button type="button" class="action-card" data-ir="${esc(a.vista)}">
+          <span class="action-card-icon" aria-hidden="true">${iconoSvg(a.icono)}</span>
+          <span class="action-card-body">
+            <strong>${esc(a.etiqueta)}</strong>
+            <span class="muted">${esc(a.descripcion || '')}</span>
+          </span>
+        </button>`
+          )
+          .join('')}
       </div>
+    </div>
+    <div class="card">
+      <h2>Resumen del ciclo de compras</h2>
+      <div class="flow-summary">${resumenFlujo()}</div>
     </div>
     <div class="card">
       <h2>Pendientes por rol</h2>
       ${
         panel.pendientes.length === 0
           ? '<div class="empty">Sin pendientes.</div>'
-          : panel.pendientes
+          : `<div class="pending-grid">${panel.pendientes
               .map(
                 (p) => `
-        <section class="pending-block">
-          <h3>${esc(p.titulo)} <span class="counter">${p.cantidad}</span></h3>
-          <p class="muted">${esc(p.detalle)}</p>
-          <ul>${p.items
-            .slice(0, 6)
+        <button type="button" class="pending-card" data-ir="${esc(p.vista)}">
+          <span class="pending-card-head">
+            <span class="pending-card-title">${esc(p.titulo)}</span>
+            <span class="counter">${p.cantidad}</span>
+          </span>
+          <span class="muted pending-card-detail">${esc(p.detalle)}</span>
+          <span class="pending-card-list">${p.items
+            .slice(0, 4)
             .map(
               (item) =>
-                `<li><button type="button" class="link" data-ir="${esc(p.vista)}">${esc(item.etiqueta)}</button> ${item.monto !== undefined ? clp(item.monto) : ''} ${badge(item.estado)}</li>`
+                `<span class="pending-card-item"><span class="pending-card-item-label">${esc(item.etiqueta)}</span><span class="pending-card-meta">${item.monto !== undefined ? esc(clp(item.monto)) : ''} ${badge(item.estado)}</span></span>`
             )
-            .join('')}</ul>
-        </section>
+            .join('')}</span>
+          <span class="pending-card-cta">Ver ${esc(TABS.find((t) => t.id === p.vista)?.label || 'detalle')} →</span>
+        </button>
       `
               )
-              .join('')
+              .join('')}</div>`
       }
     </div>
     <div class="card">

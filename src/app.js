@@ -7,6 +7,7 @@ import {
 } from './compras/almacenamiento.js';
 import { cerrarSesion, iniciarSesion, listarUsuarios } from './compras/autenticacion.js';
 import { requiereNombre } from './compras/reglas.js';
+import { etiquetaRol } from './compras/vista.js';
 import { renderComprasView } from './compras/vista.js';
 
 function qs(id) {
@@ -33,6 +34,40 @@ function showModule() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+const TEMA_KEY = 'erp_compras:tema';
+
+function temaInicial() {
+  try {
+    const guardado = localStorage.getItem(TEMA_KEY);
+    if (guardado === 'dark' || guardado === 'light') return guardado;
+  } catch {
+    // ignorar
+  }
+  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function aplicarModo(tema) {
+  const oscuro = tema === 'dark';
+  document.documentElement.dataset.theme = tema;
+  const boton = qs('btn-tema');
+  if (boton) {
+    boton.textContent = oscuro ? 'Modo claro' : 'Modo oscuro';
+    boton.setAttribute('aria-pressed', String(oscuro));
+    boton.setAttribute('aria-label', oscuro ? 'Activar modo claro' : 'Activar modo oscuro');
+  }
+}
+
+function alternarTema() {
+  const actual = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+  const siguiente = actual === 'dark' ? 'light' : 'dark';
+  try {
+    localStorage.setItem(TEMA_KEY, siguiente);
+  } catch {
+    // ignorar
+  }
+  aplicarModo(siguiente);
+}
+
 function aplicarTema(config) {
   document.documentElement.style.setProperty('--accent', config.theme.accentColor);
 }
@@ -56,13 +91,40 @@ function mostrarErroresConfig(errors) {
   }
 }
 
-function sincronizarSelectorRol() {
+function sincronizarSesionUI() {
+  const usuario = getUsuarioActivo();
+  const autenticado = estaAutenticado();
+  const indicador = qs('sesion-indicador');
+  const controlAdmin = qs('admin-rol-control');
   const selector = qs('rol-activo');
-  if (!selector) return;
-  const rol = getUsuarioActivo().rol;
-  selector.value = [...selector.options].some((opcion) => opcion.value === rol)
-    ? rol
-    : selector.options[0].value;
+  const topbar = document.querySelector('.topbar');
+  const esAdmin = autenticado && usuario.rol === 'admin_ti';
+  const esAdminTIActivo = autenticado && usuario.rol === 'admin_ti';
+
+  if (indicador) {
+    indicador.hidden = !autenticado;
+    indicador.classList.toggle('admin-ti-activo', esAdminTIActivo);
+    if (autenticado) {
+      const esPersonal = ['solicitante', 'comprador', 'jefe_compras'].includes(usuario.rol);
+      const nombre = String(usuario.nombre || '').trim();
+      const rol = etiquetaRol(usuario.rol);
+      indicador.textContent = esPersonal && nombre && nombre !== usuario.rol ? `${nombre} · ${rol}` : rol;
+    } else {
+      indicador.textContent = '';
+    }
+  }
+  if (controlAdmin) {
+    controlAdmin.hidden = !esAdmin;
+    controlAdmin.classList.toggle('admin-ti-activo', esAdminTIActivo);
+  }
+  if (selector) {
+    selector.disabled = !esAdmin;
+    selector.classList.toggle('admin-ti-activo', esAdminTIActivo);
+    selector.value = [...selector.options].some((opcion) => opcion.value === usuario.rol)
+      ? usuario.rol
+      : selector.options[0].value;
+  }
+  if (topbar) topbar.classList.toggle('admin-ti-activo', esAdminTIActivo);
 }
 
 function poblarNombresLogin(rol) {
@@ -116,6 +178,7 @@ function bloquearInterfaz() {
   }
   const logout = qs('btn-logout');
   if (logout) logout.hidden = true;
+  sincronizarSesionUI();
 
   const rol = qs('login-rol');
   if (rol) rol.value = '';
@@ -152,7 +215,7 @@ function desbloquearInterfaz(renderizar = true) {
   const logout = qs('btn-logout');
   if (logout) logout.hidden = false;
 
-  sincronizarSelectorRol();
+  sincronizarSesionUI();
   if (renderizar) renderComprasView();
   qs('compras-root')?.querySelector('h1')?.focus();
 }
@@ -226,7 +289,12 @@ function cablearEventos() {
   const selectorRol = qs('rol-activo');
   if (selectorRol) {
     selectorRol.addEventListener('change', (evento) => {
+      if (getUsuarioActivo().rol !== 'admin_ti') {
+        sincronizarSesionUI();
+        return;
+      }
       setRolActivo(evento.target.value);
+      sincronizarSesionUI();
       renderComprasView();
     });
   }
@@ -234,6 +302,7 @@ function cablearEventos() {
   qs('login-form')?.addEventListener('submit', enviarLogin);
   qs('login-rol')?.addEventListener('change', () => actualizarCampoNombre({ enfocar: true }));
   qs('login-mostrar-clave')?.addEventListener('click', alternarVisibilidadClave);
+  qs('btn-tema')?.addEventListener('click', alternarTema);
   qs('btn-logout')?.addEventListener('click', () => {
     cerrarSesion();
     bloquearInterfaz();
@@ -244,6 +313,7 @@ function cablearEventos() {
 export function initApp(resolved) {
   mostrarErroresConfig(resolved.errors);
   setActiveConfig(resolved.config);
+  aplicarModo(temaInicial());
   aplicarTema(resolved.config);
   renderLogo(qs('logo-mark'));
   renderLogo(qs('login-logo'));
