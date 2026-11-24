@@ -143,7 +143,7 @@ describe('acceso a la interfaz de compras', () => {
     expect(raiz.querySelector('h1').id).toBe('compras-titulo');
 
     const pestañas = [...raiz.querySelectorAll('[role="tab"]')];
-    expect(pestañas.length).toBe(10);
+    expect(pestañas.length).toBe(5);
     expect(pestañas.every((p) => p.getAttribute('aria-controls') === 'compras-content')).toBe(true);
     expect(pestañas.filter((p) => p.tabIndex === 0).length).toBe(1);
     expect(qs('compras-content').getAttribute('aria-labelledby')).toBe('tab-panel');

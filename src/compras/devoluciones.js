@@ -231,11 +231,7 @@ export function registrarDevolucion(datos, usuario = getUsuarioActivo()) {
       fechaAprobacion = null;
     } else {
       const aprobador = leer('usuarios').find((u) => u.id === aprobadorId);
-      if (
-        !aprobador ||
-        aprobador.rol !== 'jefe_compras' ||
-        aprobador.id === usuario.id
-      ) {
+      if (!aprobador || aprobador.rol !== 'jefe_compras' || aprobador.id === usuario.id) {
         throw new Error('La devolución debe aprobarla un jefe de compras distinto');
       }
       aprobadaPor = aprobador.id;
@@ -291,9 +287,7 @@ export function aprobarDevolucion(id, usuario = getUsuarioActivo()) {
   if (devolucion.registrada_por === usuario.id)
     throw new Error('Quien registró la devolución no puede aprobarla');
   if (registrarRecepcionDe(devolucion.orden_id).includes(usuario.id)) {
-    throw new Error(
-      'La devolución debe aprobarla un jefe de compras que no haya recepcionado'
-    );
+    throw new Error('La devolución debe aprobarla un jefe de compras que no haya recepcionado');
   }
   lista[idx] = {
     ...devolucion,

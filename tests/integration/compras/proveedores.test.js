@@ -5,6 +5,7 @@ import {
   cambiarEstadoProveedor,
   crearProveedor,
   cuentaCambiadaRecientemente,
+  desbloquearProveedor,
   eliminarProveedor,
   obtenerProveedor,
   validarProveedor,
@@ -104,6 +105,28 @@ describe('proveedores', () => {
     expect(() => cambiarEstadoProveedor(proveedor.id, 'inexistente', USUARIOS.comprador)).toThrow(
       /inválido/
     );
+  });
+
+  it('permite solo a admin_ti desbloquear proveedores y registra el evento', () => {
+    const proveedor = crearProveedor(DATOS_BASE, USUARIOS.comprador);
+    cambiarEstadoProveedor(proveedor.id, 'aprobado', USUARIOS.comprador);
+    cambiarEstadoProveedor(proveedor.id, 'bloqueado', USUARIOS.comprador);
+
+    expect(() => desbloquearProveedor(proveedor.id, USUARIOS.comprador)).toThrow(
+      /no puede ejecutar esta acción/
+    );
+    expect(() => desbloquearProveedor(proveedor.id, USUARIOS.admin)).not.toThrow();
+    expect(obtenerProveedor(proveedor.id).estado_proveedor).toBe('aprobado');
+
+    const eventos = listarEventos({
+      entidad: 'proveedor',
+      entidad_id: proveedor.entity_id,
+      accion: 'desbloqueo'
+    });
+    expect(eventos).toHaveLength(1);
+    expect(eventos[0].estado_anterior).toBe('bloqueado');
+    expect(eventos[0].estado_nuevo).toBe('aprobado');
+    expect(eventos[0].usuario_id).toBe(USUARIOS.admin.id);
   });
 
   it('enmascara RUT de persona natural y datos bancarios según rol', () => {

@@ -8,7 +8,9 @@ const html = fs.readFileSync(fileURLToPath(new URL('../../index.html', import.me
 
 let dom;
 
-function qs(id){ return document.getElementById(id); }
+function qs(id) {
+  return document.getElementById(id);
+}
 
 beforeEach(async () => {
   dom = new JSDOM(html, { url: 'http://localhost/' });
@@ -49,7 +51,9 @@ describe.skip('User Story 10 - add a document to an entity', () => {
     qs('docPaymentTerms').value = 'neto 30';
     qs('notes').value = 'Entrega parcial';
     qs('status').value = 'pendiente';
-    qs('document-form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
+    qs('document-form').dispatchEvent(
+      new dom.window.Event('submit', { bubbles: true, cancelable: true })
+    );
     const all = loadDocuments();
     expect(all.length).toBe(1);
     expect(all[0].entity_id).toBe(entity.entity_id);
@@ -70,7 +74,9 @@ describe.skip('User Story 10 - add a document to an entity', () => {
     qs('nav-documents').click();
     qs('document-entity').value = entity.entity_id;
     qs('folio').value = '';
-    qs('document-form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
+    qs('document-form').dispatchEvent(
+      new dom.window.Event('submit', { bubbles: true, cancelable: true })
+    );
     expect(loadDocuments().length).toBe(0);
     expect(qs('error-folio').textContent).toContain('obligatorio');
   });
@@ -85,7 +91,9 @@ describe.skip('User Story 10 - add a document to an entity', () => {
     qs('endDate').value = '2026-08-05';
     qs('subtotal').value = '100';
     qs('discount').value = '150';
-    qs('document-form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
+    qs('document-form').dispatchEvent(
+      new dom.window.Event('submit', { bubbles: true, cancelable: true })
+    );
     expect(loadDocuments().length).toBe(0);
     expect(qs('error-discount').textContent).toContain('superar el subtotal');
   });
@@ -98,7 +106,9 @@ describe.skip('User Story 10 - add a document to an entity', () => {
     qs('folio').value = '1003';
     qs('startDate').value = '2026-08-05';
     qs('endDate').value = '2026-08-01';
-    qs('document-form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
+    qs('document-form').dispatchEvent(
+      new dom.window.Event('submit', { bubbles: true, cancelable: true })
+    );
     expect(loadDocuments().length).toBe(0);
     expect(qs('error-endDate').textContent).toContain('igual o posterior');
   });
@@ -109,7 +119,9 @@ describe.skip('User Story 10 - add a document to an entity', () => {
     qs('folio').value = '9999';
     qs('startDate').value = '2026-08-01';
     qs('endDate').value = '2026-08-05';
-    qs('document-form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
+    qs('document-form').dispatchEvent(
+      new dom.window.Event('submit', { bubbles: true, cancelable: true })
+    );
     expect(loadDocuments().length).toBe(0);
     expect(qs('error-document-entity').textContent).toContain('entidad');
   });

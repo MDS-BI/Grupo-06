@@ -39,13 +39,12 @@ afterEach(() => {
 
 describe('vista de compras', () => {
   it('abre el módulo desde la navegación y muestra el panel', () => {
-    qs('nav-compras').click();
     expect(qs('view-compras').hidden).toBe(false);
-    expect(qs('compras-root').textContent).toContain('Adquisiciones y Compras');
+    expect(document.querySelector('.side-nav').textContent).toContain('Adquisiciones y Compras');
     expect(qs('sesion-indicador').hidden).toBe(false);
     expect(qs('sesion-indicador').textContent).toContain('Solicitante');
     expect(qs('rol-activo')).toBeNull();
-    expect(qs('compras-root').querySelectorAll('[data-tab]').length).toBe(10);
+    expect(qs('compras-root').querySelectorAll('.compras-tabs [data-tab]').length).toBe(5);
   });
 
   it('muestra indicador de sesión de solo lectura para roles no admin', () => {
@@ -54,8 +53,8 @@ describe('vista de compras', () => {
     expect(qs('compras-root').textContent).not.toContain('Sesión activa');
   });
 
-  it('navega entre las pestañas de compras', () => {
-    qs('nav-compras').click();
+  it('navega entre las pestañas de compras', async () => {
+    await activarComprador();
 
     qs('compras-root').querySelector('[data-tab="proveedores"]').click();
     expect(qs('compras-content').textContent).toContain('Proveedores');
@@ -70,7 +69,6 @@ describe('vista de compras', () => {
   });
 
   it('mantiene el rol fijo y no muestra selector de rol activo', async () => {
-    qs('nav-compras').click();
     expect(qs('rol-activo')).toBeNull();
     expect(qs('sesion-indicador').textContent).toContain('Solicitante');
 
@@ -78,9 +76,8 @@ describe('vista de compras', () => {
     expect(qs('rol-activo')).toBeNull();
     expect(qs('sesion-indicador').textContent).toContain('Administrador TI');
 
-    const { getUsuarioActivo, setRolActivo } = await import(
-      '../../../src/compras/almacenamiento.js'
-    );
+    const { getUsuarioActivo, setRolActivo } =
+      await import('../../../src/compras/almacenamiento.js');
     setRolActivo('comprador');
     expect(getUsuarioActivo().rol).toBe('admin_ti');
   });
@@ -125,11 +122,12 @@ describe('vista de compras', () => {
     const itemAlerta = [...qs('compras-content').querySelectorAll('li')].find((li) =>
       li.textContent.includes('folio 1001')
     );
-    expect(itemAlerta?.textContent || qs('compras-content').textContent).toContain('retraso de 2 días');
+    expect(itemAlerta?.textContent || qs('compras-content').textContent).toContain(
+      'retraso de 2 días'
+    );
   });
 
   it('abre la cadena documental y el historial desde una solicitud', () => {
-    qs('nav-compras').click();
     qs('compras-root').querySelector('[data-tab="solicitudes"]').click();
 
     const boton = qs('compras-content').querySelector('[data-traza="solicitud"]');
@@ -204,7 +202,7 @@ describe('accesibilidad del módulo de compras', () => {
   });
 
   it('permite enfocar los controles con teclado y muestra el indicador de foco', async () => {
-    await activarAdmin();
+    await activarComprador();
     qs('compras-root').querySelector('[data-tab="proveedores"]').click();
     const boton = qs('prov-nuevo');
     boton.focus();
@@ -265,7 +263,11 @@ describe('accesibilidad del módulo de compras', () => {
     const mezclado =
       '#' +
       [0, 1, 2]
-        .map((i) => Math.round(fondo[i] * fondo[3] + 255 * (1 - fondo[3])).toString(16).padStart(2, '0'))
+        .map((i) =>
+          Math.round(fondo[i] * fondo[3] + 255 * (1 - fondo[3]))
+            .toString(16)
+            .padStart(2, '0')
+        )
         .join('');
     expect(contraste(alerta, mezclado)).toBeGreaterThanOrEqual(4.5);
   });

@@ -256,8 +256,7 @@ export function anularSolicitud(id, usuario = getUsuarioActivo(), motivo = '') {
   if (['adjudicada', 'anulada', 'rechazada'].includes(solicitud.estado)) {
     throw new Error('La solicitud ya no puede anularse');
   }
-  const autorizado =
-    usuario.rol === 'jefe_compras' || solicitud.solicitante_id === usuario.id;
+  const autorizado = usuario.rol === 'jefe_compras' || solicitud.solicitante_id === usuario.id;
   if (!autorizado) throw new Error('No puedes anular esta solicitud');
   const motivoNormalizado = exigirMotivoAnulacion(motivo);
   return cambiarEstado(

@@ -110,8 +110,7 @@ describe('trazabilidad transversal', () => {
   });
 
   it('registra quién, cuándo y qué acción en cada cambio de estado', () => {
-    const { solicitud, cotizacion, orden, recepcion, factura, devolucion } =
-      flujoConDevolucion();
+    const { solicitud, cotizacion, orden, recepcion, factura, devolucion } = flujoConDevolucion();
 
     const documentos = [
       ['solicitud', solicitud.id],
@@ -136,17 +135,12 @@ describe('trazabilidad transversal', () => {
     expect(accionesSolicitud).toContain('creacion');
     expect(accionesSolicitud).toContain('cambio_estado');
     expect(historialDe('orden', orden.id).map((e) => e.accion)).toContain('emision');
-    expect(historialDe('factura', factura.id).map((e) => e.accion)).toContain(
-      'aprobacion_pago'
-    );
-    expect(historialDe('devolucion', devolucion.id).map((e) => e.accion)).toContain(
-      'aprobacion'
-    );
+    expect(historialDe('factura', factura.id).map((e) => e.accion)).toContain('aprobacion_pago');
+    expect(historialDe('devolucion', devolucion.id).map((e) => e.accion)).toContain('aprobacion');
   });
 
   it('navega la cadena completa desde cualquier documento', () => {
-    const { solicitud, cotizacion, orden, recepcion, factura, devolucion } =
-      flujoConDevolucion();
+    const { solicitud, cotizacion, orden, recepcion, factura, devolucion } = flujoConDevolucion();
     const esperados = [
       solicitud.id,
       cotizacion.id,

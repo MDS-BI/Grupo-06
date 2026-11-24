@@ -96,12 +96,13 @@ const ESPERADO = {
 };
 
 describe('matriz de visibilidad por rol', () => {
-  it('define las 10 vistas y los 5 roles (50 combinaciones)', () => {
+  it('define las 11 superficies y los 5 roles (55 combinaciones)', () => {
     expect(Object.keys(VISIBILIDAD)).toHaveLength(10);
     expect(Object.keys(VISIBILIDAD).sort()).toEqual([...VISTAS].sort());
     for (const vista of VISTAS) {
       expect(Object.keys(VISIBILIDAD[vista]).sort()).toEqual([...ROLES].sort());
     }
+    for (const rol of ROLES) expect(nivelVista('panel', { rol })).toBe('opera');
   });
 
   for (const vista of VISTAS) {

@@ -8,7 +8,9 @@ const html = fs.readFileSync(fileURLToPath(new URL('../../index.html', import.me
 
 let dom;
 
-function qs(id){ return document.getElementById(id); }
+function qs(id) {
+  return document.getElementById(id);
+}
 
 beforeEach(async () => {
   dom = new JSDOM(html, { url: 'http://localhost/' });
@@ -36,14 +38,16 @@ describe.skip('User Story 1 - create and organize entities', () => {
     expect(qs('view-entities').hidden).toBe(false);
     qs('name').value = 'Acme';
     qs('code').value = 'AC-001';
-    qs('entity-form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
+    qs('entity-form').dispatchEvent(
+      new dom.window.Event('submit', { bubbles: true, cancelable: true })
+    );
     const all = loadEntities();
     expect(all.length).toBe(1);
     expect(all[0].name).toBe('Acme');
     expect(all[0].code).toBe('AC-001');
     expect(all[0].entity_id).toBeDefined();
     const select = qs('edit-entity');
-    expect([...select.options].map(o => o.textContent)).toContain('Acme — AC-001');
+    expect([...select.options].map((o) => o.textContent)).toContain('Acme — AC-001');
   });
 
   it('persists ERP identity and commercial fields entered through the form', () => {
@@ -56,7 +60,9 @@ describe.skip('User Story 1 - create and organize entities', () => {
     qs('address').value = 'Av. Reforma 100';
     qs('creditLimit').value = '50000';
     qs('paymentTerms').value = 'neto 30';
-    qs('entity-form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
+    qs('entity-form').dispatchEvent(
+      new dom.window.Event('submit', { bubbles: true, cancelable: true })
+    );
     const saved = loadEntities()[0];
     expect(saved.taxId).toBe('RFC800101AB1');
     expect(saved.email).toBe('ventas@acme.mx');
@@ -71,7 +77,9 @@ describe.skip('User Story 1 - create and organize entities', () => {
     qs('name').value = 'Acme';
     qs('code').value = 'AC-001';
     qs('email').value = 'no-es-correo';
-    qs('entity-form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
+    qs('entity-form').dispatchEvent(
+      new dom.window.Event('submit', { bubbles: true, cancelable: true })
+    );
     expect(loadEntities().length).toBe(0);
     expect(qs('error-email').textContent).toContain('correo electrónico');
   });
@@ -80,7 +88,9 @@ describe.skip('User Story 1 - create and organize entities', () => {
     qs('nav-entities').click();
     qs('name').value = '';
     qs('code').value = '';
-    qs('entity-form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
+    qs('entity-form').dispatchEvent(
+      new dom.window.Event('submit', { bubbles: true, cancelable: true })
+    );
     expect(loadEntities().length).toBe(0);
     expect(qs('error-name').textContent).toContain('obligatorio');
     expect(qs('error-code').textContent).toContain('obligatorio');
