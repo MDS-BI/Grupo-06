@@ -268,8 +268,7 @@ export function getUsuarioActivo() {
   const sesion = getSesion();
   const usuarios = leer('usuarios');
   const candidato =
-    usuarios.find((u) => u.id === sesion.usuario_id) ||
-    usuarios.find((u) => u.rol === sesion.rol);
+    usuarios.find((u) => u.id === sesion.usuario_id) || usuarios.find((u) => u.rol === sesion.rol);
   const conNombre = ROLES_CON_NOMBRE.includes(sesion.rol);
   const usuario = candidato || {
     id: sesion.usuario_id,

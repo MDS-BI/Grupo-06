@@ -35,9 +35,9 @@ _Según `.specify/memory/constitution.md` v1.0.0._
 - **II. Pruebas primero**: cada regla de la sección 5 de `data-model.md` tiene prueba unitaria antes o junto con su implementación; cada historia P1 tiene al menos una prueba de integración de su flujo.
 - **III. Experiencia de usuario consistente**: todas las pantallas nuevas usan el marco del template (barra superior, barra lateral, tokens de `styles.css`), mensajes de validación en español y estados vacíos; encabezado con la sección actual y acciones rápidas rotuladas con una descripción legible, nunca con la clave interna del permiso. La accesibilidad (SC-013) se verifica en `tests/integration/compras/vista.test.js`: etiqueta por campo en las diez vistas, foco por teclado, errores junto al campo y contraste ≥ 4,5:1.
 - **IV. Rendimiento**: las colecciones se leen una vez por pantalla y se filtran en memoria; el objetivo de 500 registros se verifica con los datos semilla ampliados.
-- **Estándares de calidad**: antes de la entrega se ejecutan `npm run lint` (ESLint) y `npm run format:check` (Prettier). Ambos comandos pasan sin errores ni advertencias; T107 está cerrada. El alcance real de `format:check` es el que define `.prettierignore`: núcleo base (`src/storage.js` y `tests/unit/storage.test.js`); el resto de `src/**`, `tests/**`, `specs/**` y Markdown queda excluido.
+- **Estándares de calidad**: antes de la entrega se ejecutan `npm run lint` (ESLint) y `npm run format:check` (Prettier). El alcance real de `format:check`, definido en `.prettierignore`, cubre todo el código fuente y las pruebas (`src/**`, `tests/**`, `index.html` y la configuración `.mjs`); excluye dependencias, artefactos generados, `specs/`, `docs/` y archivos Markdown/JSON. T107 queda cerrada con este alcance ampliado.
 
-Resultado: **conforme con deuda documentada**. Los incumplimientos materiales quedan registrados en la sección «Deuda conocida» y en `tasks.md`; `format:check` está en verde dentro del alcance configurado en `.prettierignore`.
+Resultado: **conforme en calidad de código**. La deuda funcional pendiente queda registrada en la sección «Deuda conocida» y en `tasks.md`, y debe cerrarse antes de declarar la funcionalidad terminada.
 
 ## Arquitectura del módulo (`src/compras/`)
 
@@ -128,7 +128,7 @@ tests/
 | 2. Ciclo operativo                  | 9 al 15-nov     | US2, US4, US3 completa                                                   | Solicitud → OC → recepción; la OC se valida contra la solicitud aprobada, con líneas e IVA calculado                                                                         |
 | 3. Adquisiciones y cierre del ciclo | 16 al 22-nov    | US6, US7, US8                                                            | Cotizaciones, conciliación de facturas, catálogo; demo del ciclo completo                                                                                                    |
 | 4. Calidad                          | 23 al 26-nov    | US9, US10, US11, trazabilidad transversal (FR-027 a FR-030), indicadores | Evaluación, devoluciones/notas de crédito, CSV, historial de auditoría y cadena documental, README final; congelamiento del repositorio el 26-nov                            |
-| 5. UI/UX y ajustes de sesión        | 24-nov          | Refuerzo parcial US5/US12, FR-036, FR-037, ajustes sesión/rol            | Mejoras UI/UX (KPI, acciones rápidas legibles, pendientes/flujo, tablas, badges), modo oscuro, IBM Plex Sans, tabs responsivas; rol fijo para los cinco roles; `crear_solicitud` para cinco roles en permisos base. Fase 16 completada el 24-nov. |
+| 5. UI/UX y ajustes de sesión        | 24-nov          | Refuerzo parcial US5/US12, FR-036, FR-037, ajustes sesión/rol            | Mejoras UI/UX (KPI, acciones rápidas legibles, pendientes/flujo, tablas, badges), modo oscuro, IBM Plex Sans, tabs responsivas; rol fijo para los cinco roles; `crear_solicitud` para cinco roles en permisos base. Fase 16 fundacional completada el 24-nov; Fases 17-20 pendientes. |
 
 Cada historia se asigna a un responsable en un Issue de GitHub con la etiqueta de su iteración; los acuerdos de cada semana se registran en un Issue de seguimiento.
 
@@ -138,7 +138,7 @@ Cada historia se asigna a un responsable en un Issue de GitHub con la etiqueta d
 
 ## Deuda conocida
 
-Las siguientes tareas se documentan también en `tasks.md`: T101, T104, T109, T110 y T118 siguen abiertas; T107, T108, T117, T119 y T120 ya están cerradas. El núcleo base (`src/storage.js` y `tests/unit/storage.test.js`) fue formateado con Prettier y es el único código cubierto por `format:check` según `.prettierignore`.
+Las siguientes tareas se documentan también en `tasks.md`: T101, T104, T109, T110 y T118 siguen abiertas; T107, T108, T117, T119 y T120 ya están cerradas; T121-T144 y T146-T155 están en curso. `format:check` cubre todo el código y las pruebas según el alcance ampliado de `.prettierignore`.
 
 | Tarea | Estado  | Justificación                                                                                                                                                                                                                                                                                                                                       | Referencia                          |
 | ----- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
@@ -152,8 +152,8 @@ Las siguientes tareas se documentan también en `tasks.md`: T101, T104, T109, T1
 | T118  | Abierta | Pendiente 2 de `data-model.md` §10: estados de devolución y anulación con motivo incompletos.                                                                                                                                                                                                                                                       | FR-029                              |
 | T119  | Cerrada | Decisión aplicada: se elimina `borrador` del modelo de OC y se conserva `emitida` como estado inicial; `data-model.md` y `plan.md` sincronizados.                                                                                                                                                                                                | FR-010                              |
 | T120  | Cerrada | Auditoría global de SC-003 en `flujo-compras.test.js`: se validan las dos vías de cumplimiento sobre todas las OC no anuladas.                                                                                                                                                                                                                | SC-003                              |
-| T121-T144 | En curso | Fase 16 cerrada (T121-T124): `admin_ti` ya no opera compras, `PERMISOS` y `VISIBILIDAD` centralizados y suite ajustada. Pendientes navegación por rol, modo lectura y ajustes T125-T144. | FR-033 a FR-036, SC-015 a SC-017 |
-| T146-T155 | En curso | Rol fijo por sesión, indicador sin selector **Rol Activo** y creación de solicitudes por los cinco roles implementados (T121, T146, T147); pendientes T148-T155. | FR-005, FR-006, FR-034, FR-037 |
+| T121-T144 | En curso | Fase 16 fundacional cerrada (T121-T124): `admin_ti` ya no opera compras, `PERMISOS` y `VISIBILIDAD` centralizados y suite ajustada. Pendientes navegación por rol, modo lectura, panel, pruebas y cierre de documentación (T125-T144). | FR-033 a FR-036, SC-015 a SC-017 |
+| T146-T155 | En curso | Rol fijo por sesión, indicador sin selector **Rol Activo**, nombre para `jefe_compras` y creación de solicitudes por los cinco roles implementados (T146-T149, T152); pendientes el endurecimiento de autoría/filtros (T150) y T151, T153-T155. | FR-005, FR-006, FR-034, FR-037 |
 
 ## Plan de Pruebas
 
@@ -161,9 +161,9 @@ Las siguientes tareas se documentan también en `tasks.md`: T101, T104, T109, T1
 - **Integración** (`tests/integration/compras/`): un flujo por historia P1 y P2 siguiendo sus escenarios de aceptación de `spec.md`, y una prueba de auditoría de punta a punta (SC-012) en `trazabilidad.test.js`.
 - **Auditoría SC-003** (`tests/integration/compras/flujo-compras.test.js`): cobertura del 100 % de las OC sobre el umbral con tres cotizaciones vigentes o justificación de proveedor único.
 - **Accesibilidad** (`tests/integration/compras/vista.test.js`): etiquetas asociadas en las diez vistas, foco y operación por teclado, errores junto al campo con `role="alert"` y revisión automatizada de contraste (WCAG 2.1 AA).
-- **Permisos y navegación por rol** (`tests/integration/compras/permisos.test.js`, nuevo): las 50 combinaciones de rol y vista de la matriz (SC-015); `admin_ti` sin ninguna de las cinco operaciones de compra y la regla 8 sin excepciones (SC-016); acciones rápidas sin identificadores internos y encabezado con la sección (SC-017); creación de solicitudes con los cinco roles y aprobación de la solicitud de un `jefe_compras` por otro `jefe_compras` (FR-005, FR-006).
+- **Permisos y navegación por rol** (`tests/integration/compras/permisos.test.js`, nuevo): las 55 combinaciones de rol y superficie de la matriz (SC-015); `admin_ti` sin ninguna de las cinco operaciones de compra y la regla 8 sin excepciones (SC-016); acciones rápidas sin identificadores internos y encabezado con la sección (SC-017); creación de solicitudes con los cinco roles y aprobación de la solicitud de un `jefe_compras` por otro `jefe_compras` (FR-005, FR-006).
 - **Rol fijo por sesión** (`tests/integration/compras/autenticacion.test.js`): con la sesión iniciada, `setRolActivo()` no cambia el rol, la barra superior muestra el indicador de solo lectura en lugar del selector y el cambio de rol solo ocurre tras cerrar sesión e ingresar de nuevo (FR-037). Las pruebas que hoy cambian de rol en vivo pasan a iniciar una sesión por rol.
-- **Manual**: guion de la demo de 5 minutos del criterio SC-002 y escenarios de validación por historia, documentados en [quickstart.md](quickstart.md).
+- **Manual**: guion de la demo de 5 minutos del criterio SC-002, medición cronometrada de SC-001 con 3 productos semilla y escenarios de validación por historia, documentados en [quickstart.md](quickstart.md).
 
 ## Datos Semilla
 
@@ -180,22 +180,25 @@ Todos ficticios: 4 centros de costo, 7 usuarios (uno por rol, un segundo solicit
 - **Multiempresa**: agregar un identificador de empresa a cada colección.
 
 
-## An?lisis de arquitectura de navegaci?n (2026-11-24)
+## Análisis de arquitectura de navegación (2026-11-24)
 
-- **Estado actual (implementado)**: navegaci?n de dos niveles ligera: barra lateral con una sola secci?n "Compras" (`index.html`) + pesta?as internas `TABS` en `#compras-root` (`src/compras/vista.js`) para las 10 vistas. Incluye scroll m?vil, teclado/ARIA y persistencia de tab por estado de vista.
-- **Estado objetivo (spec FR-034)**: barra lateral agrupada en Panel / Adquisiciones / Compras, con visibilidad por matriz FR-033 (`visibilidad.js`, Fase 16) y encabezado "Grupo > Vista".
-- **Decisi?n**: **no cambiar la arquitectura ahora**. Mantener pesta?as actuales hasta ejecutar Fase 16, porque el cambio estructural depende de `VISIBILIDAD`, filtros por rol, permisos y ajuste masivo de pruebas.
-- **Impacto si se cambia antes de Fase 16**: alto riesgo de regresi?n en `vista.test.js`, accesibilidad, deep-links `data-ir`, y cobertura SC-015/SC-016 sin matriz implementada.
-- **Actualizaciones necesarias**: spec/plan/tasks/research/quickstart/README documentan la arquitectura actual y el objetivo diferido; no se modifica c?digo de Fase 16.
+- **Estado actual (implementado)**: navegación de dos niveles ligera: barra lateral con una sola sección "Compras" (`index.html`) + pestañas internas `TABS` en `#compras-root` (`src/compras/vista.js`) para las 10 vistas navegables. Incluye scroll móvil, teclado/ARIA y persistencia de tab por estado de vista.
+- **Estado objetivo (spec FR-034)**: barra lateral agrupada en Panel / Adquisiciones / Compras, con visibilidad por matriz FR-033 (`visibilidad.js`, Fase 16 fundacional cerrada) y encabezado "Grupo › Vista". Trazabilidad se consulta desde la cadena documental, no como vista de la barra lateral.
+- **Decisión**: mantener las pestañas actuales hasta ejecutar la Fase 17, porque el cambio estructural depende de `VISIBILIDAD`, filtros por rol, permisos y ajuste de pruebas.
+- **Impacto si se cambia antes de la Fase 17**: alto riesgo de regresión en `vista.test.js`, accesibilidad, deep-links `data-ir` y cobertura SC-015/SC-016 sin modo lectura ni filtros aplicados.
+- **Actualizaciones necesarias**: spec/plan/tasks/research/quickstart/README documentan la arquitectura actual y el objetivo diferido; `visibilidad.js` ya está creado y T143 debe agregarlo al árbol de código de este plan.
 
-## Refinamiento UX (2026-11-24)
+## Refinamiento UX y estado de sesión (2026-11-24)
 
-- **Alcance**: `index.html`, `src/app.js`, `src/compras/vista.js`, `src/compras/panel.js`, `src/styles.css`, pruebas focalizadas de vista/autenticaci?n. Sin cambios en `src/storage.js`.
-- **Modo oscuro**: `data-theme` en `:root`, toggle accesible, persistencia `erp_compras:tema`, inicializaci?n por `prefers-color-scheme`.
-- **Tipograf?a**: IBM Plex Sans (400/500/600/700), jerarqu?a para KPI/t?tulos/cuerpo.
-- **Componentes**: KPI con iconos/acento sem?ntico; acciones r?pidas con etiqueta+descripci?n+icono y hover `translateY(-2px)`; pendientes por rol como tarjetas clicables; flujo con barras CSS; tablas con scroll horizontal, encabezado sticky y hover; badges con punto sem?ntico; tabs con scroll m?vil.
-- **Accesibilidad/responsive**: mantener contraste 4.5:1, foco visible, teclado/ARIA, y evitar overflow horizontal de p?gina.
-- **Validaci?n**: `npm run lint` OK; `npx vitest run tests/integration/compras/vista.test.js tests/integration/compras/autenticacion.test.js` 17/17 OK. Suite completa y recorrido manual por rol pendientes.
+- **Alcance**: `index.html`, `src/app.js`, `src/compras/vista.js`, `src/compras/panel.js`, `src/styles.css`, pruebas focalizadas de vista/autenticación. Sin cambios en `src/storage.js`.
+- **Modo oscuro**: `data-theme` en `:root`, toggle accesible, persistencia `erp_compras:tema`, inicialización por `prefers-color-scheme`.
+- **Tipografía**: IBM Plex Sans (400/500/600/700), jerarquía para KPI/títulos/cuerpo.
+- **Componentes**: KPI con iconos/acento semántico; acciones rápidas con etiqueta+descripción+icono y hover `translateY(-2px)`; pendientes por rol como tarjetas clicables; flujo con barras CSS; tablas con scroll horizontal, encabezado sticky y hover; badges con punto semántico; tabs con scroll móvil.
+- **Accesibilidad/responsive**: mantener contraste 4.5:1, foco visible, teclado/ARIA, y evitar overflow horizontal de página.
+- **Sesión/rol**: `src/app.js` muestra indicador compacto de sesión; no existe control "Vista de rol"; `src/compras/almacenamiento.js` impide el cambio de rol en una sesión iniciada para los cinco roles.
+- **Permisos base**: `crear_solicitud` incluye los cinco roles; la semilla actualiza los nombres de los dos `jefe_compras`.
+- **Verificación**: `npm run lint` y `npm run format:check` OK con el alcance ampliado de `.prettierignore`; `npx vitest run tests/integration/compras/vista.test.js tests/integration/compras/autenticacion.test.js` 17/17 OK. Suite completa y recorrido manual por rol pendientes (Fases 17-20).
+- **Pendiente**: completar navegación agrupada, modo lectura, filtros por rol, encabezado por sección, panel FR-035 y pruebas SC-015/SC-016/SC-017 antes de declarar cumplimiento de la matriz de visibilidad.
 
 ## Seguimiento de Complejidad
 
@@ -204,11 +207,3 @@ Todos ficticios: 4 centros de costo, 7 usuarios (uno por rol, un segundo solicit
 | Colecciones adicionales fuera de Entidad/Documento       | El ciclo de compras tiene 6 documentos encadenados; el template solo modela uno                                            | Forzar todo como Documento con un campo "tipo" mezclaría estados y reglas incompatibles |
 | Bloquear la eliminación en cascada de proveedores con OC | El template borra los documentos de una entidad eliminada; en compras eso destruiría la trazabilidad de órdenes y facturas | Advertir y borrar igual: inaceptable para auditoría                                     |
 | Líneas de detalle dentro de la OC                        | El template no tiene partidas; su propio data-model las señala como punto de extensión                                     | Una OC por producto: no refleja cómo compra una empresa                                 |
-
-## Actualización 2026-11-24
-
-- **UI/UX**: se mejoró `src/compras/vista.js` y `src/styles.css` (KPI con iconos/acento, acciones rápidas con descripción e icono, pendientes como tarjetas clicables, flujo con barras CSS, tablas responsivas, badges semánticos, tabs con scroll móvil, modo oscuro y IBM Plex Sans en `index.html`).
-- **Sesión/rol**: `src/app.js` muestra indicador compacto de sesión; no existe control "Vista de rol"; `src/compras/almacenamiento.js` impide el cambio de rol en una sesión iniciada para los cinco roles.
-- **Permisos base**: `crear_solicitud` incluye los cinco roles; semilla actualiza nombres de `jefe_compras`.
-- **Verificación**: `npm run lint` OK; `npx vitest run tests/integration/compras/vista.test.js tests/integration/compras/autenticacion.test.js` 17/17 OK.
-- **Pendiente crítico**: cerrar Fase 16 (FR-033/FR-034/SC-015-SC-017) antes de declarar cumplimiento de matriz de visibilidad por rol; revalidar suite completa `tests/integration/compras`.

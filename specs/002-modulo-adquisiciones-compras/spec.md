@@ -3,7 +3,7 @@
 **Rama de la funcionalidad**: 002-modulo-adquisiciones-compras  
 **Creada**: 2026-10-27  
 **Actualizada**: 2026-11-24  
-**Estado**: Aprobada; implementación en curso con deuda documentada en `plan.md`. Avance 2026-11-24: se aplicaron mejoras UI/UX del módulo (KPI, acciones rápidas legibles, pendientes/flujo, tablas, badges, modo oscuro, IBM Plex Sans y tabs responsivas) y ajustes de sesión: el rol queda fijo durante la sesión para los cinco roles, sin control para cambiarlo en vivo. Se habilitó `crear_solicitud` para los cinco roles en permisos base y se actualizaron nombres semilla para `jefe_compras`. Sigue pendiente la Fase 16 (matriz `FR-033` con `visibilidad.js`, navegación agrupada completa, filtros/acciones por visibilidad y ajuste masivo de pruebas antiguas).
+**Estado**: Aprobada; implementación en curso con deuda documentada en `plan.md`. Avance 2026-11-24: se aplicaron mejoras UI/UX del módulo (KPI, acciones rápidas legibles, pendientes/flujo, tablas, badges, modo oscuro, IBM Plex Sans y tabs responsivas) y ajustes de sesión: el rol queda fijo durante la sesión para los cinco roles, sin control para cambiarlo en vivo. Se habilitó `crear_solicitud` para los cinco roles en permisos base y se actualizaron nombres semilla para `jefe_compras`. La Fase 16 fundacional está cerrada (`src/compras/visibilidad.js`, `PERMISOS` y pruebas de matriz); siguen pendientes la navegación agrupada completa, los filtros y acciones por visibilidad y el ajuste de pruebas de las Fases 17-20.
 **Entrada**: Descripción del grupo: "Construir, sobre el módulo base del curso, un módulo de Adquisiciones y Compras para una pyme chilena que cubra el ciclo completo: solicitud de compra, cotizaciones de proveedores, orden de compra, recepción y factura del proveedor, junto con la gestión y evaluación de proveedores."
 
 ## Propósito
@@ -76,10 +76,10 @@ Backend real, autenticación real (los roles se simulan), conexión con el SII o
 
 ### Session 2026-11-23
 
-- Q: ?Se puede cambiar de rol durante una sesi?n? (FR-034, FR-036, FR-037) ? A: **Fijo para los cinco roles (actualizado 2026-11-24).** Al iniciar sesi?n, el rol queda fijo para todos los roles: la barra superior muestra indicador de sesi?n con usuario/rol y **Cerrar sesi?n**, y `setRolActivo()` no cambia el rol de una sesi?n iniciada. Para usar otro rol se cierra sesi?n y se ingresa de nuevo.
+- Q: ¿Se puede cambiar de rol durante una sesión? (FR-034, FR-036, FR-037) → A: **Fijo para los cinco roles (actualizado 2026-11-24).** Al iniciar sesión, el rol queda fijo para todos los roles: la barra superior muestra indicador de sesión con usuario/rol y **Cerrar sesión**, y `setRolActivo()` no cambia el rol de una sesión iniciada. Para usar otro rol se cierra sesión y se ingresa de nuevo.
 - Q: ¿Cómo se rediseñan los permisos y la navegación por rol? (FR-004, FR-014, FR-033 a FR-036) → A: `admin_ti` pasa a ser **administrador del sistema** y no operador de compras: conserva la edición de datos bancarios, el desbloqueo de proveedores y la consulta y exportación de la trazabilidad, y ve todo lo demás en solo lectura; pierde emitir OC, registrar recepciones y aprobar solicitudes, pagos y devoluciones. La segregación de funciones (regla 8) se aplica **sin excepciones** para ningún rol. Cada rol ve y opera según la matriz de visibilidad (FR-033); la barra lateral se agrupa en Panel / Adquisiciones / Compras (FR-034); el panel muestra pendientes e indicadores propios de cada rol (FR-035); las acciones rápidas muestran una descripción legible, se elimina la tarjeta "Sesión activa" y el encabezado muestra la sección actual (FR-036). El comprador concilia facturas de OC que él emitió como riesgo asumido de pyme (data-model §6). Resoluciones de consistencia: solo `admin_ti` desbloquea proveedores (vuelven a `aprobado`) y el comprador puede bloquearlos; solo el `comprador` emite OC; el solicitante ve el precio de referencia del catálogo, pero no las cotizaciones; bodega registra las devoluciones y `jefe_compras` las aprueba; en trazabilidad, `admin_ti` consulta y exporta (el historial es inmutable) y `jefe_compras` solo consulta.
 - Q: ¿Qué roles pueden crear solicitudes de compra? (FR-005, FR-006, FR-033) → A: **Los cinco roles** (`solicitante`, `comprador`, `jefe_compras`, `bodega` y `admin_ti`) tienen `crear_solicitud`. Cada usuario crea y edita solo sus propias solicitudes; los roles que ya veían las solicitudes ajenas (`comprador`, `jefe_compras` y `admin_ti`) las siguen viendo en solo lectura o para aprobarlas, y `solicitante` y `bodega` ven solo las suyas. La aprobación sigue siendo exclusiva de un `jefe_compras` distinto del solicitante (regla 8): si quien crea la solicitud es `jefe_compras`, debe aprobarla otro `jefe_compras`, por lo que la semilla agrega un segundo usuario `jefe_compras`. La decisión y sus alternativas descartadas están en `research.md`.
-- Q: ?Se puede cambiar de rol durante una sesi?n? (FR-034, FR-036, FR-037) ? A: **Hist?rico, reemplazado 2026-11-24.** Versi?n vigente: el rol queda fijo para los cinco roles durante la sesi?n; no existe "Vista de rol" ni otro control para cambiarlo en vivo.
+- Q: ¿Se puede cambiar de rol durante una sesión? (FR-034, FR-036, FR-037) → A: **Histórico, reemplazado 2026-11-24.** Versión vigente: el rol queda fijo para los cinco roles durante la sesión; no existe "Vista de rol" ni otro control para cambiarlo en vivo.
 - Q: ¿Cómo ingresa el segundo `jefe_compras` si ese rol no pide nombre? (FR-037) → A: `jefe_compras` pasa a pedir nombre al ingresar, igual que `solicitante` y `comprador`, y se muestra con su nombre en la sesión y en la trazabilidad; así se distinguen los dos usuarios `jefe_compras` de la semilla. `bodega` y `admin_ti` siguen ingresando y mostrándose solo por su rol.
 - Q: ¿Dónde ve cada rol el estado de las solicitudes que creó? (FR-035) → A: Como los cinco roles pueden crear solicitudes, el panel de **todos los roles** muestra el pendiente **"Mis solicitudes"** con el estado de las solicitudes propias del usuario, además de los pendientes propios de su rol.
 - Q: ¿Se permite que un comprador cotice y emita la OC de una solicitud que él mismo creó? → A: Sí, como **riesgo asumido de pyme** (conflicto de interés), documentado en data-model §6. Se mitiga porque la solicitud la aprueba un `jefe_compras` distinto del solicitante antes de cotizar y porque cada paso queda en la trazabilidad.
@@ -183,7 +183,7 @@ _Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo u
 3. **Dado** un solicitante, **cuando** revisa el panel, **entonces** solo ve sus propias solicitudes y no los pendientes de otros usuarios ni datos de otras áreas (acceso restringido).
 4. **Dadas** órdenes de compra emitidas sin recepción registrada por más de 7 días, **cuando** el encargado de bodega o el comprador abre el panel, **entonces** el sistema las lista como pendientes de seguimiento.
 5. **Dado** un período seleccionado (mes actual), **cuando** el panel carga, **entonces** muestra los indicadores del período que FR-035 asigna a su rol, calculados con los datos existentes.
-6. **Dado** que no hay pendientes para el rol, **cuando** el usuario abre el panel, **entonces** ve un estado vacío claro que solo lo invita a acciones que su rol puede ejecutar (p. ej., crear una solicitud u orden); para `bodega` y `admin_ti` el estado vacío informa que no hay pendientes y solo invita a crear una solicitud de compra, el único documento del ciclo que esos roles pueden crear.
+6. **Dado** que no hay pendientes para el rol, **cuando** el usuario abre el panel, **entonces** ve un estado vacío con texto explícito y solo acciones que su rol puede ejecutar (p. ej., crear una solicitud u orden); para `bodega` y `admin_ti` el estado vacío informa que no hay pendientes y solo invita a crear una solicitud de compra, el único documento del ciclo que esos roles pueden crear.
 7. **Dado** que la aplicación se abre en un navegador, **cuando** se revisan la navegación lateral y el contenido principal, **entonces** solo aparecen las vistas del módulo de Adquisiciones y Compras, agrupadas en Panel / Adquisiciones / Compras según FR-034 y filtradas por el rol activo, y no se muestran ni se puede navegar a las vistas genéricas Entidades, Documentos ni Búsqueda del template base.
 8. **Dado** cada uno de los cinco roles, **cuando** abre el panel, **entonces** ve exactamente los pendientes e indicadores asignados a su rol en FR-035 y ninguno de los asignados a otros roles.
 9. **Dado** un usuario de cualquiera de los cinco roles que creó solicitudes, **cuando** abre el panel, **entonces** ve el pendiente **"Mis solicitudes"** con el estado de cada una de sus solicitudes y un acceso directo, sin solicitudes de otros usuarios.
@@ -307,7 +307,7 @@ _Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo u
 
 ### Historia de Usuario 12 - Navegación y visibilidad por rol (Prioridad: P1)
 
-**Como** usuario del módulo (cualquiera de los cinco roles), **necesito** ver en la navegación y en cada vista solo lo que mi rol puede operar o consultar, **para** encontrar rápido mi trabajo, no ver acciones que no me corresponden y respetar la segregación de funciones.
+**Como** usuario del módulo (cualquiera de los cinco roles), **necesito** ver en la navegación y en cada vista solo lo que mi rol puede operar o consultar, **para** encontrar mi trabajo sin recorrer vistas ajenas, no ver acciones que no me corresponden y respetar la segregación de funciones.
 
 **Por qué esta prioridad**: Es el control de acceso visible del módulo. Sin él, roles como `admin_ti` pueden operar el ciclo de compras y se rompe la segregación de funciones (regla 8); además la navegación mezcla vistas que el rol no usa.
 
@@ -323,7 +323,7 @@ _Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo u
 6. **Dado** un documento con historial, **cuando** lo abre un usuario `solicitante`, `comprador` o `bodega`, **entonces** no ve el historial de eventos; **cuando** lo abre un `jefe_compras`, **entonces** lo consulta sin poder exportarlo; y **cuando** lo abre un `admin_ti`, **entonces** lo consulta y puede exportarlo.
 7. **Dada** cualquier vista del módulo, **cuando** el usuario la abre, **entonces** el encabezado muestra la sección actual (p. ej., "Compras › Órdenes de compra").
 8. **Dado** el panel de inicio, **cuando** se muestran las acciones rápidas, **entonces** cada una tiene una descripción legible para el usuario y ninguna muestra el identificador interno del permiso.
-9. **Dada** una sesi?n iniciada, **cuando** el usuario revisa la pantalla, **entonces** no aparece la tarjeta "Sesi?n activa"; la barra superior muestra indicador de sesi?n y **Cerrar sesi?n**, sin control de cambio de rol para ning?n rol.
+9. **Dada** una sesión iniciada, **cuando** el usuario revisa la pantalla, **entonces** no aparece la tarjeta "Sesión activa"; la barra superior muestra indicador de sesión y **Cerrar sesión**, sin control de cambio de rol para ningún rol.
 10. **Dada** una sesión iniciada, **cuando** el usuario busca cómo usar otro rol, **entonces** no existe un selector para cambiarlo; debe cerrar sesión e ingresar de nuevo con el otro rol, y la aplicación abre el Panel de ese rol (FR-037).
 
 ---
@@ -350,7 +350,7 @@ _Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo u
 - ¿Qué pasa si el proveedor entrega más de lo pedido? Solo se acepta hasta lo pendiente; el excedente se registra como rechazado con motivo `no_corresponde`.
 - ¿Qué pasa si un producto se desactiva con solicitudes abiertas? Las solicitudes existentes se mantienen; no se puede agregar a solicitudes nuevas.
 - ¿Qué pasa si se bloquea un proveedor con OC abiertas? Las OC abiertas siguen su curso; no se le pueden emitir nuevas.
-- ¿Qué pasa si `localStorage` está lleno o deshabilitado? La aplicación muestra un mensaje claro y no pierde lo que el usuario tenía en pantalla.
+- ¿Qué pasa si `localStorage` está lleno o deshabilitado? La aplicación muestra un mensaje específico que identifica el error de almacenamiento y no pierde lo que el usuario tenía en pantalla.
 
 **Productos dañados**
 
@@ -415,14 +415,16 @@ _Nota de Integración: Para asegurar la trazabilidad y seguridad, este módulo u
   | `admin_ti`     | Mis solicitudes; cambios bancarios de los últimos 30 días, alertas de fraude (facturas no aprobadas de proveedores con cambio de cuenta hace menos de 30 días) | —                                                    |
 
   **Mis solicitudes** aparece en el panel de los cinco roles y muestra el estado de las solicitudes creadas por el usuario de la sesión, con acceso directo a cada una; nunca incluye solicitudes de otros usuarios. La alerta de vencimiento de FR-017 se muestra solo a los roles con acceso a Facturas.
-- **FR-036**: La interfaz DEBE: (a) mostrar en cada acci?n r?pida una descripci?n legible para el usuario y nunca el identificador interno del permiso; (b) no mostrar la tarjeta "Sesi?n activa", ya que el usuario y el rol se ven en el indicador de sesi?n de la barra superior (FR-037); (c) mostrar en el encabezado la secci?n actual (grupo y vista). **Estado 2026-11-24**: (a) y (b) implementados; (c) y validaci?n completa por matriz FR-033 pendientes.
-- **FR-037**: El sistema DEBE mostrar una pantalla de ingreso simulada, centralizada en `src/compras/autenticacion.js`, con selector de rol y clave gen?rica ?nica (`Compras2026`). `solicitante`, `comprador` y `jefe_compras` DEBEN pedir nombre validado contra usuarios semilla; `bodega` y `admin_ti` ingresan por rol sin nombre. Al iniciar sesi?n, el rol DEBE quedar fijo para los cinco roles: indicador de sesi?n + **Cerrar sesi?n**, y `setRolActivo()` NO DEBE cambiar el rol de una sesi?n iniciada. No existe control para cambiar de rol en vivo; para usar otro rol se cierra sesi?n y se ingresa de nuevo. La pantalla no valida identidad real.
+- **FR-036**: La interfaz DEBE: (a) mostrar en cada acción rápida una descripción legible para el usuario y nunca el identificador interno del permiso; (b) no mostrar la tarjeta "Sesión activa", ya que el usuario y el rol se ven en el indicador de sesión de la barra superior (FR-037); (c) mostrar en el encabezado la sección actual (grupo y vista). **Estado 2026-11-24**: (a) y (b) implementados; (c) y validación completa por matriz FR-033 pendientes.
+- **FR-037**: El sistema DEBE mostrar una pantalla de ingreso simulada, centralizada en `src/compras/autenticacion.js`, con selector de rol y clave genérica única (`Compras2026`). `solicitante`, `comprador` y `jefe_compras` DEBEN pedir nombre validado contra usuarios semilla; `bodega` y `admin_ti` ingresan por rol sin nombre. Al iniciar sesión, el rol DEBE quedar fijo para los cinco roles: indicador de sesión + **Cerrar sesión**, y `setRolActivo()` NO DEBE cambiar el rol de una sesión iniciada. No existe control para cambiar de rol en vivo; para usar otro rol se cierra sesión y se ingresa de nuevo. La pantalla no valida identidad real.
 
 #### Matriz de visibilidad por rol (FR-033)
 
-Leyenda: ✏️ opera · 👁️ solo lectura · — no ve.
+Leyenda: ✏️ opera · 👁️ solo lectura · — no ve. En la fila Panel, 👁️ significa consultar el panel y usar únicamente las acciones rápidas permitidas por FR-036; no habilita operaciones sobre entidades.
 
 | Vista              | `solicitante`                   | `comprador`                           | `jefe_compras`                       | `bodega`       | `admin_ti`                                 |
+| ------------------ | ------------------------------- | ------------------------------------- | ------------------------------------ | -------------- | ------------------------------------------ |
+| Panel              | 👁️                              | 👁️                                    | 👁️                                   | 👁️             | 👁️                                         |
 | ------------------ | ------------------------------- | ------------------------------------- | ------------------------------------ | -------------- | ------------------------------------------ |
 | Solicitudes        | ✏️ crea y ve solo propias       | ✏️ crea propias · 👁️ ajenas           | ✏️ crea propias · aprueba / rechaza ajenas | ✏️ crea y ve solo propias | ✏️ crea propias · 👁️ ajenas       |
 | Cotizaciones       | —                               | ✏️                                    | 👁️                                   | —              | 👁️                                         |
@@ -435,7 +437,7 @@ Leyenda: ✏️ opera · 👁️ solo lectura · — no ve.
 | Evaluaciones       | —                               | ✏️                                    | ✏️                                   | —              | 👁️                                         |
 | Trazabilidad       | —                               | —                                     | 👁️ consulta                          | —              | ✏️ consulta y exporta                      |
 
-En Solicitudes, cada usuario edita solo las solicitudes que creó; "ajenas" son las de otros usuarios. La aprobación de una solicitud creada por un `jefe_compras` corresponde a otro `jefe_compras` (FR-006). En Trazabilidad, ✏️ significa consultar y exportar: el historial es inmutable y nadie edita sus eventos. La navegación de la cadena documental (FR-028) se mantiene para cada rol sobre los documentos que ya puede ver; lo que se restringe es el historial de eventos.
+La matriz cubre 11 superficies: las 10 vistas navegables de FR-032 más Trazabilidad, que no es una vista de la barra lateral sino una superficie consultable desde la cadena documental (FR-028). En Solicitudes, cada usuario edita solo las solicitudes que creó; "ajenas" son las de otros usuarios. La aprobación de una solicitud creada por un `jefe_compras` corresponde a otro `jefe_compras` (FR-006). En Trazabilidad, ✏️ significa consultar y exportar: el historial es inmutable y nadie edita sus eventos. La navegación de la cadena documental se mantiene para cada rol sobre los documentos que ya puede ver; lo que se restringe es el historial de eventos. SC-015 verifica las 55 combinaciones resultantes (5 roles × 11 superficies).
 
 ### Requisitos de Integración
 
@@ -462,19 +464,19 @@ El detalle de atributos, cardinalidades y reglas está en [data-model.md](data-m
 - **Historial de trazabilidad**: registro de quién, cuándo y qué acción se ejecutó sobre solicitudes, cotizaciones, órdenes de compra, recepciones, facturas y devoluciones; permite navegar la cadena documental completa y conserva las anulaciones con su motivo y los cambios bancarios con el valor enmascarado.
 
 
-### Actualizaci?n de implementaci?n (2026-11-24)
+### Actualización de implementación (2026-11-24)
 
-- **UI/UX aplicada**: jerarqu?a visual en KPI, acciones r?pidas con descripci?n legible e icono, pendientes/flujo con accesos directos, tablas con contenedor responsive y badges sem?nticos; modo oscuro con `data-theme` y persistencia en `localStorage`; tipograf?a IBM Plex Sans.
-- **Sesi?n**: indicador compacto de usuario/rol; rol fijo para los cinco roles durante la sesi?n, sin "Vista de rol".
+- **UI/UX aplicada**: jerarquía visual en KPI, acciones rápidas con descripción legible e icono, pendientes/flujo con accesos directos, tablas con contenedor responsive y badges semánticos; modo oscuro con `data-theme` y persistencia en `localStorage`; tipografía IBM Plex Sans.
+- **Sesión**: indicador compacto de usuario/rol; rol fijo para los cinco roles durante la sesión, sin "Vista de rol".
 - **Permisos base**: `crear_solicitud` habilitado para los cinco roles en `almacenamiento.js`; semilla con nombres para ambos `jefe_compras`.
-- **Pendiente cr?tico**: Fase 16 (FR-033/FR-034/SC-015-SC-017) sigue sin cerrar: falta `src/compras/visibilidad.js`, aplicaci?n completa de matriz, navegaci?n agrupada por visibilidad, restricci?n en operaciones no-UI y ajuste masivo de pruebas antiguas.
-- **Verificaci?n reciente**: `npm run lint` OK; `npx vitest run tests/integration/compras/vista.test.js tests/integration/compras/autenticacion.test.js` 17/17 OK.
+- **Pendiente crítico**: la Fase 16 fundacional (FR-033/FR-034/SC-015-SC-017) está cerrada: `src/compras/visibilidad.js`, `PERMISOS` y sus pruebas unitarias ya existen. Siguen abiertas la navegación agrupada por visibilidad, la restricción en operaciones no-UI y el ajuste de pruebas de las Fases 17-20.
+- **Verificación reciente**: `npm run lint` OK; `npx vitest run tests/integration/compras/vista.test.js tests/integration/compras/autenticacion.test.js` 17/17 OK.
 
 ## Criterios de Éxito _(obligatorio)_
 
 ### Resultados Medibles
 
-- **SC-001**: Un solicitante crea y envía una solicitud de 3 productos en menos de 2 minutos.
+- **SC-001**: Un solicitante crea y envía una solicitud de 3 productos en menos de 2 minutos. Protocolo: se mide con cronómetro desde que se abre la vista Solicitudes hasta que se confirma el envío, usando datos semilla, 3 productos activos y un navegador de escritorio; la medición se registra en `quickstart.md` y se valida en la demostración de T090, no en la prueba de rendimiento de T089.
 - **SC-002**: El ciclo completo (solicitud, 3 cotizaciones, OC, recepción y factura conciliada) se puede demostrar en menos de 5 minutos con datos semilla.
 - **SC-003**: El 100 % de las órdenes sobre el umbral tienen 3 cotizaciones o una justificación registrada.
 - **SC-004**: Ninguna recepción permite aceptar más unidades que las compradas, verificado con pruebas automatizadas.
@@ -488,7 +490,7 @@ El detalle de atributos, cardinalidades y reglas está en [data-model.md](data-m
 - **SC-012**: El 100 % de los cambios de estado de solicitud, cotización, OC, recepción, factura y devolución registra quién, cuándo y qué acción, y desde cualquier documento se puede navegar la cadena completa sin búsquedas manuales, verificado con una prueba de auditoría de punta a punta.
 - **SC-013**: El 100 % de las pantallas del módulo (Panel, Proveedores, Solicitudes, Cotizaciones, Órdenes de compra, Recepciones, Facturas, Devoluciones, Catálogo y Evaluaciones) tiene una etiqueta asociada a cada campo, se puede operar solo con teclado, muestra los mensajes de error junto al campo afectado y cumple un contraste mínimo de 4,5:1 en texto normal (WCAG 2.1 AA), verificado en una revisión de accesibilidad de cada pantalla.
 - **SC-014**: El 100 % de la navegación y del contenido visible de la aplicación corresponde a vistas del módulo de Adquisiciones y Compras; no aparece ninguna vista genérica del template base (Entidades, Documentos o Búsqueda), verificado al abrir la aplicación y revisar la barra lateral y las acciones disponibles.
-- **SC-015**: El 100 % de las 50 combinaciones rol × vista (5 roles × 10 vistas) se comporta según la matriz de visibilidad (FR-033): opera, solo lectura o no ve, verificado con pruebas automatizadas.
+- **SC-015**: El 100 % de las 55 combinaciones rol × superficie (5 roles × 11 superficies: las 10 vistas navegables de FR-032 más Trazabilidad) se comporta según la matriz de visibilidad (FR-033): opera, solo lectura o no ve, verificado con pruebas automatizadas.
 - **SC-016**: `admin_ti` no puede ejecutar ninguna de las cinco operaciones de compra que pierde (emitir OC, registrar recepciones, aprobar pagos, aprobar devoluciones y aprobar solicitudes), y ningún rol puede registrar la recepción de una OC que emitió, verificado con pruebas automatizadas.
 - **SC-017**: El 0 % de las acciones rápidas muestra un identificador interno de permiso y el 100 % de las vistas muestra su sección en el encabezado, verificado al recorrer la aplicación con los cinco roles.
 

@@ -33,7 +33,11 @@ export function validarCredenciales(rol, nombre, clave) {
     return { ok: false, campo: 'rol', motivo: 'Selecciona un rol válido.' };
   }
   if (String(clave ?? '') !== CLAVE_DEMO) {
-    return { ok: false, campo: 'clave', motivo: 'Clave incorrecta. Usa la clave genérica de demostración.' };
+    return {
+      ok: false,
+      campo: 'clave',
+      motivo: 'Clave incorrecta. Usa la clave genérica de demostración.'
+    };
   }
 
   const usuarios = listarUsuarios();

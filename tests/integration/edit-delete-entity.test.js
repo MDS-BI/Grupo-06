@@ -8,7 +8,9 @@ const html = fs.readFileSync(fileURLToPath(new URL('../../index.html', import.me
 
 let dom;
 
-function qs(id){ return document.getElementById(id); }
+function qs(id) {
+  return document.getElementById(id);
+}
 
 beforeEach(async () => {
   dom = new JSDOM(html, { url: 'http://localhost/' });
@@ -44,7 +46,9 @@ describe.skip('User Story 2 - edit and remove entities', () => {
     expect(qs('name').value).toBe('Acme');
 
     qs('name').value = 'Acme Updated';
-    qs('entity-form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
+    qs('entity-form').dispatchEvent(
+      new dom.window.Event('submit', { bubbles: true, cancelable: true })
+    );
     expect(loadEntities()[0].name).toBe('Acme Updated');
   });
 
@@ -59,18 +63,20 @@ describe.skip('User Story 2 - edit and remove entities', () => {
   });
 
   it('stays responsive and correct when many entities exist', () => {
-    for(let i = 0; i < 300; i++){
+    for (let i = 0; i < 300; i++) {
       addEntity({ name: `Bulk ${i}`, code: `B-${String(i).padStart(4, '0')}` });
     }
     qs('nav-entities').click();
     const select = qs('edit-entity');
     expect(select.options.length).toBe(303);
-    const target = [...select.options].find(o => o.textContent.includes('Bulk 150'));
+    const target = [...select.options].find((o) => o.textContent.includes('Bulk 150'));
     select.value = target.value;
     select.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
     expect(qs('name').value).toBe('Bulk 150');
     qs('name').value = 'Bulk 150 Renamed';
-    qs('entity-form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
-    expect(loadEntities().find(e => e.code === 'B-0150').name).toBe('Bulk 150 Renamed');
+    qs('entity-form').dispatchEvent(
+      new dom.window.Event('submit', { bubbles: true, cancelable: true })
+    );
+    expect(loadEntities().find((e) => e.code === 'B-0150').name).toBe('Bulk 150 Renamed');
   });
 });

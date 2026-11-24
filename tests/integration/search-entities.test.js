@@ -8,7 +8,9 @@ const html = fs.readFileSync(fileURLToPath(new URL('../../index.html', import.me
 
 let dom;
 
-function qs(id){ return document.getElementById(id); }
+function qs(id) {
+  return document.getElementById(id);
+}
 
 beforeEach(async () => {
   dom = new JSDOM(html, { url: 'http://localhost/' });
@@ -58,7 +60,7 @@ describe.skip('User Story 8 - search and find entities quickly', () => {
   });
 
   it('stays prompt and accurate with hundreds of stored entities', () => {
-    for(let i = 0; i < 500; i++){
+    for (let i = 0; i < 500; i++) {
       addEntity({ name: `Item ${i}`, code: `IT-${String(i).padStart(4, '0')}` });
     }
     const start = Date.now();

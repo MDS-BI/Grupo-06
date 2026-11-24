@@ -397,15 +397,10 @@ describe('flujo completo de compras', () => {
       { ...base, proveedor_id: 'prov-002', fecha_validez: '2026-11-01' },
       USUARIOS.comprador
     );
-    expect(() => seleccionarCotizacion(vencida.id, USUARIOS.comprador)).toThrow(
-      /recibida|vencida/
-    );
+    expect(() => seleccionarCotizacion(vencida.id, USUARIOS.comprador)).toThrow(/recibida|vencida/);
     expect(obtenerCotizacion(vencida.id).estado).toBe('vencida');
 
-    const segunda = registrarCotizacion(
-      { ...base, proveedor_id: 'prov-004' },
-      USUARIOS.comprador
-    );
+    const segunda = registrarCotizacion({ ...base, proveedor_id: 'prov-004' }, USUARIOS.comprador);
     expect(() => descartarCotizacion(segunda.id, '', USUARIOS.comprador)).toThrow(/motivo/);
 
     const seleccionada = seleccionarCotizacion(primera.id, USUARIOS.comprador);
@@ -450,9 +445,7 @@ describe('flujo completo de compras', () => {
     const todas = leer('ordenes').filter((orden) => orden.estado !== 'anulada');
     const sobreUmbral = todas.filter((orden) => {
       const solicitud = obtenerSolicitud(orden.solicitud_id);
-      return (
-        Number(solicitud?.monto_estimado ?? orden.neto) >= UMBRAL_COTIZACIONES
-      );
+      return Number(solicitud?.monto_estimado ?? orden.neto) >= UMBRAL_COTIZACIONES;
     });
 
     expect(sobreUmbral.length).toBeGreaterThanOrEqual(2);
@@ -482,8 +475,8 @@ describe('flujo completo de compras', () => {
     expect(
       obtenerSolicitud(conTresCotizaciones.solicitud.id).justificacion_proveedor_unico || ''
     ).toBe('');
-    expect(
-      obtenerSolicitud(conJustificacion.solicitud.id).justificacion_proveedor_unico
-    ).toContain('Único proveedor certificado');
+    expect(obtenerSolicitud(conJustificacion.solicitud.id).justificacion_proveedor_unico).toContain(
+      'Único proveedor certificado'
+    );
   });
 });

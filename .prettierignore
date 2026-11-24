@@ -8,11 +8,3 @@ docs/
 specs/
 *.md
 *.json
-*.html
-*.mjs
-src/**
-tests/**
-!src/storage.js
-!tests/unit/
-tests/unit/**
-!tests/unit/storage.test.js

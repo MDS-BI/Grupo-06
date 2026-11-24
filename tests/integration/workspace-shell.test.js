@@ -9,7 +9,9 @@ const html = fs.readFileSync(fileURLToPath(new URL('../../index.html', import.me
 
 let dom;
 
-function qs(id){ return document.getElementById(id); }
+function qs(id) {
+  return document.getElementById(id);
+}
 
 const brandedConfig = {
   moduleName: 'Sales Suite',
@@ -32,7 +34,7 @@ afterEach(() => {
   dom.window.close();
 });
 
-async function bootWith(configOverride){
+async function bootWith(configOverride) {
   vi.resetModules();
   const { initApp } = await import('../../src/app.js');
   await initApp(normalizeConfig(configOverride));
@@ -72,7 +74,12 @@ describe.skip('User Story 13 - branded ERP workspace shell', () => {
   it('uses remapped terms on the sidebar for tailored modules', async () => {
     await bootWith({
       moduleName: 'Ventas',
-      labels: { entity: 'Cliente', entities: 'Clientes', document: 'Pedido de Venta', documents: 'Pedidos de Venta' }
+      labels: {
+        entity: 'Cliente',
+        entities: 'Clientes',
+        document: 'Pedido de Venta',
+        documents: 'Pedidos de Venta'
+      }
     });
     expect(qs('nav-entities-label').textContent).toBe('Clientes');
     expect(qs('nav-documents-label').textContent).toBe('Pedidos de Venta');
@@ -80,7 +87,7 @@ describe.skip('User Story 13 - branded ERP workspace shell', () => {
 
   it('keeps every module button labeled for accessible icon-rail collapse', async () => {
     await bootWith(undefined);
-    document.querySelectorAll('.nav-module').forEach(btn => {
+    document.querySelectorAll('.nav-module').forEach((btn) => {
       expect(btn.querySelector('.nav-label')).not.toBeNull();
       expect(btn.querySelector('.nav-label').textContent.length).toBeGreaterThan(0);
     });
@@ -88,7 +95,8 @@ describe.skip('User Story 13 - branded ERP workspace shell', () => {
 
   it('highlights the active module while navigating between all screens', async () => {
     await bootWith(undefined);
-    const activeModule = () => document.querySelector('.nav-module[aria-current="page"]').dataset.module;
+    const activeModule = () =>
+      document.querySelector('.nav-module[aria-current="page"]').dataset.module;
 
     expect(activeModule()).toBe('dashboard');
 
@@ -112,7 +120,12 @@ describe.skip('User Story 13 - branded ERP workspace shell', () => {
   it('preserves all stored data while navigating between modules', async () => {
     await bootWith(undefined);
     const entity = addEntity({ name: 'Acme', code: 'AC-001' });
-    addDocument({ entityId: entity.entity_id, folio: 1001, startDate: '2026-08-01', endDate: '2026-08-05' });
+    addDocument({
+      entityId: entity.entity_id,
+      folio: 1001,
+      startDate: '2026-08-01',
+      endDate: '2026-08-05'
+    });
 
     qs('nav-entities').click();
     qs('nav-documents').click();

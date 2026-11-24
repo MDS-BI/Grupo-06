@@ -9,11 +9,18 @@ const html = fs.readFileSync(fileURLToPath(new URL('../../index.html', import.me
 
 let dom;
 
-function qs(id){ return document.getElementById(id); }
+function qs(id) {
+  return document.getElementById(id);
+}
 
 const salesConfig = {
   moduleName: 'Ventas',
-  labels: { entity: 'Cliente', entities: 'Clientes', document: 'Pedido de Venta', documents: 'Pedidos de Venta' }
+  labels: {
+    entity: 'Cliente',
+    entities: 'Clientes',
+    document: 'Pedido de Venta',
+    documents: 'Pedidos de Venta'
+  }
 };
 
 beforeEach(async () => {
@@ -32,7 +39,7 @@ afterEach(() => {
   dom.window.close();
 });
 
-async function bootWith(configOverride){
+async function bootWith(configOverride) {
   vi.resetModules();
   const { initApp } = await import('../../src/app.js');
   await initApp(normalizeConfig(configOverride));
@@ -71,7 +78,12 @@ describe.skip('User Story 3 - home dashboard with quick actions and record stats
 
     const entity = addEntity({ name: 'Acme', code: 'AC-001' });
     addEntity({ name: 'Globex', code: 'GL-002' });
-    addDocument({ entityId: entity.entity_id, folio: 1001, startDate: '2026-08-01', endDate: '2026-08-05' });
+    addDocument({
+      entityId: entity.entity_id,
+      folio: 1001,
+      startDate: '2026-08-01',
+      endDate: '2026-08-05'
+    });
 
     qs('nav-dashboard').click();
     expect(qs('stat-entities').textContent).toBe('2');
@@ -83,7 +95,9 @@ describe.skip('User Story 3 - home dashboard with quick actions and record stats
     qs('nav-entities').click();
     qs('name').value = 'Acme';
     qs('code').value = 'AC-001';
-    qs('entity-form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
+    qs('entity-form').dispatchEvent(
+      new dom.window.Event('submit', { bubbles: true, cancelable: true })
+    );
     expect(loadEntities().length).toBe(1);
 
     qs('nav-dashboard').click();

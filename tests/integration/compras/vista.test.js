@@ -78,9 +78,8 @@ describe('vista de compras', () => {
     expect(qs('rol-activo')).toBeNull();
     expect(qs('sesion-indicador').textContent).toContain('Administrador TI');
 
-    const { getUsuarioActivo, setRolActivo } = await import(
-      '../../../src/compras/almacenamiento.js'
-    );
+    const { getUsuarioActivo, setRolActivo } =
+      await import('../../../src/compras/almacenamiento.js');
     setRolActivo('comprador');
     expect(getUsuarioActivo().rol).toBe('admin_ti');
   });
@@ -125,7 +124,9 @@ describe('vista de compras', () => {
     const itemAlerta = [...qs('compras-content').querySelectorAll('li')].find((li) =>
       li.textContent.includes('folio 1001')
     );
-    expect(itemAlerta?.textContent || qs('compras-content').textContent).toContain('retraso de 2 días');
+    expect(itemAlerta?.textContent || qs('compras-content').textContent).toContain(
+      'retraso de 2 días'
+    );
   });
 
   it('abre la cadena documental y el historial desde una solicitud', () => {
@@ -265,7 +266,11 @@ describe('accesibilidad del módulo de compras', () => {
     const mezclado =
       '#' +
       [0, 1, 2]
-        .map((i) => Math.round(fondo[i] * fondo[3] + 255 * (1 - fondo[3])).toString(16).padStart(2, '0'))
+        .map((i) =>
+          Math.round(fondo[i] * fondo[3] + 255 * (1 - fondo[3]))
+            .toString(16)
+            .padStart(2, '0')
+        )
         .join('');
     expect(contraste(alerta, mezclado)).toBeGreaterThanOrEqual(4.5);
   });

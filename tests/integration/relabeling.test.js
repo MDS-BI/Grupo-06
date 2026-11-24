@@ -8,7 +8,9 @@ const html = fs.readFileSync(fileURLToPath(new URL('../../index.html', import.me
 
 let dom;
 
-function qs(id){ return document.getElementById(id); }
+function qs(id) {
+  return document.getElementById(id);
+}
 
 beforeEach(async () => {
   dom = new JSDOM(html, { url: 'http://localhost/' });
@@ -26,7 +28,7 @@ afterEach(() => {
   dom.window.close();
 });
 
-async function bootWith(configOverride){
+async function bootWith(configOverride) {
   vi.resetModules();
   const { initApp } = await import('../../src/app.js');
   await initApp(normalizeConfig(configOverride));
@@ -50,7 +52,12 @@ describe.skip('User Story 6 - relabel screens from configuration', () => {
   it('uses configured terms on every screen without altering navigation behavior', async () => {
     await bootWith({
       moduleName: 'Ventas',
-      labels: { entity: 'Cliente', entities: 'Clientes', document: 'Pedido de Venta', documents: 'Pedidos de Venta' }
+      labels: {
+        entity: 'Cliente',
+        entities: 'Clientes',
+        document: 'Pedido de Venta',
+        documents: 'Pedidos de Venta'
+      }
     });
     expect(document.title).toBe('Ventas');
     expect(qs('brand-name').textContent).toBe('Ventas');
@@ -78,7 +85,9 @@ describe.skip('User Story 6 - relabel screens from configuration', () => {
   });
 
   it('keeps navigation behavior unchanged after relabeling', async () => {
-    await bootWith({ labels: { entity: 'Producto', entities: 'Productos', document: 'Orden', documents: 'Órdenes' } });
+    await bootWith({
+      labels: { entity: 'Producto', entities: 'Productos', document: 'Orden', documents: 'Órdenes' }
+    });
     qs('nav-entities').click();
     expect(qs('view-entities').hidden).toBe(false);
     qs('nav-documents').click();

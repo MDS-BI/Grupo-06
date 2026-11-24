@@ -101,7 +101,8 @@ function sincronizarSesionUI() {
       const esPersonal = ['solicitante', 'comprador', 'jefe_compras'].includes(usuario.rol);
       const nombre = String(usuario.nombre || '').trim();
       const rol = etiquetaRol(usuario.rol);
-      indicador.textContent = esPersonal && nombre && nombre !== usuario.rol ? `${nombre} · ${rol}` : rol;
+      indicador.textContent =
+        esPersonal && nombre && nombre !== usuario.rol ? `${nombre} · ${rol}` : rol;
     } else {
       indicador.textContent = '';
     }
@@ -267,9 +268,9 @@ function cablearEventos() {
   if (wired) return;
   wired = true;
 
-  document.querySelectorAll('.nav-module').forEach((boton) =>
-    boton.addEventListener('click', () => showModule())
-  );
+  document
+    .querySelectorAll('.nav-module')
+    .forEach((boton) => boton.addEventListener('click', () => showModule()));
 
   qs('login-form')?.addEventListener('submit', enviarLogin);
   qs('login-rol')?.addEventListener('change', () => actualizarCampoNombre({ enfocar: true }));
