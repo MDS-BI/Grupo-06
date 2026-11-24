@@ -10,7 +10,9 @@ import {
   obtenerProveedor,
   crearProveedor,
   actualizarProveedor,
+  actualizarDatosBancarios,
   cambiarEstadoProveedor,
+  desbloquearProveedor,
   eliminarProveedor,
   vistaProveedor
 } from './proveedores.js';
@@ -68,12 +70,14 @@ import {
 import { listarEvaluaciones, registrarEvaluacion, promedioProveedor } from './evaluaciones.js';
 import { construirPanel } from './panel.js';
 import { cadenaDocumental, historialDe } from './trazabilidad.js';
+import { GRUPOS, nivelVista, vistasVisibles } from './visibilidad.js';
 import {
   exportarProveedores,
   exportarSolicitudes,
   exportarOrdenes,
   exportarRecepciones,
-  exportarFacturas
+  exportarFacturas,
+  exportarTrazabilidad
 } from './exportacion.js';
 
 /** Etiquetas legibles de los roles; las claves internas se mantienen intactas. */
@@ -115,10 +119,42 @@ function grupoDeTab(id) {
   return TABS.find((t) => t.id === id)?.grupo || 'Panel';
 }
 
+function tabsPara(usuario) {
+  const visibles = new Set(vistasVisibles(usuario));
+  return TABS.filter((t) => visibles.has(t.id));
+}
+
+function puedeOperar(vista, permiso, usuario) {
+  return nivelVista(vista, usuario) === 'opera' && puede(permiso, usuario);
+}
+
+function esPropia(registro, usuario) {
+  return registro?.solicitante_id === usuario?.id;
+}
+
+function ordenesVisibles(usuario) {
+  const ordenes = listarOrdenes();
+  if (usuario?.rol !== 'solicitante') return ordenes;
+  const propias = new Set(
+    listarSolicitudes(usuario)
+      .filter((s) => esPropia(s, usuario))
+      .map((s) => s.id)
+  );
+  return ordenes.filter((o) => propias.has(o.solicitud_id));
+}
+
+function recepcionesVisibles(usuario) {
+  const recepciones = listarRecepciones();
+  if (usuario?.rol !== 'solicitante') return recepciones;
+  const ordenIds = new Set(ordenesVisibles(usuario).map((o) => o.id));
+  return recepciones.filter((r) => ordenIds.has(r.orden_id));
+}
+
 let tab = 'panel';
 let provFiltro = '';
 let provEditId = null;
 let provFormVisible = false;
+let provBancoId = '';
 let solFiltro = '';
 let solEstado = '';
 let solFormVisible = false;
@@ -212,7 +248,7 @@ function opciones(items, seleccionado, vacio = '-- Selecciona --') {
 const ERRORES_POR_CAMPO = [
   [/razón social|razon social/i, ['#prov-razon']],
   [/rut/i, ['#prov-rut']],
-  [/banco|cuenta/i, ['#prov-cuenta', '#prov-banco']],
+  [/banco|cuenta/i, ['#prov-banco-cuenta', '#prov-banco-banco', '#prov-cuenta', '#prov-banco']],
   [/condición de pago|condicion de pago|plazo mayor|días/i, ['#prov-dias', '#cot-condicion', '#oc-condicion']],
   [/correo/i, ['#prov-email']],
   [/justificación|justificacion/i, ['#sol-justificacion']],
@@ -323,19 +359,53 @@ export function renderComprasView() {
   const root = qs('compras-root');
   if (!root) return;
   asegurarSemilla();
-  getUsuarioActivo();
-  if (!TABS.some((t) => t.id === tab)) tab = 'panel';
-  const indiceActivo = TABS.findIndex((t) => t.id === tab);
-
   const usuario = getUsuarioActivo();
+  const visibles = tabsPara(usuario);
+  if (!visibles.some((t) => t.id === tab)) tab = 'panel';
+  const activo = visibles.find((t) => t.id === tab);
   const esAdminTI = usuario.rol === 'admin_ti';
+
+  const nav = document.querySelector('.side-nav');
+  if (nav) {
+    nav.innerHTML = `
+      <p class="side-nav-titulo">Adquisiciones y Compras</p>
+      ${Object.entries(GRUPOS)
+        .map(([grupo, ids]) => {
+          const items = visibles.filter((t) => ids.includes(t.id));
+          if (!items.length) return '';
+          return `<div class="side-nav-grupo">
+            <p class="side-nav-grupo-titulo">${esc(grupo)}</p>
+            ${items
+              .map(
+                (t) => `<button type="button" id="nav-tab-${t.id}" class="side-nav-item${t.id === tab ? ' active' : ''}" data-nav-tab="${t.id}"${t.id === tab ? ' aria-current="page"' : ''} tabindex="${t.id === tab ? 0 : -1}">${esc(t.label)}</button>`
+              )
+              .join('')}
+          </div>`;
+        })
+        .join('')}
+    `;
+  }
+
+  const grupos = Object.entries(GRUPOS)
+    .map(([grupo, ids]) => {
+      const items = visibles.filter((t) => ids.includes(t.id));
+      if (!items.length) return '';
+      return `<span class="compras-tabs-grupo" role="presentation" aria-hidden="true">${esc(grupo)}</span>${items
+        .map(
+          (t) =>
+            `<button type="button" role="tab" id="tab-${t.id}" class="compras-tab${t.id === tab ? ' active' : ''}" data-tab="${t.id}" aria-controls="compras-content" aria-selected="${t.id === tab}" tabindex="${t.id === tab ? 0 : -1}">${esc(t.label)}</button>`
+        )
+        .join('')}`;
+    })
+    .join('');
+
   root.innerHTML = `
     <div id="compras-aviso" class="compras-aviso" role="alert" aria-live="assertive" tabindex="-1" hidden></div>
     <div class="compras-header${esAdminTI ? ' admin-ti-activo' : ''}">
       <div>
-        <p class="muted compras-seccion" aria-live="polite">${esc(seccionActual())}</p>
+        <p class="muted compras-seccion" aria-live="polite">${esc(seccionActual(visibles))}</p>
         <div class="compras-titulo-fila">
-          <h1 id="compras-titulo" tabindex="-1">Adquisiciones y Compras</h1>
+          <h1 id="compras-titulo" tabindex="-1">${esc(activo?.label || 'Panel')}</h1>
           ${esAdminTI ? '<span class="admin-ti-badge" aria-label="Privilegios elevados: Administrador TI"><svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 1.5l1.8 3.6 4 .6-2.9 2.8.7 4L8 10.6 4.4 12.5l.7-4L2.2 5.7l4-.6L8 1.5z"></path></svg>Privilegios elevados</span>' : ''}
         </div>
         <p class="muted">Ciclo completo de compra: solicitud, cotización, OC, recepción, factura y devolución.</p>
@@ -345,34 +415,30 @@ export function renderComprasView() {
       </div>
     </div>
 
-    <nav class="compras-tabs" role="tablist" aria-label="Secciones de compras">
-      ${TABS.map(
-        (t, indice) =>
-          `<button type="button" role="tab" id="tab-${t.id}" class="compras-tab${t.id === tab ? ' active' : ''}" data-tab="${t.id}" aria-controls="compras-content" aria-selected="${t.id === tab}" tabindex="${indice === indiceActivo ? 0 : -1}">${esc(t.label)}</button>`
-      ).join('')}
-    </nav>
+    <nav class="compras-tabs" role="tablist" aria-label="Secciones de compras">${grupos}</nav>
     <div id="compras-content" class="compras-content" role="tabpanel" aria-labelledby="tab-${tab}" tabindex="0"></div>
   `;
 
-  const botonesTab = [...root.querySelectorAll('[data-tab]')];
-  botonesTab.forEach((btn, indice) => {
-    btn.addEventListener('click', () => {
-      tab = btn.dataset.tab;
-      renderComprasView();
+  const cablearNavegacion = (botones, clave, prefijo) => {
+    botones.forEach((btn, indice) => {
+      btn.addEventListener('click', () => irA(btn.dataset[clave]));
+      btn.addEventListener('keydown', (evento) => {
+        if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(evento.key)) return;
+        evento.preventDefault();
+        let destino = indice;
+        if (evento.key === 'ArrowRight') destino = (indice + 1) % botones.length;
+        if (evento.key === 'ArrowLeft') destino = (indice - 1 + botones.length) % botones.length;
+        if (evento.key === 'Home') destino = 0;
+        if (evento.key === 'End') destino = botones.length - 1;
+        const id = botones[destino].dataset[clave];
+        irA(id);
+        qs(`${prefijo}-${id}`)?.focus();
+      });
     });
-    btn.addEventListener('keydown', (evento) => {
-      if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(evento.key)) return;
-      evento.preventDefault();
-      let destino = indice;
-      if (evento.key === 'ArrowRight') destino = (indice + 1) % botonesTab.length;
-      if (evento.key === 'ArrowLeft') destino = (indice - 1 + botonesTab.length) % botonesTab.length;
-      if (evento.key === 'Home') destino = 0;
-      if (evento.key === 'End') destino = botonesTab.length - 1;
-      tab = botonesTab[destino].dataset.tab;
-      renderComprasView();
-      qs(`tab-${tab}`)?.focus();
-    });
-  });
+  };
+
+  cablearNavegacion([...root.querySelectorAll('.compras-tabs [data-tab]')], 'tab', 'tab');
+  cablearNavegacion(nav ? [...nav.querySelectorAll('[data-nav-tab]')] : [], 'navTab', 'nav-tab');
 
   renderComprasTab();
   renderTrazaCadena();
@@ -383,6 +449,11 @@ export function renderComprasView() {
       renderComprasView();
     })
   );
+  root.onclick = (evento) => {
+    const boton = evento.target.closest?.('[data-ir], [data-traza-ir]');
+    if (!boton || !root.contains(boton)) return;
+    irA(boton.dataset.ir || boton.dataset.trazaIr);
+  };
 }
 
 function renderComprasTab() {
@@ -402,13 +473,17 @@ function renderComprasTab() {
   asociarEtiquetas(qs('compras-content'));
 }
 
-function seccionActual() {
-  const actual = TABS.find((t) => t.id === tab);
+function seccionActual(visibles = TABS) {
+  const actual = visibles.find((t) => t.id === tab);
   if (!actual) return 'Panel';
-  return tab === 'panel' ? 'Panel' : `${grupoDeTab(tab)} · ${actual.label}`;
+  return tab === 'panel' ? 'Panel' : `${grupoDeTab(tab)} › ${actual.label}`;
 }
 
 function irA(nuevaTab) {
+  if (!nuevaTab || !nivelVista(nuevaTab, getUsuarioActivo())) {
+    aviso('Tu rol no tiene acceso a esta vista');
+    return;
+  }
   tab = nuevaTab;
   renderComprasView();
 }
@@ -441,9 +516,12 @@ function iconoSvg(nombre, tamano = 20) {
 }
 
 function resumenFlujo() {
-  const solicitudes = listarSolicitudes(getUsuarioActivo());
-  const ordenes = listarOrdenes();
-  const recepciones = leer('recepciones') || [];
+  const usuario = getUsuarioActivo();
+  const solicitudes = listarSolicitudes(usuario).filter(
+    (s) => usuario.rol !== 'bodega' || esPropia(s, usuario)
+  );
+  const ordenes = ordenesVisibles(usuario);
+  const recepciones = recepcionesVisibles(usuario);
   const facturas = listarFacturas();
   const etapas = [
     {
@@ -461,8 +539,10 @@ function resumenFlujo() {
       total: facturas.length
     }
   ];
-  const max = Math.max(1, ...etapas.map((e) => e.total));
-  return etapas
+  const permitidas = new Set(tabsPara(usuario).map((t) => t.id));
+  const etapasVisibles = etapas.filter((e) => permitidas.has(e.id));
+  const max = Math.max(1, ...etapasVisibles.map((e) => e.total));
+  return etapasVisibles
     .map((e) => {
       const pct = Math.round((e.valor / max) * 100);
       return `<button type="button" class="flow-step" data-ir="${esc(e.id)}" aria-label="${esc(e.label)}: ${e.valor} de ${e.total}">
@@ -484,8 +564,12 @@ function renderTrazaCadena() {
   if (!traza) return;
   const content = qs('compras-content');
   if (!content) return;
+  const usuario = getUsuarioActivo();
   const cadena = cadenaDocumental(traza.tipo, traza.id);
   const eventos = historialDe(traza.tipo, traza.id);
+  const puedeHistorial =
+    Boolean(nivelVista('trazabilidad', usuario)) && puede('consultar_trazabilidad', usuario);
+  const puedeExportar = puedeHistorial && puede('exportar_trazabilidad', usuario);
   const card = document.createElement('div');
   card.className = 'card';
   card.id = 'compras-traza';
@@ -495,13 +579,24 @@ function renderTrazaCadena() {
       cadena.length === 0
         ? '<div class="empty">No se encontró la cadena documental.</div>'
         : `<ol class="traza-cadena">${cadena
-            .map(
-              (n) =>
-                `<li>${badge(n.estado)} <button type="button" class="link" data-traza-ir="${esc(n.tab)}">${esc(n.etiqueta)}</button></li>`
-            )
+            .map((n) => {
+              const visible = Boolean(nivelVista(n.tab, usuario));
+              const factura =
+                n.tipo === 'factura' ? leer('facturas').find((f) => f.id === n.id) : null;
+              const credito = Number(factura?.credito_a_favor) || 0;
+              const detalleCredito =
+                credito > 0 ? ` <span class="muted">Crédito a favor: ${clp(credito)}</span>` : '';
+              return `<li>${badge(n.estado)} ${
+                visible
+                  ? `<button type="button" class="link" data-traza-ir="${esc(n.tab)}">${esc(n.etiqueta)}</button>`
+                  : `<span class="traza-nodo-sin-acceso" aria-disabled="true">${esc(n.etiqueta)}</span>`
+              }${detalleCredito}</li>`;
+            })
             .join('')}</ol>`
     }
-    <h3>Historial de cambios</h3>
+    ${
+      puedeHistorial
+        ? `<div class="toolbar"><h3>Historial de cambios</h3>${puedeExportar ? '<button type="button" id="traza-exportar" class="secondary">Exportar historial</button>' : ''}</div>
     ${
       eventos.length === 0
         ? '<div class="empty">Sin eventos registrados.</div>'
@@ -513,6 +608,8 @@ function renderTrazaCadena() {
         )
         .join('')}
       </tbody></table>`
+    }`
+        : '<p class="muted">El historial de eventos no está disponible para tu rol.</p>'
     }
   `;
   content.appendChild(card);
@@ -520,13 +617,19 @@ function renderTrazaCadena() {
     traza = null;
     renderComprasView();
   });
-  card
-    .querySelectorAll('[data-traza-ir]')
-    .forEach((btn) => btn.addEventListener('click', () => irA(btn.dataset.trazaIr)));
+  if (puedeExportar) {
+    qs('traza-exportar').addEventListener('click', () =>
+      exportarTrazabilidad({ entidad: traza.tipo, entidad_id: traza.id, usuario })
+    );
+  }
 }
 
 function renderPanel() {
-  const panel = construirPanel(getUsuarioActivo());
+  const usuario = getUsuarioActivo();
+  const panel = construirPanel(usuario);
+  const permitidas = new Set(tabsPara(usuario).map((t) => t.id));
+  const acciones = panel.acciones.filter((a) => permitidas.has(a.vista));
+  const pendientes = panel.pendientes.filter((p) => permitidas.has(p.vista));
   const content = qs('compras-content');
   content.innerHTML = `
     <div class="stat-grid">
@@ -563,7 +666,7 @@ function renderPanel() {
     <div class="card">
       <h2>Acciones rápidas</h2>
       <div class="action-grid">
-        ${panel.acciones
+        ${acciones
           .map(
             (a) => `<button type="button" class="action-card" data-ir="${esc(a.vista)}">
           <span class="action-card-icon" aria-hidden="true">${iconoSvg(a.icono)}</span>
@@ -583,9 +686,9 @@ function renderPanel() {
     <div class="card">
       <h2>Pendientes por rol</h2>
       ${
-        panel.pendientes.length === 0
+        pendientes.length === 0
           ? '<div class="empty">Sin pendientes.</div>'
-          : `<div class="pending-grid">${panel.pendientes
+          : `<div class="pending-grid">${pendientes
               .map(
                 (p) => `
         <button type="button" class="pending-card" data-ir="${esc(p.vista)}">
@@ -631,29 +734,31 @@ function renderPanel() {
       }
     </div>
   `;
-  content
-    .querySelectorAll('[data-ir]')
-    .forEach((btn) => btn.addEventListener('click', () => irA(btn.dataset.ir)));
 }
 
 function renderProveedores() {
   const usuario = getUsuarioActivo();
   const visibilidad = validarVisibilidadDatosBancarios(usuario.rol);
+  const puedeGestionar = puedeOperar('proveedores', 'gestionar_proveedores', usuario);
+  const puedeBanco = puedeOperar('proveedores', 'editar_datos_bancarios', usuario);
+  const puedeDesbloquear = puedeOperar('proveedores', 'desbloquear_proveedor', usuario);
   const lista = (provFiltro ? buscarProveedores(provFiltro) : listarProveedores()).map((p) =>
     vistaProveedor(p, usuario.rol)
   );
   const editando = provEditId ? vistaProveedor(obtenerProveedor(provEditId), usuario.rol) : null;
+  const seleccionBanco = provBancoId ? lista.find((p) => p.id === provBancoId) : lista[0];
+  provBancoId = seleccionBanco?.id || '';
   const content = qs('compras-content');
   content.innerHTML = `
     <div class="card">
       <div class="toolbar">
         <input id="prov-search" aria-label="Buscar proveedores" placeholder="Buscar por razón social, RUT, giro o región" value="${esc(provFiltro)}" />
         <button type="button" id="prov-buscar" class="secondary">Buscar</button>
-        <button type="button" id="prov-nuevo" class="primary">Nuevo proveedor</button>
+        ${puedeGestionar ? '<button type="button" id="prov-nuevo" class="primary">Nuevo proveedor</button>' : ''}
         <button type="button" id="prov-exportar" class="secondary">Exportar CSV</button>
       </div>
       ${
-        provFormVisible
+        puedeGestionar && provFormVisible
           ? `
       <form id="prov-form" class="card-inner">
         <h2>${editando ? 'Editar proveedor' : 'Nuevo proveedor'}</h2>
@@ -664,16 +769,30 @@ function renderProveedores() {
         <div class="field-row"><div><label>Teléfono</label><input id="prov-telefono" value="${esc(editando?.phone || '')}" /></div><div><label>Correo</label><input id="prov-email" value="${esc(editando?.email || '')}" /></div></div>
         <div class="field-row"><div><label>Categoría</label><input id="prov-categoria" value="${esc(editando?.category || '')}" /></div><div><label>Tamaño</label><select id="prov-tamano">${opciones(['micro', 'pequeña', 'mediana', 'grande'], editando?.tamano_empresa)}</select></div></div>
         <div class="field-row"><div><label>Condición de pago (días) *</label><input id="prov-dias" type="number" min="0" step="1" value="${esc(editando?.condicion_pago_dias ?? 30)}" /></div><div><label>Acuerdo de plazo mayor</label><input id="prov-acuerdo" value="${esc(editando?.acuerdo_plazo_mayor || '')}" placeholder="Obligatorio si supera 30 días" /></div></div>
-        <div class="field-row"><div><label>Banco</label><input id="prov-banco" value="${esc(editando?.banco || '')}" ${visibilidad.editable ? '' : 'disabled'} /></div><div><label>Número de cuenta</label><input id="prov-cuenta" value="${esc(editando?.numero_cuenta || '')}" ${visibilidad.editable ? '' : 'disabled'} /></div></div>
-        ${visibilidad.editable ? '' : '<p class="muted">Los datos bancarios solo pueden ser editados por admin_ti.</p>'}
+        <div class="field-row"><div><label>Banco</label><input id="prov-banco" value="${esc(editando?.banco || '')}" disabled /></div><div><label>Número de cuenta</label><input id="prov-cuenta" value="${esc(editando?.numero_cuenta || '')}" disabled /></div></div>
+        <p class="muted">Los datos bancarios solo pueden ser editados por Administrador TI.</p>
         <div class="form-actions"><button type="submit" class="primary">Guardar</button><button type="button" id="prov-cancelar" class="secondary">Cancelar</button></div>
+      </form>`
+          : ''
+      }
+      ${
+        puedeBanco
+          ? `
+      <form id="prov-banco-form" class="card-inner">
+        <h2>Datos bancarios</h2>
+        <div class="field-row"><div><label>Proveedor *</label><select id="prov-banco-proveedor">${opciones(
+          lista.map((p) => ({ value: p.id, label: `${p.code} · ${p.name}` })),
+          provBancoId
+        )}</select></div><div><label>Banco *</label><input id="prov-banco-banco" value="${esc(seleccionBanco?.banco || '')}" /></div></div>
+        <div class="field-row"><div><label>Tipo de cuenta</label><select id="prov-banco-tipo">${opciones(['corriente', 'ahorro'], seleccionBanco?.tipo_cuenta)}</select></div><div><label>Número de cuenta *</label><input id="prov-banco-cuenta" value="${esc(seleccionBanco?.numero_cuenta || '')}" /></div></div>
+        <div class="form-actions"><button type="submit" class="primary">Guardar datos bancarios</button></div>
       </form>`
           : ''
       }
     </div>
     <div class="card">
       <h2>Proveedores</h2>
-      <p class="muted" id="prov-visibilidad">${visibilidad.visible ? 'RUT y cuenta visibles para tu rol.' : 'RUT y cuenta enmascarados para tu rol.'}${visibilidad.editable ? '' : ' Solo admin_ti puede editar datos bancarios.'}</p>
+      <p class="muted" id="prov-visibilidad">${visibilidad.visible ? 'RUT y cuenta visibles para tu rol.' : 'RUT y cuenta enmascarados para tu rol.'}${puedeBanco ? '' : ' Solo Administrador TI puede editar datos bancarios.'}</p>
       ${
         lista.length === 0
           ? '<div class="empty">No hay proveedores que coincidan.</div>'
@@ -684,10 +803,12 @@ function renderProveedores() {
           (p) => `<tr>
         <td>${esc(p.code)}</td><td>${esc(p.name)}</td><td>${esc(p.rut_visible)}</td><td>${esc(p.cuenta_visible)}</td><td>${esc(p.tipo_persona)}</td><td>${esc(p.region)}</td><td>${esc(p.condicion_pago_dias)} días</td><td>${badge(p.estado_proveedor)}</td>
         <td class="actions">
-          <button type="button" class="link" data-prov-accion="editar" data-id="${esc(p.id)}">Editar</button>
-          ${p.estado_proveedor === 'potencial' ? `<button type="button" class="link" data-prov-accion="aprobar" data-id="${esc(p.id)}">Aprobar</button>` : ''}
-          ${p.estado_proveedor === 'aprobado' ? `<button type="button" class="link" data-prov-accion="bloquear" data-id="${esc(p.id)}">Bloquear</button>` : ''}
-          <button type="button" class="link danger" data-prov-accion="eliminar" data-id="${esc(p.id)}">Eliminar</button>
+          ${puedeGestionar ? `<button type="button" class="link" data-prov-accion="editar" data-id="${esc(p.id)}">Editar</button>` : ''}
+          ${puedeGestionar && p.estado_proveedor === 'potencial' ? `<button type="button" class="link" data-prov-accion="aprobar" data-id="${esc(p.id)}">Aprobar</button>` : ''}
+          ${puedeGestionar && p.estado_proveedor === 'aprobado' ? `<button type="button" class="link" data-prov-accion="bloquear" data-id="${esc(p.id)}">Bloquear</button>` : ''}
+          ${puedeDesbloquear && p.estado_proveedor === 'bloqueado' ? `<button type="button" class="link" data-prov-accion="desbloquear" data-id="${esc(p.id)}">Desbloquear</button>` : ''}
+          ${puedeGestionar ? `<button type="button" class="link danger" data-prov-accion="eliminar" data-id="${esc(p.id)}">Eliminar</button>` : ''}
+          ${!puedeGestionar && !puedeDesbloquear ? '—' : ''}
         </td>
       </tr>`
         )
@@ -706,13 +827,36 @@ function renderProveedores() {
       renderComprasTab();
     }
   });
-  qs('prov-nuevo').addEventListener('click', () => {
-    provEditId = null;
-    provFormVisible = true;
-    renderComprasTab();
-  });
+  if (qs('prov-nuevo'))
+    qs('prov-nuevo').addEventListener('click', () => {
+      provEditId = null;
+      provFormVisible = true;
+      renderComprasTab();
+    });
   qs('prov-exportar').addEventListener('click', () => exportarProveedores({ filtro: provFiltro }));
-  if (provFormVisible) {
+  if (puedeBanco) {
+    qs('prov-banco-proveedor').addEventListener('change', (ev) => {
+      provBancoId = ev.target.value;
+      renderComprasTab();
+    });
+    qs('prov-banco-form').addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      const id = qs('prov-banco-proveedor').value;
+      ejecutar(() => {
+        if (!id) throw new Error('Selecciona un proveedor');
+        actualizarDatosBancarios(
+          id,
+          {
+            banco: qs('prov-banco-banco').value,
+            tipo_cuenta: qs('prov-banco-tipo').value,
+            numero_cuenta: qs('prov-banco-cuenta').value
+          },
+          usuario
+        );
+      }, qs('prov-banco-form'));
+    });
+  }
+  if (puedeGestionar && provFormVisible) {
     qs('prov-cancelar').addEventListener('click', () => {
       provFormVisible = false;
       provEditId = null;
@@ -734,14 +878,8 @@ function renderProveedores() {
         categoria: qs('prov-categoria').value,
         tamano_empresa: qs('prov-tamano').value,
         condicion_pago_dias: qs('prov-dias').value,
-        acuerdo_plazo_mayor: qs('prov-acuerdo').value,
-        banco: qs('prov-banco').value,
-        numero_cuenta: qs('prov-cuenta').value
+        acuerdo_plazo_mayor: qs('prov-acuerdo').value
       };
-      if (!visibilidad.editable) {
-        delete datos.banco;
-        delete datos.numero_cuenta;
-      }
       if (
         editando &&
         String(editando.tipo_persona || '')
@@ -776,6 +914,10 @@ function renderProveedores() {
           cambiarEstadoProveedor(id, 'bloqueado', usuario);
           return;
         }
+        if (btn.dataset.provAccion === 'desbloquear') {
+          desbloquearProveedor(id, usuario);
+          return;
+        }
         if (btn.dataset.provAccion === 'eliminar') {
           if (!confirmar('¿Eliminar el proveedor? Si tiene OC se sugerirá bloquearlo.')) return;
           eliminarProveedor(id, usuario);
@@ -787,7 +929,12 @@ function renderProveedores() {
 
 function renderSolicitudes() {
   const usuario = getUsuarioActivo();
-  let lista = listarSolicitudes(usuario);
+  const puedeCrear = puedeOperar('solicitudes', 'crear_solicitud', usuario);
+  const puedeAprobar = puedeOperar('solicitudes', 'aprobar_solicitud', usuario);
+  const puedeCotizar = nivelVista('cotizaciones', usuario) !== null;
+  let lista = listarSolicitudes(usuario).filter(
+    (s) => usuario.rol !== 'bodega' || esPropia(s, usuario)
+  );
   if (solEstado) lista = lista.filter((s) => s.estado === solEstado);
   if (solFiltro) {
     const q = solFiltro.toLowerCase();
@@ -806,11 +953,11 @@ function renderSolicitudes() {
         <input id="sol-search" aria-label="Buscar solicitudes" placeholder="Buscar número, justificación o estado" value="${esc(solFiltro)}" />
         <select id="sol-estado" aria-label="Filtrar solicitudes por estado">${opciones(['borrador', 'enviada', 'aprobada', 'en_cotizacion', 'adjudicada', 'rechazada', 'anulada'], solEstado, 'Todos los estados')}</select>
         <button type="button" id="sol-buscar" class="secondary">Filtrar</button>
-        ${puede('crear_solicitud', usuario) ? '<button type="button" id="sol-nuevo" class="primary">Nueva solicitud</button>' : ''}
+        ${puedeCrear ? '<button type="button" id="sol-nuevo" class="primary">Nueva solicitud</button>' : ''}
         <button type="button" id="sol-exportar" class="secondary">Exportar CSV</button>
       </div>
       ${
-        solFormVisible
+        puedeCrear && solFormVisible
           ? `
       <form id="sol-form" class="card-inner">
         <h2>Nueva solicitud</h2>
@@ -841,10 +988,11 @@ function renderSolicitudes() {
         <td>${esc(s.numero)}</td><td>${esc(nombreUsuario(s.solicitante_id))}</td><td>${esc(s.centro_costo_id)}</td><td>${esc(s.prioridad)}</td><td>${fecha(s.fecha_requerida)}</td><td>${clp(s.monto_estimado)}</td><td>${badge(s.estado)}</td>
         <td class="actions">
           <button type="button" class="link" data-traza="solicitud" data-id="${esc(s.id)}">Cadena</button>
-          ${s.estado === 'borrador' ? `<button type="button" class="link" data-sol-accion="enviar" data-id="${esc(s.id)}">Enviar</button>` : ''}
-          ${s.estado === 'enviada' && puede('aprobar_solicitud', usuario) && s.solicitante_id !== usuario.id ? `<button type="button" class="link" data-sol-accion="aprobar" data-id="${esc(s.id)}">Aprobar</button><button type="button" class="link danger" data-sol-accion="rechazar" data-id="${esc(s.id)}">Rechazar</button>` : ''}
-          ${['aprobada', 'en_cotizacion'].includes(s.estado) ? `<button type="button" class="link" data-sol-accion="cotizar" data-id="${esc(s.id)}">Cotizaciones</button>` : ''}
-          ${!['adjudicada', 'anulada', 'rechazada'].includes(s.estado) ? `<button type="button" class="link danger" data-sol-accion="anular" data-id="${esc(s.id)}">Anular</button>` : ''}
+          ${s.estado === 'borrador' && puedeCrear && esPropia(s, usuario) ? `<button type="button" class="link" data-sol-accion="enviar" data-id="${esc(s.id)}">Enviar</button>` : ''}
+          ${s.estado === 'enviada' && puedeAprobar && !esPropia(s, usuario) ? `<button type="button" class="link" data-sol-accion="aprobar" data-id="${esc(s.id)}">Aprobar</button><button type="button" class="link danger" data-sol-accion="rechazar" data-id="${esc(s.id)}">Rechazar</button>` : ''}
+          ${['aprobada', 'en_cotizacion'].includes(s.estado) && puedeCotizar ? `<button type="button" class="link" data-sol-accion="cotizar" data-id="${esc(s.id)}">Cotizaciones</button>` : ''}
+          ${!['adjudicada', 'anulada', 'rechazada'].includes(s.estado) && puedeCrear && esPropia(s, usuario) ? `<button type="button" class="link danger" data-sol-accion="anular" data-id="${esc(s.id)}">Anular</button>` : ''}
+          ${!esPropia(s, usuario) ? '<span class="badge badge-lectura">Solo lectura</span>' : ''}
         </td>
       </tr>`
         )
@@ -861,12 +1009,12 @@ function renderSolicitudes() {
   qs('sol-exportar').addEventListener('click', () =>
     exportarSolicitudes(usuario, { filtro: solFiltro })
   );
-  if (qs('sol-nuevo'))
+  if (puedeCrear && qs('sol-nuevo'))
     qs('sol-nuevo').addEventListener('click', () => {
       solFormVisible = true;
       renderComprasTab();
     });
-  if (solFormVisible) {
+  if (puedeCrear && solFormVisible) {
     qs('sol-cancelar').addEventListener('click', () => {
       solFormVisible = false;
       renderComprasTab();
@@ -985,7 +1133,7 @@ function renderCotizaciones() {
       ${solicitud ? `<p class="muted">Umbral de cotizaciones: ${clp(UMBRAL_COTIZACIONES)} neto. ${Number(solicitud.monto_estimado) >= UMBRAL_COTIZACIONES ? 'Esta solicitud requiere 3 cotizaciones o justificación de proveedor único.' : ''}</p>` : '<div class="empty">No hay solicitudes aprobadas o en cotización.</div>'}
     </div>
     ${
-      solicitud && puede('gestionar_cotizaciones', usuario)
+      solicitud && puedeOperar('cotizaciones', 'gestionar_cotizaciones', usuario)
         ? `
     <div class="card">
       <h2>Registrar cotización</h2>
@@ -1017,7 +1165,7 @@ function renderCotizaciones() {
         <td>${esc(c.proveedor?.name || c.proveedor_id)}</td><td>${clp(c.neto)}</td><td>${clp(c.iva)}</td><td>${clp(c.total)}</td><td>${esc(c.plazo_entrega_dias)} días</td><td>${esc(c.condicion_pago_dias)} días</td><td>${c.evaluacion_promedio || '—'}</td><td>${fecha(c.fecha_validez)}</td><td>${badge(c.estado)}</td>
         <td class="actions">
           <button type="button" class="link" data-traza="cotizacion" data-id="${esc(c.id)}">Cadena</button>
-          ${c.estado === 'recibida' && puede('gestionar_cotizaciones', usuario) ? `<button type="button" class="link" data-cot-accion="seleccionar" data-id="${esc(c.id)}">Seleccionar</button><button type="button" class="link danger" data-cot-accion="descartar" data-id="${esc(c.id)}">Descartar</button>` : ''}
+          ${c.estado === 'recibida' && puedeOperar('cotizaciones', 'gestionar_cotizaciones', usuario) ? `<button type="button" class="link" data-cot-accion="seleccionar" data-id="${esc(c.id)}">Seleccionar</button><button type="button" class="link danger" data-cot-accion="descartar" data-id="${esc(c.id)}">Descartar</button>` : ''}
           ${c.motivo_descarte ? `<span class="muted">${esc(c.motivo_descarte)}</span>` : ''}
         </td>
       </tr>`
@@ -1031,7 +1179,7 @@ function renderCotizaciones() {
     cotSolicitudId = ev.target.value;
     renderComprasTab();
   });
-  if (solicitud && puede('gestionar_cotizaciones', usuario)) {
+  if (solicitud && puedeOperar('cotizaciones', 'gestionar_cotizaciones', usuario)) {
     qs('cot-form').addEventListener('submit', (ev) => {
       ev.preventDefault();
       const lineas = solicitud.lineas.map((l, i) => ({
@@ -1084,7 +1232,7 @@ function renderOrdenes() {
   const solicitudes = listarSolicitudes(usuario).filter((s) =>
     ['aprobada', 'en_cotizacion'].includes(s.estado)
   );
-  const lista = listarOrdenes();
+  const lista = ordenesVisibles(usuario);
   const content = qs('compras-content');
   const solicitud = ocSolicitudId ? obtenerSolicitud(ocSolicitudId) : null;
   const cotizaciones = solicitud
@@ -1092,7 +1240,7 @@ function renderOrdenes() {
     : [];
   content.innerHTML = `
     ${
-      puede('emitir_oc', usuario)
+      puedeOperar('ordenes', 'emitir_oc', usuario)
         ? `
     <div class="card">
       <h2>Emitir orden de compra</h2>
@@ -1135,7 +1283,7 @@ function renderOrdenes() {
           (
             o
           ) => `<tr><td>${esc(o.numero)}</td><td>${esc(nombreProveedor(o.proveedor_id))}</td><td>${esc(o.solicitud_id || '—')}</td><td>${fecha(o.fecha_emision)}</td><td>${clp(o.neto)}</td><td>${clp(o.iva)}</td><td>${clp(o.total)}</td><td>${badge(o.estado)}</td>
-        <td class="actions"><button type="button" class="link" data-traza="orden" data-id="${esc(o.id)}">Cadena</button>${['emitida', 'recibida_parcial'].includes(o.estado) && puede('emitir_oc', usuario) ? `<button type="button" class="link danger" data-oc-accion="anular" data-id="${esc(o.id)}">Anular</button>` : ''}</td>
+        <td class="actions"><button type="button" class="link" data-traza="orden" data-id="${esc(o.id)}">Cadena</button>${['emitida', 'recibida_parcial'].includes(o.estado) && puedeOperar('ordenes', 'emitir_oc', usuario) ? `<button type="button" class="link danger" data-oc-accion="anular" data-id="${esc(o.id)}">Anular</button>` : ''}</td>
       </tr>`
         )
         .join('')}
@@ -1144,7 +1292,7 @@ function renderOrdenes() {
     </div>
   `;
   qs('oc-exportar').addEventListener('click', () => exportarOrdenes());
-  if (puede('emitir_oc', usuario)) {
+  if (puedeOperar('ordenes', 'emitir_oc', usuario)) {
     qs('oc-solicitud').addEventListener('change', (ev) => {
       ocSolicitudId = ev.target.value;
       ocCotizacionId = '';
@@ -1181,15 +1329,18 @@ function renderOrdenes() {
 
 function renderRecepciones() {
   const usuario = getUsuarioActivo();
-  const ordenes = listarOrdenes().filter((o) => ['emitida', 'recibida_parcial'].includes(o.estado));
+  const ordenesVisiblesLista = ordenesVisibles(usuario);
+  const ordenes = ordenesVisiblesLista.filter((o) =>
+    ['emitida', 'recibida_parcial'].includes(o.estado)
+  );
   if (!recOrdenId || !ordenes.some((o) => o.id === recOrdenId)) recOrdenId = ordenes[0]?.id || '';
-  const orden = recOrdenId ? listarOrdenes().find((o) => o.id === recOrdenId) : null;
+  const orden = recOrdenId ? ordenesVisiblesLista.find((o) => o.id === recOrdenId) : null;
   const pendientes = orden ? lineasPendientes(orden) : [];
-  const lista = listarRecepciones();
+  const lista = recepcionesVisibles(usuario);
   const content = qs('compras-content');
   content.innerHTML = `
     ${
-      puede('registrar_recepcion', usuario)
+      puedeOperar('recepciones', 'registrar_recepcion', usuario)
         ? `
     <div class="card">
       <h2>Registrar recepción</h2>
@@ -1244,7 +1395,7 @@ function renderRecepciones() {
     </div>
   `;
   qs('rec-exportar').addEventListener('click', () => exportarRecepciones());
-  if (puede('registrar_recepcion', usuario) && orden) {
+  if (puedeOperar('recepciones', 'registrar_recepcion', usuario) && orden) {
     qs('rec-orden').addEventListener('change', (ev) => {
       recOrdenId = ev.target.value;
       renderComprasTab();
@@ -1286,7 +1437,7 @@ function renderFacturas() {
       ${alertas.length === 0 ? '<div class="empty">Sin facturas próximas a vencer.</div>' : `<ul>${alertas.map((f) => `<li>${esc(nombreProveedor(f.proveedor_id))} · folio ${esc(f.folio)} · vence ${fecha(f.fecha_vencimiento)} (${textoPlazo(f.dias_restantes, true)}) ${badge(f.estado)}</li>`).join('')}</ul>`}
     </div>
     ${
-      puede('registrar_factura', usuario)
+      puedeOperar('facturas', 'registrar_factura', usuario)
         ? `
     <div class="card">
       <h2>Registrar factura o nota de crédito</h2>
@@ -1322,17 +1473,17 @@ function renderFacturas() {
         lista.length === 0
           ? '<div class="empty">Sin documentos registrados.</div>'
           : `
-      <table><thead><tr><th>Tipo</th><th>Folio</th><th>OC</th><th>Proveedor</th><th>Neto</th><th>IVA</th><th>Total</th><th>Vencimiento</th><th>Estado</th><th>Diferencia</th><th>Acciones</th></tr></thead><tbody>
+      <table><thead><tr><th>Tipo</th><th>Folio</th><th>OC</th><th>Proveedor</th><th>Neto</th><th>IVA</th><th>Total</th><th>Vencimiento</th><th>Estado</th><th>Diferencia</th><th>Crédito a favor</th><th>Acciones</th></tr></thead><tbody>
       ${lista
         .map(
           (
             f
-          ) => `<tr><td>${esc(f.tipo_documento)}</td><td>${esc(f.folio)}</td><td>${esc(f.orden_id)}</td><td>${esc(nombreProveedor(f.proveedor_id))}</td><td>${clp(f.neto)}</td><td>${clp(f.iva)}</td><td>${clp(f.total)}</td><td>${fecha(f.fecha_vencimiento)}</td><td>${badge(f.estado)}${f.alerta_fraude ? ' ⚠️' : ''}</td><td>${f.diferencia === undefined ? '—' : clp(f.diferencia)}</td>
+          ) => `<tr><td>${esc(f.tipo_documento)}</td><td>${esc(f.folio)}</td><td>${esc(f.orden_id)}</td><td>${esc(nombreProveedor(f.proveedor_id))}</td><td>${clp(f.neto)}</td><td>${clp(f.iva)}</td><td>${clp(f.total)}</td><td>${fecha(f.fecha_vencimiento)}</td><td>${badge(f.estado)}${f.alerta_fraude ? ' ⚠️' : ''}</td><td>${f.diferencia === undefined ? '—' : clp(f.diferencia)}</td><td>${f.credito_a_favor === undefined ? '—' : clp(f.credito_a_favor)}</td>
         <td class="actions">
           <button type="button" class="link" data-traza="factura" data-id="${esc(f.id)}">Cadena</button>
-          ${f.tipo_documento === 'factura' && ['registrada', 'con_discrepancia'].includes(f.estado) && puede('conciliar_factura', usuario) ? `<button type="button" class="link" data-fac-accion="conciliar" data-id="${esc(f.id)}">Conciliar</button>` : ''}
-          ${f.estado === 'conciliada' && puede('aprobar_pago', usuario) ? `<button type="button" class="link" data-fac-accion="aprobar" data-id="${esc(f.id)}">Aprobar pago</button>` : ''}
-          ${!['aprobada_pago', 'rechazada'].includes(f.estado) && puede('conciliar_factura', usuario) ? `<button type="button" class="link danger" data-fac-accion="rechazar" data-id="${esc(f.id)}">Rechazar</button>` : ''}
+          ${f.tipo_documento === 'factura' && ['registrada', 'con_discrepancia'].includes(f.estado) && puedeOperar('facturas', 'conciliar_factura', usuario) ? `<button type="button" class="link" data-fac-accion="conciliar" data-id="${esc(f.id)}">Conciliar</button>` : ''}
+          ${f.estado === 'conciliada' && puedeOperar('facturas', 'aprobar_pago', usuario) ? `<button type="button" class="link" data-fac-accion="aprobar" data-id="${esc(f.id)}">Aprobar pago</button>` : ''}
+          ${!['aprobada_pago', 'rechazada'].includes(f.estado) && puedeOperar('facturas', 'conciliar_factura', usuario) ? `<button type="button" class="link danger" data-fac-accion="rechazar" data-id="${esc(f.id)}">Rechazar</button>` : ''}
         </td>
       </tr>`
         )
@@ -1343,7 +1494,7 @@ function renderFacturas() {
     </div>
   `;
   qs('fac-exportar').addEventListener('click', () => exportarFacturas());
-  if (puede('registrar_factura', usuario) && orden) {
+  if (puedeOperar('facturas', 'registrar_factura', usuario) && orden) {
     qs('fac-orden').addEventListener('change', (ev) => {
       facOrdenId = ev.target.value;
       renderComprasTab();
@@ -1395,7 +1546,7 @@ function renderDevoluciones() {
   const content = qs('compras-content');
   content.innerHTML = `
     ${
-      puede('registrar_devolucion', usuario)
+      puedeOperar('devoluciones', 'registrar_devolucion', usuario)
         ? `
     <div class="card">
       <h2>Registrar devolución</h2>
@@ -1432,7 +1583,7 @@ function renderDevoluciones() {
           ) => `<tr><td>${esc(d.numero)}</td><td>${esc(d.orden_id)}</td><td>${fecha(d.fecha_devolucion)}</td><td>${clp(d.neto)}</td><td>${badge(d.estado)}</td><td>${esc(nombreUsuario(d.registrada_por))}</td>
         <td class="actions">
           <button type="button" class="link" data-traza="devolucion" data-id="${esc(d.id)}">Cadena</button>
-          ${d.estado === 'pendiente_aprobacion' && puede('aprobar_devolucion', usuario) ? `<button type="button" class="link" data-dev-accion="aprobar" data-id="${esc(d.id)}">Aprobar</button><button type="button" class="link danger" data-dev-accion="rechazar" data-id="${esc(d.id)}">Rechazar</button>` : ''}
+          ${d.estado === 'pendiente_aprobacion' && puedeOperar('devoluciones', 'aprobar_devolucion', usuario) ? `<button type="button" class="link" data-dev-accion="aprobar" data-id="${esc(d.id)}">Aprobar</button><button type="button" class="link danger" data-dev-accion="rechazar" data-id="${esc(d.id)}">Rechazar</button>` : ''}
         </td>
       </tr>`
         )
@@ -1441,7 +1592,7 @@ function renderDevoluciones() {
       }
     </div>
   `;
-  if (puede('registrar_devolucion', usuario) && orden) {
+  if (puedeOperar('devoluciones', 'registrar_devolucion', usuario) && orden) {
     qs('dev-orden').addEventListener('change', (ev) => {
       devOrdenId = ev.target.value;
       renderComprasTab();
@@ -1506,7 +1657,7 @@ function renderCatalogo() {
         <button type="button" id="cat-filtrar" class="secondary">Filtrar</button>
       </div>
       ${
-        puede('gestionar_catalogo', usuario)
+        puedeOperar('catalogo', 'gestionar_catalogo', usuario)
           ? `
       <form id="cat-form" class="card-inner">
         <h2>Agregar producto al catálogo</h2>
@@ -1535,7 +1686,7 @@ function renderCatalogo() {
           (
             c
           ) => `<tr><td>${esc(c.proveedor?.name || c.proveedor_id)}</td><td>${esc(c.producto?.nombre || c.producto_id)}</td><td>${clp(c.precio_referencia)}</td><td>${esc(c.plazo_entrega_dias)} días</td><td>${fecha(c.fecha_actualizacion)}</td><td>${c.desactualizado ? 'Sí' : 'No'}</td><td>${c.activo === false ? 'No' : 'Sí'}</td>
-        <td class="actions">${puede('gestionar_catalogo', usuario) ? `<button type="button" class="link" data-cat-accion="precio" data-id="${esc(c.id)}">Actualizar precio</button>${c.activo !== false ? `<button type="button" class="link danger" data-cat-accion="desactivar" data-id="${esc(c.id)}">Desactivar</button>` : ''}` : ''}</td>
+        <td class="actions">${puedeOperar('catalogo', 'gestionar_catalogo', usuario) ? `<button type="button" class="link" data-cat-accion="precio" data-id="${esc(c.id)}">Actualizar precio</button>${c.activo !== false ? `<button type="button" class="link danger" data-cat-accion="desactivar" data-id="${esc(c.id)}">Desactivar</button>` : ''}` : ''}</td>
       </tr>`
         )
         .join('')}
@@ -1555,7 +1706,7 @@ function renderCatalogo() {
     catFiltro = qs('cat-search').value;
     renderComprasTab();
   });
-  if (puede('gestionar_catalogo', usuario)) {
+  if (puedeOperar('catalogo', 'gestionar_catalogo', usuario)) {
     qs('cat-form').addEventListener('submit', (ev) => {
       ev.preventDefault();
       ejecutar(() =>
@@ -1596,7 +1747,7 @@ function renderEvaluaciones() {
   const content = qs('compras-content');
   content.innerHTML = `
     ${
-      puede('evaluar_proveedor', usuario)
+      puedeOperar('evaluaciones', 'evaluar_proveedor', usuario)
         ? `
     <div class="card">
       <h2>Evaluar proveedor</h2>
@@ -1634,7 +1785,7 @@ function renderEvaluaciones() {
         .join(' · ')}</p>
     </div>
   `;
-  if (puede('evaluar_proveedor', usuario) && ordenes.length > 0) {
+  if (puedeOperar('evaluaciones', 'evaluar_proveedor', usuario) && ordenes.length > 0) {
     qs('eval-orden').addEventListener('change', (ev) => {
       evalOrdenId = ev.target.value;
       renderComprasTab();

@@ -264,6 +264,46 @@ h3 { font-size: 0.95rem; font-weight: 600; margin: 0 0 8px; }
   top: 14px;
 }
 
+.side-nav-titulo {
+  margin: 0 0 12px;
+  padding: 0 12px;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.side-nav-grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.side-nav-grupo-titulo {
+  margin: 0;
+  padding: 0 12px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.side-nav-item {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.side-nav-item:hover { background: rgba(255, 255, 255, 0.09); color: #ffffff; }
+.side-nav-item.active { background: var(--accent); color: #ffffff; }
+
 .nav-module {
   display: flex;
   align-items: center;
@@ -624,6 +664,19 @@ button.danger:hover { background: color-mix(in srgb, var(--danger) 16%, var(--su
   border-radius: 999px;
 }
 
+.compras-tabs-grupo {
+  flex: 0 0 auto;
+  align-self: center;
+  margin: 0 4px 0 10px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.compras-tabs-grupo:first-child { margin-left: 0; }
+
 .compras-tab {
   flex: 0 0 auto;
   padding: 7px 12px;
@@ -640,6 +693,19 @@ button.danger:hover { background: color-mix(in srgb, var(--danger) 16%, var(--su
 .compras-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 
 .compras-content .card { max-width: none; overflow-x: auto; }
+
+.traza-cadena {
+  margin: 0 0 14px;
+  padding-left: 20px;
+}
+
+.traza-cadena li { margin-bottom: 6px; }
+
+.traza-nodo-sin-acceso {
+  color: var(--muted);
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
 
 .card-inner {
   margin-top: 14px;
@@ -733,6 +799,7 @@ button.danger:hover { background: color-mix(in srgb, var(--danger) 16%, var(--su
 .badge-anulada, .badge-rechazada, .badge-bloqueado, .badge-con_discrepancia { background: rgba(180, 35, 24, 0.12); color: #b42318; border-color: rgba(180, 35, 24, 0.18); }
 .badge-aprobada, .badge-aprobado, .badge-conciliada, .badge-aprobada_pago, .badge-recibida_total, .badge-cerrada { background: rgba(5, 150, 105, 0.12); color: #047857; border-color: rgba(5, 150, 105, 0.18); }
 .badge-enviada, .badge-en_cotizacion, .badge-emitida, .badge-recibida_parcial { background: rgba(217, 119, 6, 0.14); color: #a34a06; border-color: rgba(217, 119, 6, 0.2); }
+.badge-lectura { background: rgba(100, 116, 139, 0.12); color: var(--muted); border-color: rgba(100, 116, 139, 0.2); }
 
 :root[data-theme="dark"] .badge-anulada,
 :root[data-theme="dark"] .badge-rechazada,

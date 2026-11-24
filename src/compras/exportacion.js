@@ -1,11 +1,41 @@
-import { getUsuarioActivo } from './almacenamiento.js';
+import { exigirPermiso, getUsuarioActivo } from './almacenamiento.js';
 import { listarSolicitudes } from './solicitudes.js';
 import { listarProveedores, vistaProveedor } from './proveedores.js';
 import { listarOrdenes } from './ordenes-compra.js';
 import { listarRecepciones } from './recepciones.js';
 import { listarFacturas } from './facturas.js';
+import { listarEventos } from './trazabilidad.js';
 
 const SEPARADOR = ';';
+
+function filtrarSolicitudesPropias(usuario) {
+  return listarSolicitudes(usuario).filter((s) => s.solicitante_id === usuario?.id);
+}
+
+function filtrarOrdenesPorSolicitante(lista, usuario) {
+  if (usuario?.rol !== 'solicitante') return lista;
+  const ids = new Set(filtrarSolicitudesPropias(usuario).map((s) => s.id));
+  return lista.filter((o) => ids.has(o.solicitud_id));
+}
+
+function filtrarRecepcionesPorSolicitante(lista, usuario) {
+  if (usuario?.rol !== 'solicitante') return lista;
+  const ids = new Set(filtrarSolicitudesPropias(usuario).map((s) => s.id));
+  const ordenIds = new Set(
+    listarOrdenes()
+      .filter((o) => ids.has(o.solicitud_id))
+      .map((o) => o.id)
+  );
+  return lista.filter((r) => ordenIds.has(r.orden_id));
+}
+
+function filtrarSolicitudesPorRol(lista, usuario) {
+  if (['solicitante', 'bodega'].includes(usuario?.rol)) {
+    const propias = new Set(filtrarSolicitudesPropias(usuario).map((s) => s.id));
+    return lista.filter((s) => propias.has(s.id));
+  }
+  return lista;
+}
 
 export function escaparCSV(valor) {
   if (valor === null || valor === undefined) return '';
@@ -106,7 +136,22 @@ const COLUMNAS_FACTURAS = [
   { key: 'fecha_vencimiento', header: 'Vencimiento' },
   { key: 'neto', header: 'Neto' },
   { key: 'iva', header: 'IVA' },
-  { key: 'total', header: 'Total' }
+  { key: 'total', header: 'Total' },
+  { key: 'credito_a_favor', header: 'Crédito a favor' }
+];
+
+const COLUMNAS_TRAZABILIDAD = [
+  { key: 'fecha_hora', header: 'Fecha y hora' },
+  { key: 'entidad', header: 'Entidad' },
+  { key: 'entidad_id', header: 'Documento' },
+  { key: 'accion', header: 'Acción' },
+  { key: 'estado_anterior', header: 'Estado anterior' },
+  { key: 'estado_nuevo', header: 'Estado nuevo' },
+  { key: 'usuario_id', header: 'Usuario' },
+  {
+    header: 'Detalle',
+    valor: (evento) => String(evento.detalle ?? '').replace(/\d{6,}/g, '****')
+  }
 ];
 
 export function exportarProveedores({
@@ -135,7 +180,7 @@ export function exportarSolicitudes(
   { filtro = '', descargar = true } = {}
 ) {
   const q = String(filtro ?? '').toLowerCase();
-  const lista = listarSolicitudes(usuario).filter(
+  const lista = filtrarSolicitudesPorRol(listarSolicitudes(usuario), usuario).filter(
     (s) =>
       !q ||
       [s.numero, s.estado, s.justificacion].some((v) =>
@@ -147,9 +192,14 @@ export function exportarSolicitudes(
   return exportarListado('solicitudes', lista, COLUMNAS_SOLICITUDES, { descargar });
 }
 
-export function exportarOrdenes({ filas, filtro = '', descargar = true } = {}) {
+export function exportarOrdenes({
+  filas,
+  filtro = '',
+  descargar = true,
+  usuario = getUsuarioActivo()
+} = {}) {
   const q = String(filtro ?? '').toLowerCase();
-  const lista = (filas || listarOrdenes()).filter(
+  const lista = filtrarOrdenesPorSolicitante(filas || listarOrdenes(), usuario).filter(
     (o) =>
       !q ||
       [o.numero, o.estado, o.proveedor_id].some((v) =>
@@ -161,9 +211,14 @@ export function exportarOrdenes({ filas, filtro = '', descargar = true } = {}) {
   return exportarListado('ordenes-compra', lista, COLUMNAS_ORDENES, { descargar });
 }
 
-export function exportarRecepciones({ filas, filtro = '', descargar = true } = {}) {
+export function exportarRecepciones({
+  filas,
+  filtro = '',
+  descargar = true,
+  usuario = getUsuarioActivo()
+} = {}) {
   const q = String(filtro ?? '').toLowerCase();
-  const lista = (filas || listarRecepciones()).filter(
+  const lista = filtrarRecepcionesPorSolicitante(filas || listarRecepciones(), usuario).filter(
     (r) =>
       !q ||
       [r.numero, r.orden_id, r.estado].some((v) =>
@@ -189,10 +244,32 @@ export function exportarFacturas({ filas, filtro = '', descargar = true } = {}) 
   return exportarListado('facturas', lista, COLUMNAS_FACTURAS, { descargar });
 }
 
+export function exportarTrazabilidad({
+  entidad,
+  entidad_id,
+  filtro = '',
+  descargar = true,
+  usuario = getUsuarioActivo()
+} = {}) {
+  exigirPermiso('exportar_trazabilidad', usuario);
+  const q = String(filtro ?? '').toLowerCase();
+  const lista = listarEventos({ entidad, entidad_id }).filter(
+    (e) =>
+      !q ||
+      [e.fecha_hora, e.entidad, e.entidad_id, e.accion, e.usuario_id, e.detalle].some((v) =>
+        String(v ?? '')
+          .toLowerCase()
+          .includes(q)
+      )
+  );
+  return exportarListado('trazabilidad', lista, COLUMNAS_TRAZABILIDAD, { descargar });
+}
+
 export {
   COLUMNAS_PROVEEDORES,
   COLUMNAS_SOLICITUDES,
   COLUMNAS_ORDENES,
   COLUMNAS_RECEPCIONES,
-  COLUMNAS_FACTURAS
+  COLUMNAS_FACTURAS,
+  COLUMNAS_TRAZABILIDAD
 };

@@ -11,7 +11,7 @@ import {
   validarCondicionPago,
   hoyISO
 } from './reglas.js';
-import { registrarCambioBancario } from './trazabilidad.js';
+import { registrarCambioBancario, registrarEvento } from './trazabilidad.js';
 
 const ESTADOS_PROVEEDOR = Object.freeze(['potencial', 'aprobado', 'bloqueado']);
 const TRANSICIONES_PROVEEDOR = Object.freeze({
@@ -100,9 +100,12 @@ export function validarProveedor(datos, { idExcluir } = {}) {
 function payloadDesdeDatos(datos, previo = {}) {
   const ahora = hoyISO();
   const banco = String(datos.banco ?? previo.banco ?? '').trim();
+  const tipoCuenta = String(datos.tipo_cuenta ?? previo.tipo_cuenta ?? '').trim();
   const cuenta = String(datos.numero_cuenta ?? previo.numero_cuenta ?? '').trim();
   const cambioCuenta =
-    (banco !== (previo.banco || '') || cuenta !== (previo.numero_cuenta || '')) &&
+    (banco !== (previo.banco || '') ||
+      tipoCuenta !== (previo.tipo_cuenta || '') ||
+      cuenta !== (previo.numero_cuenta || '')) &&
     (banco || cuenta);
   return {
     name: String(datos.razon_social ?? datos.name ?? previo.name ?? '').trim(),
@@ -127,6 +130,7 @@ function payloadDesdeDatos(datos, previo = {}) {
       datos.acuerdo_plazo_mayor ?? previo.acuerdo_plazo_mayor ?? ''
     ).trim(),
     banco,
+    tipo_cuenta: tipoCuenta,
     numero_cuenta: cuenta,
     fecha_cambio_cuenta: cambioCuenta ? ahora : previo.fecha_cambio_cuenta || '',
     updatedAt: new Date().toISOString()
@@ -193,16 +197,19 @@ export function actualizarDatosBancarios(id, datos, usuario) {
   if (idx === -1) throw new Error('Proveedor no encontrado');
   const previo = lista[idx];
   const banco = String(datos.banco ?? previo.banco ?? '').trim();
+  const tipoCuenta = String(datos.tipo_cuenta ?? previo.tipo_cuenta ?? '').trim();
   const numeroCuenta = String(datos.numero_cuenta ?? previo.numero_cuenta ?? '').trim();
-  const fusionado = { ...previo, banco, numero_cuenta: numeroCuenta };
+  const fusionado = { ...previo, banco, tipo_cuenta: tipoCuenta, numero_cuenta: numeroCuenta };
   const { valid, errors } = validarProveedor(fusionado, { idExcluir: previo.id });
   if (!valid) throw new Error(Object.values(errors)[0]);
   const bancoCambio =
     banco !== String(previo.banco ?? '').trim() ||
+    tipoCuenta !== String(previo.tipo_cuenta ?? '').trim() ||
     numeroCuenta !== String(previo.numero_cuenta ?? '').trim();
   lista[idx] = {
     ...previo,
     banco,
+    tipo_cuenta: tipoCuenta,
     numero_cuenta: numeroCuenta,
     fecha_cambio_cuenta: bancoCambio ? hoyISO() : previo.fecha_cambio_cuenta || '',
     updatedAt: new Date().toISOString()
@@ -228,6 +235,27 @@ export function cambiarEstadoProveedor(id, nuevoEstado, usuario) {
     updatedAt: new Date().toISOString()
   };
   saveEntities(lista);
+  return lista[idx];
+}
+
+export function desbloquearProveedor(id, usuario) {
+  exigirPermiso('desbloquear_proveedor', usuario);
+  const lista = loadEntities();
+  const idx = lista.findIndex((p) => p.id === id || p.entity_id === id);
+  if (idx === -1) throw new Error('Proveedor no encontrado');
+  const anterior = lista[idx].estado_proveedor || 'potencial';
+  if (anterior !== 'bloqueado') throw new Error('Solo se puede desbloquear un proveedor bloqueado');
+  lista[idx] = {
+    ...lista[idx],
+    estado_proveedor: 'aprobado',
+    updatedAt: new Date().toISOString()
+  };
+  saveEntities(lista);
+  registrarEvento('proveedor', lista[idx].entity_id, 'desbloqueo', {
+    usuario,
+    anterior,
+    nuevo: 'aprobado'
+  });
   return lista[idx];
 }
 
