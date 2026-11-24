@@ -44,7 +44,7 @@ describe('vista de compras', () => {
     expect(qs('sesion-indicador').hidden).toBe(false);
     expect(qs('sesion-indicador').textContent).toContain('Solicitante');
     expect(qs('rol-activo')).toBeNull();
-    expect(qs('compras-root').querySelectorAll('.compras-tabs [data-tab]').length).toBe(5);
+    expect(document.querySelectorAll('.side-nav [data-nav-tab]').length).toBe(5);
   });
 
   it('muestra indicador de sesión de solo lectura para roles no admin', () => {
@@ -56,15 +56,15 @@ describe('vista de compras', () => {
   it('navega entre las pestañas de compras', async () => {
     await activarComprador();
 
-    qs('compras-root').querySelector('[data-tab="proveedores"]').click();
+    document.querySelector('[data-nav-tab="proveedores"]').click();
     expect(qs('compras-content').textContent).toContain('Proveedores');
     expect(qs('compras-content').querySelectorAll('tbody tr').length).toBe(8);
 
-    qs('compras-root').querySelector('[data-tab="solicitudes"]').click();
+    document.querySelector('[data-nav-tab="solicitudes"]').click();
     expect(qs('compras-content').textContent).toContain('Solicitudes');
     expect(qs('compras-content').querySelectorAll('tbody tr').length).toBeGreaterThan(0);
 
-    qs('compras-root').querySelector('[data-tab="panel"]').click();
+    document.querySelector('[data-nav-tab="panel"]').click();
     expect(qs('compras-content').textContent).toContain('Acciones rápidas');
   });
 
@@ -100,7 +100,7 @@ describe('vista de compras', () => {
     const { boot } = await import('../../../src/app.js');
     await boot();
 
-    qs('compras-root').querySelector('[data-tab="proveedores"]').click();
+    document.querySelector('[data-nav-tab="proveedores"]').click();
     const texto = qs('compras-content').textContent;
     expect(texto).toContain('No registrado');
     expect(texto).not.toContain('555444333');
@@ -118,7 +118,7 @@ describe('vista de compras', () => {
     const { boot } = await import('../../../src/app.js');
     await boot();
 
-    qs('compras-root').querySelector('[data-tab="facturas"]').click();
+    document.querySelector('[data-nav-tab="facturas"]').click();
     const itemAlerta = [...qs('compras-content').querySelectorAll('li')].find((li) =>
       li.textContent.includes('folio 1001')
     );
@@ -128,7 +128,7 @@ describe('vista de compras', () => {
   });
 
   it('abre la cadena documental y el historial desde una solicitud', () => {
-    qs('compras-root').querySelector('[data-tab="solicitudes"]').click();
+    document.querySelector('[data-nav-tab="solicitudes"]').click();
 
     const boton = qs('compras-content').querySelector('[data-traza="solicitud"]');
     expect(boton).toBeTruthy();
@@ -189,7 +189,7 @@ describe('accesibilidad del módulo de compras', () => {
   it('asocia una etiqueta legible a cada campo de las diez vistas', async () => {
     await activarAdmin();
     VISTAS.forEach((vista) => {
-      qs('compras-root').querySelector(`[data-tab="${vista}"]`).click();
+      document.querySelector(`[data-nav-tab="${vista}"]`).click();
       const controles = [
         ...qs('compras-content').querySelectorAll('input:not([type="hidden"]), select, textarea')
       ];
@@ -203,7 +203,7 @@ describe('accesibilidad del módulo de compras', () => {
 
   it('permite enfocar los controles con teclado y muestra el indicador de foco', async () => {
     await activarComprador();
-    qs('compras-root').querySelector('[data-tab="proveedores"]').click();
+    document.querySelector('[data-nav-tab="proveedores"]').click();
     const boton = qs('prov-nuevo');
     boton.focus();
     expect(document.activeElement).toBe(boton);
@@ -222,7 +222,7 @@ describe('accesibilidad del módulo de compras', () => {
 
   it('muestra el error de validación junto al campo afectado', async () => {
     await activarComprador();
-    qs('compras-root').querySelector('[data-tab="proveedores"]').click();
+    document.querySelector('[data-nav-tab="proveedores"]').click();
     qs('prov-nuevo').click();
     qs('prov-razon').value = 'Proveedor Prueba SpA';
     qs('prov-tipo').value = 'jurídica';

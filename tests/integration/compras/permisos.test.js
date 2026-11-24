@@ -44,11 +44,13 @@ function qs(id) {
 }
 
 function tabsVisibles() {
-  return [...document.querySelectorAll('.compras-tabs [data-tab]')].map((b) => b.dataset.tab);
+  return [...document.querySelectorAll('.side-nav [data-nav-tab]')].map(
+    (b) => b.dataset.navTab
+  );
 }
 
 function abrirVista(id) {
-  const boton = document.querySelector(`.compras-tabs [data-tab="${id}"]`);
+  const boton = document.querySelector(`.side-nav [data-nav-tab="${id}"]`);
   expect(boton, `vista ${id}`).toBeTruthy();
   boton.click();
 }

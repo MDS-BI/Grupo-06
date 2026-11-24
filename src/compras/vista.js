@@ -382,7 +382,7 @@ export function renderComprasView() {
             <p class="side-nav-grupo-titulo">${esc(grupo)}</p>
             ${items
               .map(
-                (t) => `<button type="button" id="nav-tab-${t.id}" class="side-nav-item${t.id === tab ? ' active' : ''}" data-nav-tab="${t.id}"${t.id === tab ? ' aria-current="page"' : ''} tabindex="${t.id === tab ? 0 : -1}">${esc(t.label)}</button>`
+                (t) => `<button type="button" id="nav-tab-${t.id}" class="side-nav-item${t.id === tab ? ' active' : ''}" data-nav-tab="${t.id}" aria-controls="compras-content"${t.id === tab ? ' aria-current="page"' : ''}>${esc(t.label)}</button>`
               )
               .join('')}
           </div>`;
@@ -390,19 +390,6 @@ export function renderComprasView() {
         .join('')}
     `;
   }
-
-  const grupos = Object.entries(GRUPOS)
-    .map(([grupo, ids]) => {
-      const items = visibles.filter((t) => ids.includes(t.id));
-      if (!items.length) return '';
-      return `<span class="compras-tabs-grupo" role="presentation" aria-hidden="true">${esc(grupo)}</span>${items
-        .map(
-          (t) =>
-            `<button type="button" role="tab" id="tab-${t.id}" class="compras-tab${t.id === tab ? ' active' : ''}" data-tab="${t.id}" aria-controls="compras-content" aria-selected="${t.id === tab}" tabindex="${t.id === tab ? 0 : -1}">${esc(t.label)}</button>`
-        )
-        .join('')}`;
-    })
-    .join('');
 
   root.innerHTML = `
     <div id="compras-aviso" class="compras-aviso" role="alert" aria-live="assertive" tabindex="-1" hidden></div>
@@ -420,30 +407,12 @@ export function renderComprasView() {
       </div>
     </div>
 
-    <nav class="compras-tabs" role="tablist" aria-label="Secciones de compras">${grupos}</nav>
-    <div id="compras-content" class="compras-content" role="tabpanel" aria-labelledby="tab-${tab}" tabindex="0"></div>
+    <div id="compras-content" class="compras-content" role="region" aria-labelledby="compras-titulo" tabindex="0"></div>
   `;
 
-  const cablearNavegacion = (botones, clave, prefijo) => {
-    botones.forEach((btn, indice) => {
-      btn.addEventListener('click', () => irA(btn.dataset[clave]));
-      btn.addEventListener('keydown', (evento) => {
-        if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(evento.key)) return;
-        evento.preventDefault();
-        let destino = indice;
-        if (evento.key === 'ArrowRight') destino = (indice + 1) % botones.length;
-        if (evento.key === 'ArrowLeft') destino = (indice - 1 + botones.length) % botones.length;
-        if (evento.key === 'Home') destino = 0;
-        if (evento.key === 'End') destino = botones.length - 1;
-        const id = botones[destino].dataset[clave];
-        irA(id);
-        qs(`${prefijo}-${id}`)?.focus();
-      });
-    });
-  };
-
-  cablearNavegacion([...root.querySelectorAll('.compras-tabs [data-tab]')], 'tab', 'tab');
-  cablearNavegacion(nav ? [...nav.querySelectorAll('[data-nav-tab]')] : [], 'navTab', 'nav-tab');
+  (nav ? [...nav.querySelectorAll('[data-nav-tab]')] : []).forEach((btn) => {
+    btn.addEventListener('click', () => irA(btn.dataset.navTab));
+  });
 
   renderComprasTab();
   renderTrazaCadena();

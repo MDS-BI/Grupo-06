@@ -142,11 +142,13 @@ describe('acceso a la interfaz de compras', () => {
     expect(qs('view-compras').getAttribute('aria-labelledby')).toBe('compras-titulo');
     expect(raiz.querySelector('h1').id).toBe('compras-titulo');
 
-    const pestañas = [...raiz.querySelectorAll('[role="tab"]')];
-    expect(pestañas.length).toBe(5);
-    expect(pestañas.every((p) => p.getAttribute('aria-controls') === 'compras-content')).toBe(true);
-    expect(pestañas.filter((p) => p.tabIndex === 0).length).toBe(1);
-    expect(qs('compras-content').getAttribute('aria-labelledby')).toBe('tab-panel');
+    const navegacion = [...document.querySelectorAll('.side-nav [data-nav-tab]')];
+    expect(navegacion.length).toBe(5);
+    expect(navegacion.every((p) => p.getAttribute('aria-controls') === 'compras-content')).toBe(
+      true
+    );
+    expect(navegacion.filter((p) => p.getAttribute('aria-current') === 'page').length).toBe(1);
+    expect(qs('compras-content').getAttribute('aria-labelledby')).toBe('compras-titulo');
 
     expect(raiz.querySelectorAll('label:not([for])').length).toBe(0);
     expect([...raiz.querySelectorAll('th')].every((th) => th.getAttribute('scope') === 'col')).toBe(

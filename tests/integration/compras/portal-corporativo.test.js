@@ -192,16 +192,16 @@ describe('portal corporativo de acceso', () => {
       devoluciones: 2
     };
     for (const [vista, cantidad] of Object.entries(conteos)) {
-      qs('compras-root').querySelector(`[data-tab="${vista}"]`).click();
+      document.querySelector(`[data-nav-tab="${vista}"]`).click();
       expect(qs('compras-content').querySelectorAll('tbody tr'), vista).toHaveLength(cantidad);
     }
 
-    qs('compras-root').querySelector('[data-tab="cotizaciones"]').click();
+    document.querySelector('[data-nav-tab="cotizaciones"]').click();
     qs('cot-solicitud').value = 'sol-004';
     qs('cot-solicitud').dispatchEvent(new dom.window.Event('change', { bubbles: true }));
     expect(qs('compras-content').querySelectorAll('tbody tr')).toHaveLength(5);
 
-    qs('compras-root').querySelector('[data-tab="panel"]').click();
+    document.querySelector('[data-nav-tab="panel"]').click();
     expect(qs('compras-content').textContent).toContain('Acciones rápidas');
   });
 });

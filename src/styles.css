@@ -1055,63 +1055,6 @@ button.danger:hover {
   letter-spacing: 0.04em;
 }
 
-.compras-tabs {
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 6px;
-  margin-bottom: 18px;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 8px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--muted) 35%, transparent) transparent;
-}
-
-.compras-tabs::-webkit-scrollbar {
-  height: 6px;
-}
-.compras-tabs::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--muted) 35%, transparent);
-  border-radius: 999px;
-}
-
-.compras-tabs-grupo {
-  flex: 0 0 auto;
-  align-self: center;
-  margin: 0 4px 0 10px;
-  color: var(--muted);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.compras-tabs-grupo:first-child { margin-left: 0; }
-
-.compras-tab {
-  flex: 0 0 auto;
-  padding: 7px 12px;
-  border-radius: 999px;
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--muted);
-  font-weight: 600;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.compras-tab:hover {
-  color: var(--text);
-  border-color: var(--border);
-}
-.compras-tab.active {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
-}
-
 .compras-content .card {
   max-width: none;
   overflow-x: auto;
