@@ -16,8 +16,8 @@ export const USUARIOS = Object.freeze({
 
 export function iniciarSesionPorRol(rol, nombre) {
   const candidatos = Object.values(USUARIOS).filter((usuario) => usuario.rol === rol);
-  const usuario =
-    (nombre && candidatos.find((c) => c.nombre === nombre)) || candidatos[0] || { id: `u-${rol}`, rol };
+  const usuario = (nombre && candidatos.find((c) => c.nombre === nombre)) ||
+    candidatos[0] || { id: `u-${rol}`, rol };
   setSesion({ usuario_id: usuario.id, rol });
   marcarAutenticacion(true);
   return usuario;

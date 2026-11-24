@@ -30,12 +30,14 @@
     },
     {
       "id": "u-bodega-1",
+      "nombre": "Encargado de Bodega",
       "rol": "bodega",
       "centro_costo_id": "cc-004",
       "email": "bodega@example.com"
     },
     {
       "id": "u-admin-1",
+      "nombre": "Administrador TI",
       "rol": "admin_ti",
       "centro_costo_id": "cc-003",
       "email": "admin.ti@example.com"

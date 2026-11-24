@@ -1,9 +1,11 @@
-import { getUsuarioActivo, asegurarSemilla, etiquetaUsuario, leer, puede } from './almacenamiento.js';
 import {
-  hoyISO,
-  UMBRAL_COTIZACIONES,
-  validarVisibilidadDatosBancarios
-} from './reglas.js';
+  getUsuarioActivo,
+  asegurarSemilla,
+  etiquetaUsuario,
+  leer,
+  puede
+} from './almacenamiento.js';
+import { hoyISO, UMBRAL_COTIZACIONES, validarVisibilidadDatosBancarios } from './reglas.js';
 import {
   listarProveedores,
   buscarProveedores,
@@ -71,6 +73,7 @@ import { listarEvaluaciones, registrarEvaluacion, promedioProveedor } from './ev
 import { construirPanel } from './panel.js';
 import { cadenaDocumental, historialDe } from './trazabilidad.js';
 import { GRUPOS, nivelVista, vistasVisibles } from './visibilidad.js';
+import { abrirAsistente } from './asistente.js';
 import {
   exportarProveedores,
   exportarSolicitudes,
@@ -293,7 +296,9 @@ function mostrarErrorCampo(formulario, mensaje) {
     }
   }
   if (!control) {
-    control = formulario.querySelector('input:not([disabled]), select:not([disabled]), textarea:not([disabled])');
+    control = formulario.querySelector(
+      'input:not([disabled]), select:not([disabled]), textarea:not([disabled])'
+    );
   }
   const id = `error-campo-${++contadorEtiquetas}`;
   const error = document.createElement('p');
@@ -499,16 +504,14 @@ function iconoSvg(nombre, tamano = 20) {
       '<path d="M21 8l-9-5-9 5 9 5 9-5z"></path><path d="M3 8v8l9 5 9-5V8"></path><path d="M12 13v8"></path>',
     factura:
       '<path d="M14 2H6a2 2 0 0 0-2 2v16l3-2 3 2 3-2 3 2V8z"></path><path d="M14 2v6h6"></path><path d="M8 13h8"></path><path d="M8 17h5"></path>',
-    pago:
-      '<circle cx="12" cy="12" r="9"></circle><path d="M8.5 15.5c.7.9 1.9 1.5 3.5 1.5 2 0 3.5-1 3.5-2.6 0-1.5-1.1-2.3-3.2-2.7l-1-.2c-1.7-.3-2.5-.9-2.5-2 0-1.3 1.3-2.2 3-2.2 1.4 0 2.5.5 3.1 1.3"></path><path d="M12 6v2"></path><path d="M12 17v2"></path>',
+    pago: '<circle cx="12" cy="12" r="9"></circle><path d="M8.5 15.5c.7.9 1.9 1.5 3.5 1.5 2 0 3.5-1 3.5-2.6 0-1.5-1.1-2.3-3.2-2.7l-1-.2c-1.7-.3-2.5-.9-2.5-2 0-1.3 1.3-2.2 3-2.2 1.4 0 2.5.5 3.1 1.3"></path><path d="M12 6v2"></path><path d="M12 17v2"></path>',
     proveedor:
       '<path d="M3 21h18"></path><path d="M5 21V7l8-4 6 3v15"></path><path d="M9 10h1"></path><path d="M14 10h1"></path><path d="M9 14h1"></path><path d="M14 14h1"></path><path d="M10 21v-4h4v4"></path>',
-    comprometido:
-      '<path d="M3 17l5-5 4 4 7-9"></path><path d="M14 7h5v5"></path>',
-    abiertas:
-      '<circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path>',
-    aprobadas:
-      '<path d="M20 6L9 17l-5-5"></path>',
+    comprometido: '<path d="M3 17l5-5 4 4 7-9"></path><path d="M14 7h5v5"></path>',
+    abiertas: '<circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path>',
+    aprobadas: '<path d="M20 6L9 17l-5-5"></path>',
+    asistente:
+      '<path d="M21 12a8 8 0 0 1-8 8H8l-4 2 1.2-4A8 8 0 1 1 21 12z"></path><path d="M12 8l1.1 2.4L15.5 11l-2.4 1.1L12 14.5l-1.1-2.4L8.5 11l2.4-.6L12 8z"></path>',
     montoPago:
       '<rect x="2" y="5" width="20" height="14" rx="2"></rect><path d="M2 10h20"></path><path d="M6 15h4"></path>'
   };
@@ -527,11 +530,23 @@ function resumenFlujo() {
     {
       id: 'solicitudes',
       label: 'Solicitudes',
-      valor: solicitudes.filter((s) => ['aprobada', 'en_cotizacion', 'adjudicada'].includes(s.estado)).length,
+      valor: solicitudes.filter((s) =>
+        ['aprobada', 'en_cotizacion', 'adjudicada'].includes(s.estado)
+      ).length,
       total: solicitudes.length
     },
-    { id: 'ordenes', label: 'Órdenes', valor: ordenes.filter((o) => o.estado !== 'anulada').length, total: ordenes.length },
-    { id: 'recepciones', label: 'Recepciones', valor: recepciones.length, total: Math.max(recepciones.length, ordenes.length) },
+    {
+      id: 'ordenes',
+      label: 'Órdenes',
+      valor: ordenes.filter((o) => o.estado !== 'anulada').length,
+      total: ordenes.length
+    },
+    {
+      id: 'recepciones',
+      label: 'Recepciones',
+      valor: recepciones.length,
+      total: Math.max(recepciones.length, ordenes.length)
+    },
     {
       id: 'facturas',
       label: 'Facturas',
@@ -677,6 +692,14 @@ function renderPanel() {
         </button>`
           )
           .join('')}
+        <button type="button" class="action-card action-card--asistente" data-accion="asistente-ia">
+          <span class="action-card-icon" aria-hidden="true">${iconoSvg('asistente')}</span>
+          <span class="action-card-body">
+            <strong>Asistente IA de Compras</strong>
+            <span class="muted">Consulta estados y ejecuta acciones permitidas según tu rol.</span>
+            <span class="action-card-badge">IA Corporativa</span>
+          </span>
+        </button>
       </div>
     </div>
     <div class="card">
@@ -734,6 +757,12 @@ function renderPanel() {
       }
     </div>
   `;
+  content
+    .querySelectorAll('[data-ir]')
+    .forEach((btn) => btn.addEventListener('click', () => irA(btn.dataset.ir)));
+  content
+    .querySelectorAll('[data-accion="asistente-ia"]')
+    .forEach((btn) => btn.addEventListener('click', abrirAsistente));
 }
 
 function renderProveedores() {
@@ -1189,19 +1218,21 @@ function renderCotizaciones() {
           qs('cot-form').querySelector(`.cot-precio[data-index="${i}"]`).value
         )
       }));
-      ejecutar(() =>
-        registrarCotizacion(
-          {
-            solicitud_id: solicitud.id,
-            proveedor_id: qs('cot-proveedor').value,
-            plazo_entrega_dias: qs('cot-plazo').value,
-            condicion_pago_dias: qs('cot-condicion').value,
-            fecha_validez: qs('cot-validez').value,
-            lineas
-          },
-          usuario
-        )
-      , qs('cot-form'));
+      ejecutar(
+        () =>
+          registrarCotizacion(
+            {
+              solicitud_id: solicitud.id,
+              proveedor_id: qs('cot-proveedor').value,
+              plazo_entrega_dias: qs('cot-plazo').value,
+              condicion_pago_dias: qs('cot-condicion').value,
+              fecha_validez: qs('cot-validez').value,
+              lineas
+            },
+            usuario
+          ),
+        qs('cot-form')
+      );
     });
   }
   content.querySelectorAll('[data-cot-accion]').forEach((btn) =>
@@ -1304,19 +1335,21 @@ function renderOrdenes() {
     });
     qs('oc-form').addEventListener('submit', (ev) => {
       ev.preventDefault();
-      ejecutar(() =>
-        emitirOrdenCompra(
-          {
-            solicitud_id: qs('oc-solicitud').value,
-            cotizacion_id: qs('oc-cotizacion').value || null,
-            proveedor_id: qs('oc-proveedor').value || null,
-            condicion_pago_dias: qs('oc-condicion').value,
-            fecha_entrega_prometida: qs('oc-entrega').value || null,
-            moneda: qs('oc-moneda').value
-          },
-          usuario
-        )
-      , qs('oc-form'));
+      ejecutar(
+        () =>
+          emitirOrdenCompra(
+            {
+              solicitud_id: qs('oc-solicitud').value,
+              cotizacion_id: qs('oc-cotizacion').value || null,
+              proveedor_id: qs('oc-proveedor').value || null,
+              condicion_pago_dias: qs('oc-condicion').value,
+              fecha_entrega_prometida: qs('oc-entrega').value || null,
+              moneda: qs('oc-moneda').value
+            },
+            usuario
+          ),
+        qs('oc-form')
+      );
     });
   }
   content.querySelectorAll('[data-oc-accion]').forEach((btn) =>
@@ -1410,12 +1443,14 @@ function renderRecepciones() {
           motivo_rechazo: fila.querySelector('.rec-motivo').value
         }))
         .filter((l) => l.cantidad_recibida > 0);
-      ejecutar(() =>
-        registrarRecepcion(
-          { orden_id: orden.id, lineas, observaciones: qs('rec-obs').value },
-          usuario
-        )
-      , qs('rec-form'));
+      ejecutar(
+        () =>
+          registrarRecepcion(
+            { orden_id: orden.id, lineas, observaciones: qs('rec-obs').value },
+            usuario
+          ),
+        qs('rec-form')
+      );
     });
   }
 }
@@ -1501,21 +1536,23 @@ function renderFacturas() {
     });
     qs('fac-form').addEventListener('submit', (ev) => {
       ev.preventDefault();
-      ejecutar(() =>
-        registrarFactura(
-          {
-            orden_id: orden.id,
-            tipo_documento: qs('fac-tipo').value,
-            folio: qs('fac-folio').value,
-            neto: qs('fac-neto').value,
-            iva: qs('fac-iva').value,
-            total: qs('fac-total').value,
-            fecha_recepcion: qs('fac-fecha').value,
-            factura_referencia_id: qs('fac-referencia').value || null
-          },
-          usuario
-        )
-      , qs('fac-form'));
+      ejecutar(
+        () =>
+          registrarFactura(
+            {
+              orden_id: orden.id,
+              tipo_documento: qs('fac-tipo').value,
+              folio: qs('fac-folio').value,
+              neto: qs('fac-neto').value,
+              iva: qs('fac-iva').value,
+              total: qs('fac-total').value,
+              fecha_recepcion: qs('fac-fecha').value,
+              factura_referencia_id: qs('fac-referencia').value || null
+            },
+            usuario
+          ),
+        qs('fac-form')
+      );
     });
   }
   content.querySelectorAll('[data-fac-accion]').forEach((btn) =>
@@ -1606,12 +1643,14 @@ function renderDevoluciones() {
           motivo: fila.querySelector('.dev-motivo').value
         }))
         .filter((l) => l.cantidad > 0);
-      ejecutar(() =>
-        registrarDevolucion(
-          { orden_id: orden.id, lineas, observaciones: qs('dev-obs').value },
-          usuario
-        )
-      , qs('dev-form'));
+      ejecutar(
+        () =>
+          registrarDevolucion(
+            { orden_id: orden.id, lineas, observaciones: qs('dev-obs').value },
+            usuario
+          ),
+        qs('dev-form')
+      );
     });
   }
   content.querySelectorAll('[data-dev-accion]').forEach((btn) =>
@@ -1709,17 +1748,19 @@ function renderCatalogo() {
   if (puedeOperar('catalogo', 'gestionar_catalogo', usuario)) {
     qs('cat-form').addEventListener('submit', (ev) => {
       ev.preventDefault();
-      ejecutar(() =>
-        agregarProductoCatalogo(
-          {
-            proveedor_id: qs('cat-form-proveedor').value,
-            producto_id: qs('cat-form-producto').value,
-            precio_referencia: qs('cat-form-precio').value,
-            plazo_entrega_dias: qs('cat-form-plazo').value
-          },
-          usuario
-        )
-      , qs('cat-form'));
+      ejecutar(
+        () =>
+          agregarProductoCatalogo(
+            {
+              proveedor_id: qs('cat-form-proveedor').value,
+              producto_id: qs('cat-form-producto').value,
+              precio_referencia: qs('cat-form-precio').value,
+              plazo_entrega_dias: qs('cat-form-plazo').value
+            },
+            usuario
+          ),
+        qs('cat-form')
+      );
     });
   }
   content.querySelectorAll('[data-cat-accion]').forEach((btn) =>
@@ -1792,17 +1833,19 @@ function renderEvaluaciones() {
     });
     qs('eval-form').addEventListener('submit', (ev) => {
       ev.preventDefault();
-      ejecutar(() =>
-        registrarEvaluacion(
-          {
-            orden_id: qs('eval-orden').value,
-            puntaje_calidad: qs('eval-calidad').value,
-            puntaje_atencion: qs('eval-atencion').value,
-            comentario: qs('eval-comentario').value
-          },
-          usuario
-        )
-      , qs('eval-form'));
+      ejecutar(
+        () =>
+          registrarEvaluacion(
+            {
+              orden_id: qs('eval-orden').value,
+              puntaje_calidad: qs('eval-calidad').value,
+              puntaje_atencion: qs('eval-atencion').value,
+              comentario: qs('eval-comentario').value
+            },
+            usuario
+          ),
+        qs('eval-form')
+      );
     });
   }
 }
