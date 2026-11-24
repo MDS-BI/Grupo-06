@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="2500" height="1750" viewBox="0 0 2500 1750" role="img" aria-labelledby="titulo descripcion">
+  <title id="titulo">Modelo Entidad-Relación del módulo Adquisiciones y Compras</title>
+  <desc id="descripcion">Diagrama con las doce entidades de la semilla, sus atributos clave PK, FK y UK, y la tabla completa de cardinalidades. Fondo blanco para uso en informes.</desc>
+  <rect width="2500" height="1750" fill="#ffffff"/>
+  <rect x="0" y="0" width="2500" height="118" fill="#f8fafc"/>
+  <path d="M 0 118 H 2500" stroke="#cbd5e1" stroke-width="1.4"/>
+  <text x="40" y="48" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="32" font-weight="700" fill="#0f172a" text-anchor="start">Modelo Entidad-Relación — Adquisiciones y Compras</text>
+  <text x="42" y="76" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="14.5" font-weight="400" fill="#475569" text-anchor="start">12 entidades de src/compras/semilla.json · atributos clave y cardinalidades según data-model.md</text>
+  <rect x="40" y="86" width="650" height="24" rx="12" fill="#ecfdf5" stroke="#a7f3d0"/>
+  <text x="365" y="102" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.5" font-weight="600" fill="#065f46" text-anchor="middle">Flujo operativo: solicitud → cotización → OC → recepción → factura → devolución</text>
+  <rect x="780" y="78" width="160" height="30" rx="15" fill="#dbeafe" stroke="#93c5fd"/><text x="860" y="98" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.5" font-weight="600" fill="#1e3a8a" text-anchor="middle">solicitudes</text><text x="953" y="98" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700" fill="#2563eb" text-anchor="middle">→</text>
+<rect x="985" y="78" width="160" height="30" rx="15" fill="#dbeafe" stroke="#93c5fd"/><text x="1065" y="98" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.5" font-weight="600" fill="#1e3a8a" text-anchor="middle">cotizaciones</text><text x="1158" y="98" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700" fill="#2563eb" text-anchor="middle">→</text>
+<rect x="1190" y="78" width="160" height="30" rx="15" fill="#dbeafe" stroke="#93c5fd"/><text x="1270" y="98" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.5" font-weight="600" fill="#1e3a8a" text-anchor="middle">ordenes</text><text x="1363" y="98" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700" fill="#2563eb" text-anchor="middle">→</text>
+<rect x="1395" y="78" width="160" height="30" rx="15" fill="#dbeafe" stroke="#93c5fd"/><text x="1475" y="98" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.5" font-weight="600" fill="#1e3a8a" text-anchor="middle">recepciones</text><text x="1568" y="98" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700" fill="#2563eb" text-anchor="middle">→</text>
+<rect x="1600" y="78" width="160" height="30" rx="15" fill="#dbeafe" stroke="#93c5fd"/><text x="1680" y="98" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.5" font-weight="600" fill="#1e3a8a" text-anchor="middle">facturas</text><text x="1773" y="98" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700" fill="#2563eb" text-anchor="middle">→</text>
+<rect x="1805" y="78" width="160" height="30" rx="15" fill="#dbeafe" stroke="#93c5fd"/><text x="1885" y="98" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.5" font-weight="600" fill="#1e3a8a" text-anchor="middle">devoluciones</text>
+  <text x="42" y="140" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="13" font-weight="700" fill="#475569" text-anchor="start">ENTIDADES — claves y atributos de control</text>
+  
+    <g>
+      <rect x="40" y="150" width="490" height="290" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.4"/>
+      <path d="M 40 194 H 530" stroke="#cbd5e1" stroke-width="1.2"/>
+      <rect x="40" y="150" width="7" height="290" rx="3.5" fill="#2563eb" opacity="0.9"/>
+      <text x="60" y="178" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="17" font-weight="700" fill="#0f172a" text-anchor="start">centros_costo</text>
+      <text x="512" y="178" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#475569" text-anchor="end">Áreas internas</text>
+      <rect x="58" y="207" width="34" height="19" rx="5" fill="#1d4ed8"/><text x="75" y="220.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">PK</text><text x="102" y="221" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">id</text>
+<rect x="58" y="227.5" width="34" height="19" rx="5" fill="#b45309"/><text x="75" y="241" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">UK</text><text x="102" y="241.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">codigo</text>
+<rect x="58" y="248" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="75" y="261.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="102" y="262" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">nombre, activo</text>
+<rect x="58" y="268.5" width="34" height="19" rx="5" fill="#0f766e"/><text x="75" y="282" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="102" y="282.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">← usuarios.centro_costo_id</text>
+<rect x="58" y="289" width="34" height="19" rx="5" fill="#0f766e"/><text x="75" y="302.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="102" y="303" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">← solicitudes.centro_costo_id</text>
+    </g>
+
+    <g>
+      <rect x="565" y="150" width="490" height="290" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.4"/>
+      <path d="M 565 194 H 1055" stroke="#cbd5e1" stroke-width="1.2"/>
+      <rect x="565" y="150" width="7" height="290" rx="3.5" fill="#2563eb" opacity="0.9"/>
+      <text x="585" y="178" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="17" font-weight="700" fill="#0f172a" text-anchor="start">usuarios</text>
+      <text x="1037" y="178" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#475569" text-anchor="end">Personas internas</text>
+      <rect x="583" y="207" width="34" height="19" rx="5" fill="#1d4ed8"/><text x="600" y="220.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">PK</text><text x="627" y="221" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">id</text>
+<rect x="583" y="227.5" width="34" height="19" rx="5" fill="#b45309"/><text x="600" y="241" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">UK</text><text x="627" y="241.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">email</text>
+<rect x="583" y="248" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="600" y="261.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="627" y="262" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">nombre, rol</text>
+<rect x="583" y="268.5" width="34" height="19" rx="5" fill="#0f766e"/><text x="600" y="282" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="627" y="282.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">centro_costo_id → centros_costo</text>
+<rect x="583" y="289" width="34" height="19" rx="5" fill="#0f766e"/><text x="600" y="302.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="627" y="303" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">← solicitudes (solicitante_id)</text>
+<rect x="583" y="309.5" width="34" height="19" rx="5" fill="#0f766e"/><text x="600" y="323" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="627" y="323.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">← solicitudes (aprob./rech./anul.)</text>
+<rect x="583" y="330" width="34" height="19" rx="5" fill="#0f766e"/><text x="600" y="343.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="627" y="344" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">← ordenes.emitida_por</text>
+<rect x="583" y="350.5" width="34" height="19" rx="5" fill="#0f766e"/><text x="600" y="364" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="627" y="364.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">← recepciones.registrada_por</text>
+<rect x="583" y="371" width="34" height="19" rx="5" fill="#0f766e"/><text x="600" y="384.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="627" y="385" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">← facturas/devoluciones/evaluaciones</text>
+<rect x="583" y="391.5" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="600" y="405" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="627" y="405.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">rol fijo durante la sesión</text>
+    </g>
+
+    <g>
+      <rect x="1090" y="150" width="490" height="290" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.4"/>
+      <path d="M 1090 194 H 1580" stroke="#cbd5e1" stroke-width="1.2"/>
+      <rect x="1090" y="150" width="7" height="290" rx="3.5" fill="#2563eb" opacity="0.9"/>
+      <text x="1110" y="178" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="17" font-weight="700" fill="#0f172a" text-anchor="start">productos</text>
+      <text x="1562" y="178" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#475569" text-anchor="end">Maestro compartido</text>
+      <rect x="1108" y="207" width="34" height="19" rx="5" fill="#1d4ed8"/><text x="1125" y="220.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">PK</text><text x="1152" y="221" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">id</text>
+<rect x="1108" y="227.5" width="34" height="19" rx="5" fill="#b45309"/><text x="1125" y="241" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">UK</text><text x="1152" y="241.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">codigo (SKU)</text>
+<rect x="1108" y="248" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="1125" y="261.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="1152" y="262" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">nombre, categoria, unidad</text>
+<rect x="1108" y="268.5" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="1125" y="282" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="1152" y="282.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">activo, precio_referencia</text>
+<rect x="1108" y="289" width="34" height="19" rx="5" fill="#0f766e"/><text x="1125" y="302.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="1152" y="303" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">← catalogo.producto_id</text>
+<rect x="1108" y="309.5" width="34" height="19" rx="5" fill="#0f766e"/><text x="1125" y="323" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="1152" y="323.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">← lineas[].producto_id (5 documentos)</text>
+<rect x="1108" y="330" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="1125" y="343.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="1152" y="344" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">Compras solo lee el maestro</text>
+    </g>
+
+    <g>
+      <rect x="40" y="470" width="490" height="290" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.4"/>
+      <path d="M 40 514 H 530" stroke="#cbd5e1" stroke-width="1.2"/>
+      <rect x="40" y="470" width="7" height="290" rx="3.5" fill="#2563eb" opacity="0.9"/>
+      <text x="60" y="498" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="17" font-weight="700" fill="#0f172a" text-anchor="start">proveedores</text>
+      <text x="512" y="498" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#475569" text-anchor="end">Maestro de adquisiciones</text>
+      <rect x="58" y="527" width="34" height="19" rx="5" fill="#1d4ed8"/><text x="75" y="540.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">PK</text><text x="102" y="541" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">entity_id</text>
+<rect x="58" y="547.5" width="34" height="19" rx="5" fill="#b45309"/><text x="75" y="561" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">UK</text><text x="102" y="561.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">rut</text>
+<rect x="58" y="568" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="75" y="581.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="102" y="582" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">razon_social, tipo_persona</text>
+<rect x="58" y="588.5" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="75" y="602" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="102" y="602.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">estado_proveedor</text>
+<rect x="58" y="609" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="75" y="622.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="102" y="623" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">condicion_pago_dias</text>
+<rect x="58" y="629.5" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="75" y="643" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="102" y="643.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">numero_cuenta (S)</text>
+<rect x="58" y="650" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="75" y="663.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="102" y="664" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">fecha_cambio_cuenta</text>
+<rect x="58" y="670.5" width="34" height="19" rx="5" fill="#0f766e"/><text x="75" y="684" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="102" y="684.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">← catalogo/cotizaciones/OC/facturas/eval.</text>
+    </g>
+
+    <g>
+      <rect x="565" y="470" width="490" height="290" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.4"/>
+      <path d="M 565 514 H 1055" stroke="#cbd5e1" stroke-width="1.2"/>
+      <rect x="565" y="470" width="7" height="290" rx="3.5" fill="#2563eb" opacity="0.9"/>
+      <text x="585" y="498" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="17" font-weight="700" fill="#0f172a" text-anchor="start">solicitudes</text>
+      <text x="1037" y="498" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#475569" text-anchor="end">Necesidad interna</text>
+      <rect x="583" y="527" width="34" height="19" rx="5" fill="#1d4ed8"/><text x="600" y="540.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">PK</text><text x="627" y="541" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">id</text>
+<rect x="583" y="547.5" width="34" height="19" rx="5" fill="#b45309"/><text x="600" y="561" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">UK</text><text x="627" y="561.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">numero</text>
+<rect x="583" y="568" width="34" height="19" rx="5" fill="#0f766e"/><text x="600" y="581.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="627" y="582" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">solicitante_id → usuarios</text>
+<rect x="583" y="588.5" width="34" height="19" rx="5" fill="#0f766e"/><text x="600" y="602" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="627" y="602.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">centro_costo_id → centros_costo</text>
+<rect x="583" y="609" width="34" height="19" rx="5" fill="#0f766e"/><text x="600" y="622.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="627" y="623" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">aprobada_por / rechazada_por → usuarios</text>
+<rect x="583" y="629.5" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="600" y="643" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="627" y="643.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">estado, prioridad, monto_estimado</text>
+<rect x="583" y="650" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="600" y="663.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="627" y="664" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">fecha_creacion, fecha_requerida</text>
+<rect x="583" y="670.5" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="600" y="684" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="627" y="684.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">lineas[producto_id, cantidad, precio]</text>
+<rect x="583" y="691" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="600" y="704.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="627" y="705" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">motivo_rechazo, anulada_por</text>
+    </g>
+
+    <g>
+      <rect x="1090" y="470" width="490" height="290" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.4"/>
+      <path d="M 1090 514 H 1580" stroke="#cbd5e1" stroke-width="1.2"/>
+      <rect x="1090" y="470" width="7" height="290" rx="3.5" fill="#2563eb" opacity="0.9"/>
+      <text x="1110" y="498" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="17" font-weight="700" fill="#0f172a" text-anchor="start">cotizaciones</text>
+      <text x="1562" y="498" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#475569" text-anchor="end">Ofertas de proveedor</text>
+      <rect x="1108" y="527" width="34" height="19" rx="5" fill="#1d4ed8"/><text x="1125" y="540.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">PK</text><text x="1152" y="541" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">id</text>
+<rect x="1108" y="547.5" width="34" height="19" rx="5" fill="#b45309"/><text x="1125" y="561" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">UK</text><text x="1152" y="561.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">numero</text>
+<rect x="1108" y="568" width="34" height="19" rx="5" fill="#0f766e"/><text x="1125" y="581.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="1152" y="582" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">solicitud_id → solicitudes</text>
+<rect x="1108" y="588.5" width="34" height="19" rx="5" fill="#0f766e"/><text x="1125" y="602" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="1152" y="602.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">proveedor_id → proveedores</text>
+<rect x="1108" y="609" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="1125" y="622.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="1152" y="623" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">estado, motivo_descarte</text>
+<rect x="1108" y="629.5" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="1125" y="643" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="1152" y="643.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">plazo_entrega_dias, condicion_pago_dias</text>
+<rect x="1108" y="650" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="1125" y="663.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="1152" y="664" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">fecha_registro, fecha_validez</text>
+<rect x="1108" y="670.5" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="1125" y="684" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="1152" y="684.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">lineas[producto_id, precio, descuento]</text>
+<rect x="1108" y="691" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="1125" y="704.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="1152" y="705" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">neto, iva, total</text>
+    </g>
+
+    <g>
+      <rect x="40" y="790" width="490" height="290" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.4"/>
+      <path d="M 40 834 H 530" stroke="#cbd5e1" stroke-width="1.2"/>
+      <rect x="40" y="790" width="7" height="290" rx="3.5" fill="#2563eb" opacity="0.9"/>
+      <text x="60" y="818" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="17" font-weight="700" fill="#0f172a" text-anchor="start">ordenes</text>
+      <text x="512" y="818" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#475569" text-anchor="end">Compromiso de compra</text>
+      <rect x="58" y="847" width="34" height="19" rx="5" fill="#1d4ed8"/><text x="75" y="860.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">PK</text><text x="102" y="861" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">id</text>
+<rect x="58" y="867.5" width="34" height="19" rx="5" fill="#b45309"/><text x="75" y="881" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">UK</text><text x="102" y="881.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">numero</text>
+<rect x="58" y="888" width="34" height="19" rx="5" fill="#0f766e"/><text x="75" y="901.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="102" y="902" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">solicitud_id → solicitudes</text>
+<rect x="58" y="908.5" width="34" height="19" rx="5" fill="#0f766e"/><text x="75" y="922" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="102" y="922.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">cotizacion_id → cotizaciones (0..1)</text>
+<rect x="58" y="929" width="34" height="19" rx="5" fill="#0f766e"/><text x="75" y="942.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="102" y="943" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">proveedor_id → proveedores</text>
+<rect x="58" y="949.5" width="34" height="19" rx="5" fill="#0f766e"/><text x="75" y="963" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="102" y="963.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">emitida_por → usuarios</text>
+<rect x="58" y="970" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="75" y="983.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="102" y="984" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">estado, fecha_emision, fecha_entrega</text>
+<rect x="58" y="990.5" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="75" y="1004" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="102" y="1004.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">lineas[producto_id, precio, descuento]</text>
+<rect x="58" y="1011" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="75" y="1024.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="102" y="1025" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">neto, iva, total</text>
+    </g>
+
+    <g>
+      <rect x="565" y="790" width="490" height="290" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.4"/>
+      <path d="M 565 834 H 1055" stroke="#cbd5e1" stroke-width="1.2"/>
+      <rect x="565" y="790" width="7" height="290" rx="3.5" fill="#2563eb" opacity="0.9"/>
+      <text x="585" y="818" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="17" font-weight="700" fill="#0f172a" text-anchor="start">recepciones</text>
+      <text x="1037" y="818" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#475569" text-anchor="end">Entregas reales</text>
+      <rect x="583" y="847" width="34" height="19" rx="5" fill="#1d4ed8"/><text x="600" y="860.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">PK</text><text x="627" y="861" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">id</text>
+<rect x="583" y="867.5" width="34" height="19" rx="5" fill="#b45309"/><text x="600" y="881" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">UK</text><text x="627" y="881.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">numero</text>
+<rect x="583" y="888" width="34" height="19" rx="5" fill="#0f766e"/><text x="600" y="901.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="627" y="902" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">orden_id → ordenes</text>
+<rect x="583" y="908.5" width="34" height="19" rx="5" fill="#0f766e"/><text x="600" y="922" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="627" y="922.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">registrada_por → usuarios</text>
+<rect x="583" y="929" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="600" y="942.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="627" y="943" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">estado, fecha_recepcion</text>
+<rect x="583" y="949.5" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="600" y="963" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="627" y="963.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">observaciones</text>
+<rect x="583" y="970" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="600" y="983.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="627" y="984" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">lineas[orden_linea_id, producto_id]</text>
+<rect x="583" y="990.5" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="600" y="1004" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="627" y="1004.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">cantidad_aceptada / rechazada</text>
+<rect x="583" y="1011" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="600" y="1024.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="627" y="1025" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">motivo_rechazo (danado, etc.)</text>
+    </g>
+
+    <g>
+      <rect x="1090" y="790" width="490" height="290" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.4"/>
+      <path d="M 1090 834 H 1580" stroke="#cbd5e1" stroke-width="1.2"/>
+      <rect x="1090" y="790" width="7" height="290" rx="3.5" fill="#2563eb" opacity="0.9"/>
+      <text x="1110" y="818" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="17" font-weight="700" fill="#0f172a" text-anchor="start">facturas</text>
+      <text x="1562" y="818" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#475569" text-anchor="end">Documento tributario</text>
+      <rect x="1108" y="847" width="34" height="19" rx="5" fill="#1d4ed8"/><text x="1125" y="860.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">PK</text><text x="1152" y="861" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">id</text>
+<rect x="1108" y="867.5" width="34" height="19" rx="5" fill="#0f766e"/><text x="1125" y="881" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="1152" y="881.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">orden_id → ordenes</text>
+<rect x="1108" y="888" width="34" height="19" rx="5" fill="#0f766e"/><text x="1125" y="901.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="1152" y="902" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">proveedor_id → proveedores</text>
+<rect x="1108" y="908.5" width="34" height="19" rx="5" fill="#0f766e"/><text x="1125" y="922" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="1152" y="922.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">registrada_por → usuarios</text>
+<rect x="1108" y="929" width="34" height="19" rx="5" fill="#0f766e"/><text x="1125" y="942.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="1152" y="943" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">aprobada_por → usuarios (0..1)</text>
+<rect x="1108" y="949.5" width="34" height="19" rx="5" fill="#0f766e"/><text x="1125" y="963" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="1152" y="963.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">factura_referencia_id → facturas</text>
+<rect x="1108" y="970" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="1125" y="983.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="1152" y="984" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">tipo_documento, folio</text>
+<rect x="1108" y="990.5" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="1125" y="1004" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="1152" y="1004.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">estado, fecha_recepcion, vencimiento</text>
+<rect x="1108" y="1011" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="1125" y="1024.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="1152" y="1025" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">neto, iva, total, diferencia</text>
+<rect x="1108" y="1031.5" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="1125" y="1045" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="1152" y="1045.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">tolerancia_monto, alerta_fraude</text>
+    </g>
+
+    <g>
+      <rect x="40" y="1110" width="490" height="290" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.4"/>
+      <path d="M 40 1154 H 530" stroke="#cbd5e1" stroke-width="1.2"/>
+      <rect x="40" y="1110" width="7" height="290" rx="3.5" fill="#2563eb" opacity="0.9"/>
+      <text x="60" y="1138" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="17" font-weight="700" fill="#0f172a" text-anchor="start">devoluciones</text>
+      <text x="512" y="1138" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#475569" text-anchor="end">Devolución DEV-AAAA-NNNN</text>
+      <rect x="58" y="1167" width="34" height="19" rx="5" fill="#1d4ed8"/><text x="75" y="1180.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">PK</text><text x="102" y="1181" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">id</text>
+<rect x="58" y="1187.5" width="34" height="19" rx="5" fill="#b45309"/><text x="75" y="1201" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">UK</text><text x="102" y="1201.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">numero</text>
+<rect x="58" y="1208" width="34" height="19" rx="5" fill="#0f766e"/><text x="75" y="1221.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="102" y="1222" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">orden_id → ordenes</text>
+<rect x="58" y="1228.5" width="34" height="19" rx="5" fill="#0f766e"/><text x="75" y="1242" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="102" y="1242.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">registrada_por → usuarios</text>
+<rect x="58" y="1249" width="34" height="19" rx="5" fill="#0f766e"/><text x="75" y="1262.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="102" y="1263" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">aprobada_por → usuarios (0..1)</text>
+<rect x="58" y="1269.5" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="75" y="1283" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="102" y="1283.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">estado, fecha_devolucion</text>
+<rect x="58" y="1290" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="75" y="1303.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="102" y="1304" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">observaciones, neto</text>
+<rect x="58" y="1310.5" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="75" y="1324" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="102" y="1324.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">lineas[orden_linea_id, producto_id, cantidad]</text>
+<rect x="58" y="1331" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="75" y="1344.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="102" y="1345" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">motivo, precio_unitario</text>
+    </g>
+
+    <g>
+      <rect x="565" y="1110" width="490" height="290" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.4"/>
+      <path d="M 565 1154 H 1055" stroke="#cbd5e1" stroke-width="1.2"/>
+      <rect x="565" y="1110" width="7" height="290" rx="3.5" fill="#2563eb" opacity="0.9"/>
+      <text x="585" y="1138" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="17" font-weight="700" fill="#0f172a" text-anchor="start">catalogo</text>
+      <text x="1037" y="1138" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#475569" text-anchor="end">Proveedor × producto</text>
+      <rect x="583" y="1167" width="34" height="19" rx="5" fill="#1d4ed8"/><text x="600" y="1180.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">PK</text><text x="627" y="1181" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">id</text>
+<rect x="583" y="1187.5" width="34" height="19" rx="5" fill="#0f766e"/><text x="600" y="1201" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="627" y="1201.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">proveedor_id → proveedores</text>
+<rect x="583" y="1208" width="34" height="19" rx="5" fill="#0f766e"/><text x="600" y="1221.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="627" y="1222" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">producto_id → productos</text>
+<rect x="583" y="1228.5" width="34" height="19" rx="5" fill="#b45309"/><text x="600" y="1242" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">UK</text><text x="627" y="1242.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">par (proveedor_id, producto_id)</text>
+<rect x="583" y="1249" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="600" y="1262.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="627" y="1263" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">precio_referencia</text>
+<rect x="583" y="1269.5" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="600" y="1283" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="627" y="1283.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">plazo_entrega_dias</text>
+<rect x="583" y="1290" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="600" y="1303.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="627" y="1304" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">fecha_actualizacion, activo</text>
+    </g>
+
+    <g>
+      <rect x="1090" y="1110" width="490" height="290" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.4"/>
+      <path d="M 1090 1154 H 1580" stroke="#cbd5e1" stroke-width="1.2"/>
+      <rect x="1090" y="1110" width="7" height="290" rx="3.5" fill="#2563eb" opacity="0.9"/>
+      <text x="1110" y="1138" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="17" font-weight="700" fill="#0f172a" text-anchor="start">evaluaciones</text>
+      <text x="1562" y="1138" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#475569" text-anchor="end">Desempeño por OC</text>
+      <rect x="1108" y="1167" width="34" height="19" rx="5" fill="#1d4ed8"/><text x="1125" y="1180.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">PK</text><text x="1152" y="1181" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">id</text>
+<rect x="1108" y="1187.5" width="34" height="19" rx="5" fill="#0f766e"/><text x="1125" y="1201" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="1152" y="1201.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">orden_id → ordenes</text>
+<rect x="1108" y="1208" width="34" height="19" rx="5" fill="#0f766e"/><text x="1125" y="1221.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="1152" y="1222" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">proveedor_id → proveedores</text>
+<rect x="1108" y="1228.5" width="34" height="19" rx="5" fill="#0f766e"/><text x="1125" y="1242" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle">FK</text><text x="1152" y="1242.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">evaluado_por → usuarios</text>
+<rect x="1108" y="1249" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="1125" y="1262.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="1152" y="1263" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">puntaje_calidad</text>
+<rect x="1108" y="1269.5" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="1125" y="1283" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="1152" y="1283.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">puntaje_plazo (calculado)</text>
+<rect x="1108" y="1290" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="1125" y="1303.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="1152" y="1304" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">puntaje_atencion, promedio</text>
+<rect x="1108" y="1310.5" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="1125" y="1324" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="1152" y="1324.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">dias_atraso</text>
+<rect x="1108" y="1331" width="34" height="19" rx="5" fill="#e2e8f0"/><text x="1125" y="1344.5" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">·</text><text x="1152" y="1345" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.4" font-weight="400" fill="#0f172a" text-anchor="start">fecha_evaluacion, comentario</text>
+    </g>
+  <g>
+    <rect x="1640" y="150" width="820" height="1250" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.4"/>
+    <rect x="1640" y="150" width="820" height="52" rx="12" fill="#eef2ff"/>
+    <text x="1662" y="182" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="14" font-weight="700" fill="#0f172a" text-anchor="start">RELACIONES Y CARDINALIDADES EXACTAS</text>
+    <text x="2428" y="182" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#475569" text-anchor="end">Lectura: izquierda → derecha</text>
+    <text x="1668" y="216" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="700" fill="#475569" text-anchor="start">Relación</text>
+    <text x="2418" y="216" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="700" fill="#475569" text-anchor="end">Cardinalidad</text>
+    
+    <rect x="1656" y="218" width="788" height="27" rx="4" fill="#ffffff"/>
+    <text x="1668" y="236" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#0f172a" text-anchor="start">centros_costo → usuarios</text>
+    <text x="2418" y="236" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="700" fill="#2563eb" text-anchor="end">1 : 0..N</text>
+
+    <rect x="1656" y="246" width="788" height="27" rx="4" fill="#f8fafc"/>
+    <text x="1668" y="264" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#0f172a" text-anchor="start">centros_costo → solicitudes</text>
+    <text x="2418" y="264" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="700" fill="#2563eb" text-anchor="end">1 : 0..N</text>
+
+    <rect x="1656" y="274" width="788" height="27" rx="4" fill="#ffffff"/>
+    <text x="1668" y="292" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#0f172a" text-anchor="start">usuarios → solicitudes (solicitante_id)</text>
+    <text x="2418" y="292" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="700" fill="#2563eb" text-anchor="end">1 : 0..N</text>
+
+    <rect x="1656" y="302" width="788" height="27" rx="4" fill="#f8fafc"/>
+    <text x="1668" y="320" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#0f172a" text-anchor="start">usuarios → solicitudes (aprob./rech./anul.)</text>
+    <text x="2418" y="320" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="700" fill="#2563eb" text-anchor="end">0..1 : 0..N</text>
+
+    <rect x="1656" y="330" width="788" height="27" rx="4" fill="#ffffff"/>
+    <text x="1668" y="348" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#0f172a" text-anchor="start">usuarios → ordenes (emitida_por)</text>
+    <text x="2418" y="348" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="700" fill="#2563eb" text-anchor="end">1 : 0..N</text>
+
+    <rect x="1656" y="358" width="788" height="27" rx="4" fill="#f8fafc"/>
+    <text x="1668" y="376" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#0f172a" text-anchor="start">usuarios → recepciones (registrada_por)</text>
+    <text x="2418" y="376" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="700" fill="#2563eb" text-anchor="end">1 : 0..N</text>
+
+    <rect x="1656" y="386" width="788" height="27" rx="4" fill="#ffffff"/>
+    <text x="1668" y="404" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#0f172a" text-anchor="start">usuarios → facturas (registra / aprueba)</text>
+    <text x="2418" y="404" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="700" fill="#2563eb" text-anchor="end">1 / 0..1 : 0..N</text>
+
+    <rect x="1656" y="414" width="788" height="27" rx="4" fill="#f8fafc"/>
+    <text x="1668" y="432" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#0f172a" text-anchor="start">usuarios → devoluciones (registra / aprueba)</text>
+    <text x="2418" y="432" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="700" fill="#2563eb" text-anchor="end">1 / 0..1 : 0..N</text>
+
+    <rect x="1656" y="442" width="788" height="27" rx="4" fill="#ffffff"/>
+    <text x="1668" y="460" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#0f172a" text-anchor="start">usuarios → evaluaciones (evaluado_por)</text>
+    <text x="2418" y="460" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="700" fill="#2563eb" text-anchor="end">1 : 0..N</text>
+
+    <rect x="1656" y="470" width="788" height="27" rx="4" fill="#f8fafc"/>
+    <text x="1668" y="488" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#0f172a" text-anchor="start">proveedores → catalogo</text>
+    <text x="2418" y="488" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="700" fill="#2563eb" text-anchor="end">1 : 0..N</text>
+
+    <rect x="1656" y="498" width="788" height="27" rx="4" fill="#ffffff"/>
+    <text x="1668" y="516" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#0f172a" text-anchor="start">productos → catalogo</text>
+    <text x="2418" y="516" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="700" fill="#2563eb" text-anchor="end">1 : 0..N</text>
+
+    <rect x="1656" y="526" width="788" height="27" rx="4" fill="#f8fafc"/>
+    <text x="1668" y="544" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#0f172a" text-anchor="start">proveedores ↔ productos (vía catalogo)</text>
+    <text x="2418" y="544" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="700" fill="#2563eb" text-anchor="end">N : M</text>
+
+    <rect x="1656" y="554" width="788" height="27" rx="4" fill="#ffffff"/>
+    <text x="1668" y="572" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#0f172a" text-anchor="start">proveedores → cotizaciones</text>
+    <text x="2418" y="572" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="700" fill="#2563eb" text-anchor="end">1 : 0..N</text>
+
+    <rect x="1656" y="582" width="788" height="27" rx="4" fill="#f8fafc"/>
+    <text x="1668" y="600" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#0f172a" text-anchor="start">proveedores → ordenes</text>
+    <text x="2418" y="600" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="700" fill="#2563eb" text-anchor="end">1 : 0..N</text>
+
+    <rect x="1656" y="610" width="788" height="27" rx="4" fill="#ffffff"/>
+    <text x="1668" y="628" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#0f172a" text-anchor="start">proveedores → facturas</text>
+    <text x="2418" y="628" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="700" fill="#2563eb" text-anchor="end">1 : 0..N</text>
+
+    <rect x="1656" y="638" width="788" height="27" rx="4" fill="#f8fafc"/>
+    <text x="1668" y="656" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#0f172a" text-anchor="start">proveedores → evaluaciones</text>
+    <text x="2418" y="656" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="700" fill="#2563eb" text-anchor="end">1 : 0..N</text>
+
+    <rect x="1656" y="666" width="788" height="27" rx="4" fill="#ffffff"/>
+    <text x="1668" y="684" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#0f172a" text-anchor="start">solicitudes → cotizaciones</text>
+    <text x="2418" y="684" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="700" fill="#2563eb" text-anchor="end">1 : 0..N</text>
+
+    <rect x="1656" y="694" width="788" height="27" rx="4" fill="#f8fafc"/>
+    <text x="1668" y="712" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#0f172a" text-anchor="start">solicitudes → ordenes</text>
+    <text x="2418" y="712" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="700" fill="#2563eb" text-anchor="end">1 : 0..N*</text>
+
+    <rect x="1656" y="722" width="788" height="27" rx="4" fill="#ffffff"/>
+    <text x="1668" y="740" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#0f172a" text-anchor="start">cotizaciones → ordenes</text>
+    <text x="2418" y="740" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="700" fill="#2563eb" text-anchor="end">0..1 : 0..1</text>
+
+    <rect x="1656" y="750" width="788" height="27" rx="4" fill="#f8fafc"/>
+    <text x="1668" y="768" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#0f172a" text-anchor="start">ordenes → recepciones</text>
+    <text x="2418" y="768" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="700" fill="#2563eb" text-anchor="end">1 : 0..N</text>
+
+    <rect x="1656" y="778" width="788" height="27" rx="4" fill="#ffffff"/>
+    <text x="1668" y="796" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#0f172a" text-anchor="start">ordenes → facturas</text>
+    <text x="2418" y="796" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="700" fill="#2563eb" text-anchor="end">1 : 0..N</text>
+
+    <rect x="1656" y="806" width="788" height="27" rx="4" fill="#f8fafc"/>
+    <text x="1668" y="824" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#0f172a" text-anchor="start">ordenes → devoluciones</text>
+    <text x="2418" y="824" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="700" fill="#2563eb" text-anchor="end">1 : 0..N</text>
+
+    <rect x="1656" y="834" width="788" height="27" rx="4" fill="#ffffff"/>
+    <text x="1668" y="852" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#0f172a" text-anchor="start">ordenes → evaluaciones</text>
+    <text x="2418" y="852" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="700" fill="#2563eb" text-anchor="end">1 : 0..1</text>
+
+    <rect x="1656" y="862" width="788" height="27" rx="4" fill="#f8fafc"/>
+    <text x="1668" y="880" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#0f172a" text-anchor="start">productos → solicitudes.lineas</text>
+    <text x="2418" y="880" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="700" fill="#2563eb" text-anchor="end">1 : 0..N</text>
+
+    <rect x="1656" y="890" width="788" height="27" rx="4" fill="#ffffff"/>
+    <text x="1668" y="908" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#0f172a" text-anchor="start">productos → cotizaciones.lineas</text>
+    <text x="2418" y="908" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="700" fill="#2563eb" text-anchor="end">1 : 0..N</text>
+
+    <rect x="1656" y="918" width="788" height="27" rx="4" fill="#f8fafc"/>
+    <text x="1668" y="936" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#0f172a" text-anchor="start">productos → ordenes.lineas</text>
+    <text x="2418" y="936" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="700" fill="#2563eb" text-anchor="end">1 : 0..N</text>
+
+    <rect x="1656" y="946" width="788" height="27" rx="4" fill="#ffffff"/>
+    <text x="1668" y="964" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#0f172a" text-anchor="start">productos → recepciones.lineas</text>
+    <text x="2418" y="964" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="700" fill="#2563eb" text-anchor="end">1 : 0..N</text>
+
+    <rect x="1656" y="974" width="788" height="27" rx="4" fill="#f8fafc"/>
+    <text x="1668" y="992" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#0f172a" text-anchor="start">productos → devoluciones.lineas</text>
+    <text x="2418" y="992" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="700" fill="#2563eb" text-anchor="end">1 : 0..N</text>
+
+    <rect x="1656" y="1002" width="788" height="27" rx="4" fill="#ffffff"/>
+    <text x="1668" y="1020" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#0f172a" text-anchor="start">recepciones ↔ devoluciones (vía orden_linea_id)</text>
+    <text x="2418" y="1020" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="700" fill="#2563eb" text-anchor="end">N : M†</text>
+
+    <rect x="1656" y="1030" width="788" height="27" rx="4" fill="#f8fafc"/>
+    <text x="1668" y="1048" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#0f172a" text-anchor="start">facturas → facturas (nota de crédito)</text>
+    <text x="2418" y="1048" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="700" fill="#2563eb" text-anchor="end">0..1 : 0..N</text>
+
+    <rect x="1656" y="1058" width="788" height="27" rx="4" fill="#ffffff"/>
+    <text x="1668" y="1076" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="400" fill="#0f172a" text-anchor="start">facturas → devoluciones (modelo FR-031)</text>
+    <text x="2418" y="1076" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.2" font-weight="700" fill="#2563eb" text-anchor="end">0..1 : 0..N</text>
+    <text x="1668" y="1148" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="13" font-weight="700" fill="#0f172a" text-anchor="start">Notas</text>
+    <text x="1668" y="1174" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12" font-weight="400" fill="#475569" text-anchor="start">* Una OC vigente por solicitud; las anuladas se reemiten.</text>
+    <text x="1668" y="1198" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12" font-weight="400" fill="#475569" text-anchor="start">† A nivel de líneas: detalle_recepcion 1 : 0..N detalle_devolucion.</text>
+    <text x="1668" y="1222" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12" font-weight="400" fill="#475569" text-anchor="start">Los cambios de estado y datos bancarios quedan en trazabilidad.</text>
+    <text x="1668" y="1246" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12" font-weight="400" fill="#475569" text-anchor="start">Enmascaramiento: solo admin_ti y jefe_compras ven datos bancarios completos.</text>
+    <text x="1668" y="1270" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12" font-weight="400" fill="#475569" text-anchor="start">Edición bancaria: solo admin_ti; cada cambio actualiza fecha_cambio_cuenta.</text>
+    <text x="1668" y="1294" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12" font-weight="400" fill="#475569" text-anchor="start">Umbral: 1.000.000 CLP neto · Conciliación: tolerancia 1 % del neto.</text>
+    <text x="1668" y="1318" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12" font-weight="400" fill="#475569" text-anchor="start">Roles: solicitante, comprador, jefe_compras, bodega, admin_ti.</text>
+    <text x="1668" y="1342" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12" font-weight="400" fill="#475569" text-anchor="start">Todas las entidades usan identificadores textuales en la semilla.</text>
+    <text x="1668" y="1366" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12" font-weight="400" fill="#475569" text-anchor="start">Los montos se calculan en CLP enteros con IVA de 19 %.</text>
+    <text x="1668" y="1390" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12" font-weight="400" fill="#475569" text-anchor="start">Diagrama para entregable académico; sin datos personales reales.</text>
+  </g>
+  <g>
+    <rect x="40" y="1425" width="2420" height="285" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2"/>
+    <text x="68" y="1455" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700" fill="#0f172a" text-anchor="start">NOTAS DE LECTURA Y ALCANCE</text>
+    <text x="68" y="1472" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="14" font-weight="400" fill="#0f172a" text-anchor="start">* Solo una orden de compra no anulada por solicitud; una OC anulada puede reemitirse.</text>
+<text x="68" y="1509" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="14" font-weight="400" fill="#0f172a" text-anchor="start">† A nivel agregado; en el modelo normalizado: detalle_recepcion 1 : 0..N detalle_devolucion. En la semilla se vincula por lineas[].orden_linea_id.</text>
+<text x="68" y="1546" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="14" font-weight="400" fill="#0f172a" text-anchor="start">PK = clave primaria · FK = clave foránea · UK = valor único · (S) = dato sensible. Montos en CLP enteros.</text>
+<text x="68" y="1583" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="14" font-weight="400" fill="#0f172a" text-anchor="start">No se dibujan trazabilidad ni tablas de detalle: no pertenecen a las 12 colecciones semilla. Se documentan en README.md y data-model.md.</text>
+<text x="68" y="1620" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="14" font-weight="400" fill="#475569" text-anchor="start">Fuente: specs/002-modulo-adquisiciones-compras/data-model.md §2-4 y src/compras/semilla.json.</text>
+  </g>
+</svg>

@@ -8,7 +8,7 @@
 
 - Node.js y npm compatibles con las versiones de Vite y Vitest declaradas en `package.json`.
 - Un navegador de escritorio moderno con `localStorage` disponible.
-- No se necesita backend, base de datos ni conexión a internet después de instalar dependencias. El acceso es simulado: escriba su correo corporativo o active **Modo presentación** para usar el directorio de acceso rápido con la clave genérica `Compras2026`; también está disponible el acceso por rol. Solicitante, Comprador y Jefe de Compras piden nombre. El rol queda fijo hasta cerrar sesión; para usar otro rol, cierre sesión e ingrese de nuevo.
+- No se necesita backend, base de datos ni conexión a internet después de instalar dependencias. El acceso es simulado: `Modo Real` usa el correo corporativo y `Modo Demo` habilita el directorio de acceso rápido y el selector de rol con la clave genérica `Compras2026`. Solicitante, Comprador y Jefe de Compras piden nombre. El rol queda fijo hasta cerrar sesión; para usar otro rol, cierre sesión e ingrese de nuevo.
 
 ## Configuración
 
@@ -25,7 +25,7 @@
    ```
 
 3. Abra la URL local que muestra Vite (por defecto `http://localhost:5173`).
-4. En la pantalla de acceso escriba `carla.diaz@example.com` o pulse **Activar modo presentación** y luego su entrada en el directorio, e ingrese la clave genérica `Compras2026`. Por el acceso alternativo por rol, elija **Comprador**, escriba `Carla Díaz` y use la misma clave. **Jefe de Compras** también pide nombre: la semilla tiene dos usuarios de ese rol, `Marcela Rojas` y `Jorge Muñoz`. Si ingresa como **Encargado de Bodega** o **Administrador TI**, el campo de nombre se oculta y la sesión muestra el rol con su centro de costo. El botón **Mostrar** permite verificar la clave y **Cerrar sesión** devuelve a esta pantalla sin borrar los datos. Con la sesión iniciada no es posible cambiar de rol: en los escenarios, "como `<rol>`" significa cerrar sesión e ingresar con ese rol.
+4. En la pantalla de acceso escriba `carla.diaz@example.com` en `Modo Real`, o cambie a `Modo Demo` y pulse su entrada en el directorio, e ingrese la clave genérica `Compras2026`. Por el acceso alternativo por rol, elija **Comprador**, escriba `Carla Díaz` y use la misma clave. **Jefe de Compras** también pide nombre: la semilla tiene dos usuarios de ese rol, `Marcela Rojas` y `Jorge Muñoz`. Si ingresa como **Encargado de Bodega** o **Administrador TI**, el campo de nombre se oculta y la sesión muestra el rol con su centro de costo. El botón **Mostrar** permite verificar la clave y **Cerrar sesión** devuelve a esta pantalla sin borrar los datos. Con la sesión iniciada no es posible cambiar de rol: en los escenarios, "como `<rol>`" significa cerrar sesión e ingresar con ese rol.
 
 La primera visita carga automáticamente `src/compras/semilla.json`: 7 usuarios (dos de ellos `jefe_compras`), 4 centros de costo, 20 productos, 8 proveedores, 10 solicitudes, 7 cotizaciones, 8 órdenes de compra, 5 recepciones, 7 documentos de facturación, 2 devoluciones, 10 referencias de catálogo y 2 evaluaciones. Todos los datos son ficticios y las fechas se ajustan al día actual.
 
@@ -42,11 +42,11 @@ Después recargue la página para que se vuelva a cargar la semilla.
 | Comando                | Resultado esperado                                                                                              |
 | ---------------------- | --------------------------------------------------------------------------------------------------------------- |
 | `npm run dev`          | Servidor Vite activo; la interfaz pide acceso y luego muestra solo el módulo Adquisiciones y Compras.          |
-| `npx vitest run`       | 232 pruebas aprobadas y 56 omitidas (las omitidas pertenecen al template base).                                 |
+| `npm test -- --run`    | 260 pruebas aprobadas en 18 archivos y 56 omitidas (las omitidas pertenecen al template base).                  |
 | `npm run lint`         | 0 errores y 0 advertencias.                                                                                      |
 | `npm run build`        | Build de producción sin errores.                                                                                |
 | `npm run preview`      | El build se sirve en `http://localhost:4173` con el mismo comportamiento.                                       |
-| `npm run format:check` | Sin diferencias en el alcance de `.prettierignore` (núcleo base); el resto de `src/**` y `tests/**` está excluido. |
+| `npm run format:check` | Sin diferencias en todo el código y las pruebas incluidos por `.prettierignore`.                                  |
 
 ## Escenarios de validación
 
@@ -129,13 +129,14 @@ npx vitest run tests/unit/compras/reglas.test.js
 npx vitest run tests/integration/compras
 ```
 
-Los flujos de cada historia están en `tests/integration/compras/`: `proveedores.test.js`, `flujo-compras.test.js`, `catalogo-panel.test.js`, `casos-limite.test.js`, `vista.test.js`, `autenticacion.test.js`, `almacenamiento.test.js`, `trazabilidad.test.js` y `rendimiento.test.js`.
+Los flujos de cada historia están en `tests/integration/compras/`: `proveedores.test.js`, `flujo-compras.test.js`, `catalogo-panel.test.js`, `casos-limite.test.js`, `vista.test.js`, `autenticacion.test.js`, `portal-corporativo.test.js`, `permisos.test.js`, `asistente.test.js`, `almacenamiento.test.js`, `trazabilidad.test.js` y `rendimiento.test.js`.
 
 ## Cobertura aún pendiente
 
 - T101 y T110: cierre de OC con saldo pendiente y cálculo y visualización de `credito_a_favor` cuando una devolución `defectuosa` descuenta una factura ya aprobada.
 - T104, T109 y T118: anulación con `motivo_anulacion` en facturas, devoluciones, cotizaciones y recepciones, con su registro en trazabilidad.
-- Rediseño de permisos y navegación por rol (FR-033 a FR-036): permisos y visibilidad base implementados (T121-T123); la navegación agrupada y el modo solo lectura por vista (T125-T132) siguen pendientes.
-- Creación de solicitudes por los cinco roles, segundo `jefe_compras` en la semilla y rol fijo por sesión (FR-005, FR-006, FR-037): implementados en T121, T146 y T147; la barra superior muestra el indicador de solo lectura y no existe selector **Rol Activo**. La navegación agrupada por rol (FR-034) sigue pendiente en T125.
+- T127: el filtro de OC y recepciones del `solicitante` está en la UI y en el CSV, pero falta en los servicios `ordenes-compra.js` y `recepciones.js`.
+- T137 y T139: **Mis solicitudes** aparece solo para `solicitante`; falta extenderlo a los cinco roles que exige FR-035 y ampliar las pruebas del panel.
+- Recorrido manual en navegador (T144/T155): ejecutar los escenarios 1 a 4 con los cinco roles, cerrando sesión entre cada uno. La verificación automatizada ya está completada.
 
-T107, T108 y T120 están cerradas: `npm run format:check` pasa sin diferencias en el alcance de `.prettierignore`, la accesibilidad (SC-013) se verifica en `vista.test.js` (errores junto al campo con `role="alert"`/`aria-describedby`) y la auditoría de SC-003 en `flujo-compras.test.js`.
+T107, T108, T120, T140, T142 y T143 están cerradas: `npm run format:check` pasa sin diferencias en todo el alcance de `.prettierignore`, la accesibilidad (SC-013) se verifica en `vista.test.js`, la auditoría de SC-003 en `flujo-compras.test.js`, `admin_ti` queda en solo lectura en `permisos.test.js` y la documentación comparte el estado canónico.

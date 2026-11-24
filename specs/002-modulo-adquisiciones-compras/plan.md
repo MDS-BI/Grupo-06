@@ -5,7 +5,7 @@
 
 ## Resumen
 
-Construir el módulo Adquisiciones y Compras **sobre el módulo base ERP del curso** (`specs/001-erp-base-module`), sin reemplazar su código central: `src/storage.js` y sus pruebas permanecen sin cambios funcionales (solo se aplicó formateo con Prettier). La interfaz final es **exclusiva del módulo**: `index.html` solo expone `#view-compras`, `#compras-root` y el indicador de sesión del usuario y rol (FR-037); no se muestran las vistas genéricas de Entidades, Documentos ni Búsqueda del template, conforme a FR-032 y SC-014. **Actualización 2026-11-24**: el rol queda fijo durante la sesión para los cinco roles y no existe control para cambiarlo en vivo. Se aplicaron mejoras UI/UX (KPI, acciones rápidas legibles, pendientes/flujo, tablas, badges, modo oscuro e IBM Plex Sans) sin modificar `src/storage.js`.
+Construir el módulo Adquisiciones y Compras **sobre el módulo base ERP del curso** (`specs/001-erp-base-module`), sin reemplazar su código central: `src/storage.js` y sus pruebas permanecen sin cambios funcionales (solo se aplicó formateo con Prettier). La interfaz final es **exclusiva del módulo**: `index.html` solo expone `#view-compras`, `#compras-root` y el indicador de sesión del usuario y rol (FR-037); no se muestran las vistas genéricas de Entidades, Documentos ni Búsqueda del template, conforme a FR-032 y SC-014. **Actualización 2026-11-24**: el rol queda fijo durante la sesión para los cinco roles y no existe control para cambiarlo en vivo. Se aplicaron mejoras UI/UX (KPI, acciones rápidas legibles, pendientes/flujo, tablas, badges, íconos SVG laterales, encabezado `Resumen General`, modo oscuro e IBM Plex Sans) sin modificar `src/storage.js`. El estado canónico de las Fases 17–20 se registra más abajo y se replica en los demás artefactos.
 
 Los proveedores reutilizan el contrato de Entidad del módulo base desde `src/compras/proveedores.js` sin tocar `src/storage.js`. El resto de documentos del ciclo (solicitudes, cotizaciones, OC, recepciones, facturas, devoluciones, catálogo, evaluaciones y trazabilidad) viven en colecciones propias `erp_compras:*` gestionadas desde `src/compras/almacenamiento.js`, siguiendo el mismo contrato de almacenamiento del template (`specs/001-erp-base-module/contracts/entity-storage.md`).
 
@@ -95,6 +95,7 @@ src/
 └── compras/
     ├── reglas.js           (cálculos de montos, validación de RUT, transiciones, conciliación, nota de plazo)
     ├── almacenamiento.js   (colecciones erp_compras:* con el contrato del template y PERMISOS por rol)
+    ├── visibilidad.js      (matriz VISIBILIDAD, GRUPOS, nivelVista() y vistasVisibles(), FR-033/FR-034)
     ├── solicitudes.js      (pantalla y flujo de solicitudes)
     ├── cotizaciones.js     (registro y comparación)
     ├── ordenes-compra.js   (emisión, compra directa y anulación de OC)
@@ -103,8 +104,9 @@ src/
     ├── devoluciones.js     (devoluciones y notas de crédito)
     ├── proveedores.js      (alta/edición, visibilidad de datos sensibles, cambio bancario auditado)
     ├── autenticacion.js    (pantalla de ingreso simulada: selector de rol, nombre condicional, clave genérica; fija el rol de la sesión)
+    ├── asistente.js        (asistente local restringido, sin API keys ni backend)
     ├── vista.js            (pantallas de compras, navegación agrupada por rol y cadena documental)
-    ├── exportacion.js      (CSV con BOM y permisos por rol)
+    ├── exportacion.js      (CSV con BOM y permisos por rol, incluido trazabilidad.csv)
     ├── trazabilidad.js     (historial de eventos y cadena documental)
     ├── catalogo.js
     ├── evaluaciones.js
@@ -112,9 +114,9 @@ src/
     └── semilla.json        (datos ficticios)
 
 tests/
-├── unit/compras/           (reglas.test.js, exportacion.test.js, configuracion.test.js: reglas de data-model.md, sección 5)
+├── unit/compras/           (reglas.test.js, exportacion.test.js, configuracion.test.js, visibilidad.test.js: reglas de data-model.md, sección 5 y matriz FR-033)
 └── integration/compras/    (flujos por historia: proveedores, flujo-compras, casos-limite, catalogo-panel, vista,
-                             almacenamiento, trazabilidad y rendimiento; helpers.js compartido)
+                             autenticacion, portal-corporativo, permisos, asistente, almacenamiento, trazabilidad y rendimiento; helpers.js compartido)
 ```
 
 **Decisión de Estructura**: todo lo propio del módulo vive en `src/compras/` para no mezclarlo con el módulo base; así se puede actualizar el template sin pisar el trabajo del grupo y otros módulos pueden leer las colecciones `erp_compras:*`.
@@ -128,7 +130,7 @@ tests/
 | 2. Ciclo operativo                  | 9 al 15-nov     | US2, US4, US3 completa                                                   | Solicitud → OC → recepción; la OC se valida contra la solicitud aprobada, con líneas e IVA calculado                                                                         |
 | 3. Adquisiciones y cierre del ciclo | 16 al 22-nov    | US6, US7, US8                                                            | Cotizaciones, conciliación de facturas, catálogo; demo del ciclo completo                                                                                                    |
 | 4. Calidad                          | 23 al 26-nov    | US9, US10, US11, trazabilidad transversal (FR-027 a FR-030), indicadores | Evaluación, devoluciones/notas de crédito, CSV, historial de auditoría y cadena documental, README final; congelamiento del repositorio el 26-nov                            |
-| 5. UI/UX y ajustes de sesión        | 24-nov          | Refuerzo parcial US5/US12, FR-036, FR-037, ajustes sesión/rol            | Mejoras UI/UX (KPI, acciones rápidas legibles, pendientes/flujo, tablas, badges), modo oscuro, IBM Plex Sans, tabs responsivas; rol fijo para los cinco roles; `crear_solicitud` para cinco roles en permisos base. Fase 16 fundacional completada el 24-nov; Fases 17-20 pendientes. |
+| 5. UI/UX y ajustes de sesión        | 24-nov          | Refuerzo parcial US5/US12, FR-036, FR-037, ajustes sesión/rol            | Mejoras UI/UX (KPI, acciones rápidas legibles, pendientes/flujo, tablas, badges, íconos SVG, encabezado `Resumen General`), modo oscuro, IBM Plex Sans y navegación lateral responsiva; rol fijo para los cinco roles y `crear_solicitud` para los cinco roles. Fases 17–20 según el estado canónico: T127 y T137/T139 siguen abiertas. |
 
 Cada historia se asigna a un responsable en un Issue de GitHub con la etiqueta de su iteración; los acuerdos de cada semana se registran en un Issue de seguimiento.
 
@@ -136,9 +138,17 @@ Cada historia se asigna a un responsable en un Issue de GitHub con la etiqueta d
 
 **Resuelta.** La carpeta `src/` (módulo base) se restauró desde el historial (`git checkout 501e9c6 -- src index.html`) y hoy está versionada en `HEAD` junto con `src/compras/`. Las pruebas del template (`tests/unit/storage.test.js`, entre otras) vuelven a encontrar sus dependencias.
 
+## Estado de las Fases 17–20 (2026-11-24)
+
+- **Fase 16**: cerrada (`visibilidad.js`, `PERMISOS` y pruebas de matriz).
+- **Fase 17**: navegación agrupada, solo lectura, bloqueo de accesos, historial/exportación y encabezado implementados y verificados en la interfaz; queda **T127** abierta: el filtro de OC y recepciones del `solicitante` está en la UI y en el CSV, pero no en los servicios `ordenes-compra.js` ni `recepciones.js`.
+- **Fase 18**: ajustes de permisos por historia implementados y verificados; quedan **T137** y **T139** abiertas: el pendiente **Mis solicitudes** aparece solo para `solicitante`, no para los cinco roles que exige FR-035, y las pruebas de panel cubren ese alcance parcial.
+- **Fase 19**: semilla, contratos y documentación sincronizados; verificación automatizada completada (18 archivos, 260 pruebas aprobadas, 56 omitidas; `npm run lint` y `npm run format:check` sin errores). El recorrido manual de los escenarios 1 a 4 de `quickstart.md` queda como procedimiento de validación en navegador.
+- **Fase 20**: cerrada; rol fijo, indicador de sesión, nombre de `jefe_compras`, creación de solicitudes por los cinco roles y pruebas de sesión implementados y verificados (T146–T155).
+
 ## Deuda conocida
 
-Las siguientes tareas se documentan también en `tasks.md`: T101, T104, T109, T110 y T118 siguen abiertas; T107, T108, T117, T119 y T120 ya están cerradas; T121-T144 y T146-T155 están en curso. `format:check` cubre todo el código y las pruebas según el alcance ampliado de `.prettierignore`.
+Las siguientes tareas se documentan también en `tasks.md`: T101, T104, T109, T110 y T118 siguen abiertas; T107, T108, T117, T119, T120, T142, T143 y T146–T154 están cerradas; T127, T137, T139, T144 y T155 conservan la deuda indicada en el estado canónico. `format:check` cubre todo el código y las pruebas según el alcance ampliado de `.prettierignore`.
 
 | Tarea | Estado  | Justificación                                                                                                                                                                                                                                                                                                                                       | Referencia                          |
 | ----- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
@@ -152,8 +162,8 @@ Las siguientes tareas se documentan también en `tasks.md`: T101, T104, T109, T1
 | T118  | Abierta | Pendiente 2 de `data-model.md` §10: estados de devolución y anulación con motivo incompletos.                                                                                                                                                                                                                                                       | FR-029                              |
 | T119  | Cerrada | Decisión aplicada: se elimina `borrador` del modelo de OC y se conserva `emitida` como estado inicial; `data-model.md` y `plan.md` sincronizados.                                                                                                                                                                                                | FR-010                              |
 | T120  | Cerrada | Auditoría global de SC-003 en `flujo-compras.test.js`: se validan las dos vías de cumplimiento sobre todas las OC no anuladas.                                                                                                                                                                                                                | SC-003                              |
-| T121-T144 | En curso | Fase 16 fundacional cerrada (T121-T124): `admin_ti` ya no opera compras, `PERMISOS` y `VISIBILIDAD` centralizados y suite ajustada. Pendientes navegación por rol, modo lectura, panel, pruebas y cierre de documentación (T125-T144). | FR-033 a FR-036, SC-015 a SC-017 |
-| T146-T155 | En curso | Rol fijo por sesión, indicador sin selector **Rol Activo**, nombre para `jefe_compras` y creación de solicitudes por los cinco roles implementados (T146-T149, T152); pendientes el endurecimiento de autoría/filtros (T150) y T151, T153-T155. | FR-005, FR-006, FR-034, FR-037 |
+| T121-T144 | Parcial | Fase 16 cerrada; Fase 17 con UI/CSV verificadas y T127 abierta en servicios; Fase 18 con permisos por historia verificados y T137/T139 abiertas por FR-035; Fase 19 con documentación sincronizada y suite en verde, recorrido manual por ejecutar (T144). | FR-033 a FR-036, SC-015 a SC-017 |
+| T146-T155 | Cerrada con nota | Rol fijo, indicador sin selector **Rol Activo**, nombre para `jefe_compras`, creación por cinco roles y pruebas de sesión implementadas (T146–T154); T155 conserva el recorrido manual de los escenarios 1 y 3 de `quickstart.md` como procedimiento de validación. | FR-005, FR-006, FR-034, FR-037 |
 
 ## Plan de Pruebas
 
@@ -167,7 +177,7 @@ Las siguientes tareas se documentan también en `tasks.md`: T101, T104, T109, T1
 
 ## Datos Semilla
 
-Todos ficticios: 4 centros de costo, 7 usuarios (uno por rol, un segundo solicitante y un segundo `jefe_compras` para aprobar las solicitudes que crea el primero; los dos `jefe_compras` tienen nombre ficticio porque ese rol lo pide al ingresar), 8 proveedores (al menos uno de cada tamaño, uno bloqueado y uno con cuenta bancaria cambiada hace menos de 30 días), 20 productos, y solicitudes, cotizaciones, OC, recepciones y facturas en todos los estados para que cada pantalla y alerta tenga algo que mostrar.
+Todos ficticios: 4 centros de costo, **7 usuarios** (`u-solicitante-1`, `u-solicitante-2`, `u-comprador-1`, `u-jefe-1`, `u-jefe-2`, `u-bodega-1` y `u-admin-1`; el segundo `jefe_compras` aprueba las solicitudes que crea el primero y ambos tienen nombre ficticio porque ese rol lo pide al ingresar), 8 proveedores (al menos uno de cada tamaño, uno bloqueado y uno con cuenta bancaria cambiada hace menos de 30 días), 20 productos, y solicitudes, cotizaciones, OC, recepciones y facturas en todos los estados para que cada pantalla y alerta tenga algo que mostrar.
 
 ## Escalabilidad y Desarrollo Futuro
 
@@ -182,11 +192,10 @@ Todos ficticios: 4 centros de costo, 7 usuarios (uno por rol, un segundo solicit
 
 ## Análisis de arquitectura de navegación (2026-11-24)
 
-- **Estado actual (implementado)**: navegación de dos niveles ligera: barra lateral con una sola sección "Compras" (`index.html`) + pestañas internas `TABS` en `#compras-root` (`src/compras/vista.js`) para las 10 vistas navegables. Incluye scroll móvil, teclado/ARIA y persistencia de tab por estado de vista.
-- **Estado objetivo (spec FR-034)**: barra lateral agrupada en Panel / Adquisiciones / Compras, con visibilidad por matriz FR-033 (`visibilidad.js`, Fase 16 fundacional cerrada) y encabezado "Grupo › Vista". Trazabilidad se consulta desde la cadena documental, no como vista de la barra lateral.
-- **Decisión**: mantener las pestañas actuales hasta ejecutar la Fase 17, porque el cambio estructural depende de `VISIBILIDAD`, filtros por rol, permisos y ajuste de pruebas.
-- **Impacto si se cambia antes de la Fase 17**: alto riesgo de regresión en `vista.test.js`, accesibilidad, deep-links `data-ir` y cobertura SC-015/SC-016 sin modo lectura ni filtros aplicados.
-- **Actualizaciones necesarias**: spec/plan/tasks/research/quickstart/README documentan la arquitectura actual y el objetivo diferido; `visibilidad.js` ya está creado y T143 debe agregarlo al árbol de código de este plan.
+- **Estado implementado (spec FR-034)**: barra lateral agrupada en Panel / Adquisiciones / Compras, con visibilidad por matriz FR-033 (`visibilidad.js`, Fase 16 cerrada), íconos SVG decorativos por vista y encabezado de sección; la vista Panel muestra `ADQUISICIONES Y COMPRAS` / `Resumen General`. No existe una fila duplicada de pestañas horizontales. Trazabilidad se consulta desde la cadena documental, no como vista de la barra lateral.
+- **Decisión aplicada**: la navegación agrupada y el modo solo lectura ya están integrados con `vistasVisibles()` y `nivelVista()`; la deuda restante no es estructural, sino funcional: T127 (filtro en servicios) y T137/T139 (`Mis solicitudes` en los cinco roles).
+- **Impacto de la deuda pendiente**: sin T127, una operación directa sobre `ordenes-compra.js`/`recepciones.js` no aplica el filtro del `solicitante`; sin T137/T139, el panel no cumple la tabla completa de FR-035 para los cinco roles. SC-015/SC-016 ya están cubiertos por `permisos.test.js` y `visibilidad.test.js`.
+- **Actualizaciones aplicadas**: `spec.md`, `plan.md`, `tasks.md`, `quickstart.md` y el `README.md` del módulo comparten el estado canónico de las Fases 17–20; el árbol de código ya incluye `visibilidad.js`, `asistente.js` y los tests nuevos.
 
 ## Refinamiento UX y estado de sesión (2026-11-24)
 
@@ -197,7 +206,7 @@ Todos ficticios: 4 centros de costo, 7 usuarios (uno por rol, un segundo solicit
 - **Accesibilidad/responsive**: mantener contraste 4.5:1, foco visible, teclado/ARIA, y evitar overflow horizontal de página.
 - **Sesión/rol**: `src/app.js` muestra indicador compacto de sesión; no existe control "Vista de rol"; `src/compras/almacenamiento.js` impide el cambio de rol en una sesión iniciada para los cinco roles.
 - **Permisos base**: `crear_solicitud` incluye los cinco roles; la semilla actualiza los nombres de los dos `jefe_compras`.
-- **Verificación**: `npm run lint` y `npm run format:check` OK con el alcance ampliado de `.prettierignore`; `npx vitest run tests/integration/compras/vista.test.js tests/integration/compras/autenticacion.test.js` 17/17 OK. Suite completa y recorrido manual por rol pendientes (Fases 17-20).
+- **Verificación**: `npm run lint` y `npm run format:check` OK con el alcance ampliado de `.prettierignore`; `npm test -- --run` 18 archivos / 260 pruebas aprobadas y 56 omitidas. El recorrido manual por rol de los escenarios 1 a 4 de `quickstart.md` queda como procedimiento de validación en navegador; la deuda funcional abierta es T127 y T137/T139.
 - **Pendiente**: completar navegación agrupada, modo lectura, filtros por rol, encabezado por sección, panel FR-035 y pruebas SC-015/SC-016/SC-017 antes de declarar cumplimiento de la matriz de visibilidad.
 
 ## Seguimiento de Complejidad

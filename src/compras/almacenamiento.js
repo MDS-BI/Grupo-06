@@ -83,6 +83,19 @@ function escribirCrudo(nombre, valor) {
   }
 }
 
+function borrarCrudo(nombre) {
+  const s = storage();
+  if (!s) {
+    memoria.delete(nombre);
+    return;
+  }
+  try {
+    s.removeItem(clave(nombre));
+  } catch {
+    // ignorar: el estado en memoria se considera cierre local
+  }
+}
+
 export function leer(nombre) {
   try {
     const raw = leerCrudo(nombre);
@@ -278,6 +291,12 @@ export function estaAutenticado() {
 export function marcarAutenticacion(valor = true) {
   escribirCrudo(AUTENTICACION_KEY, valor ? 'true' : 'false');
   return Boolean(valor);
+}
+
+/** Elimina la sesión persistida y fuerza el estado no autenticado. */
+export function limpiarSesion() {
+  borrarCrudo(SESION_KEY);
+  return marcarAutenticacion(false);
 }
 
 /** Completa la identidad de la sesión con el usuario semilla correspondiente. */

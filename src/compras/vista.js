@@ -122,6 +122,29 @@ function grupoDeTab(id) {
   return TABS.find((t) => t.id === id)?.grupo || 'Panel';
 }
 
+/** Ícono lineal de 16 px para cada entrada de la barra lateral de compras. */
+function iconoNavegacion(id) {
+  const paths = {
+    panel: '<rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M3 9h18"></path><path d="M9 9v12"></path>',
+    proveedores: '<path d="M3 21h18"></path><path d="M5 21V7l7-4 7 4v14"></path><path d="M9 21v-6h6v6"></path><path d="M9 10h1"></path><path d="M14 10h1"></path>',
+    catalogo: '<path d="M4 5h16v14H4z"></path><path d="M4 9h16"></path><path d="M9 9v10"></path>',
+    evaluaciones: '<path d="M12 3l2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.6 9.1l5.8-.8L12 3z"></path>',
+    solicitudes: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M9 15h6"></path><path d="M12 12v6"></path>',
+    cotizaciones: '<path d="M4 6h16v12H4z"></path><path d="M8 10h8"></path><path d="M8 14h5"></path><circle cx="17" cy="14" r="1"></circle>',
+    ordenes: '<rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M7 8h10"></path><path d="M7 12h6"></path><path d="M16 16h2"></path>',
+    recepciones: '<path d="M3 7h11v10H3z"></path><path d="M14 11h4l3 3v3h-7z"></path><circle cx="7" cy="18" r="2"></circle><circle cx="18" cy="18" r="2"></circle>',
+    facturas: '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3z"></path><path d="M9 8h6"></path><path d="M9 12h6"></path>',
+    devoluciones: '<path d="M9 7L4 12l5 5"></path><path d="M4 12h10a6 6 0 0 1 6 6"></path>'
+  };
+  const contenido = paths[id] || paths.panel;
+  return `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${contenido}</svg>`;
+}
+
+function botonNavegacion(tabActual, idActual) {
+  const activo = tabActual.id === idActual;
+  return `<button type="button" id="nav-tab-${tabActual.id}" class="side-nav-item${activo ? ' active' : ''}" data-nav-tab="${tabActual.id}" aria-controls="compras-content"${activo ? ' aria-current="page"' : ''}>${iconoNavegacion(tabActual.id)}<span>${esc(tabActual.label)}</span></button>`;
+}
+
 function tabsPara(usuario) {
   const visibles = new Set(vistasVisibles(usuario));
   return TABS.filter((t) => visibles.has(t.id));
@@ -378,29 +401,36 @@ export function renderComprasView() {
         .map(([grupo, ids]) => {
           const items = visibles.filter((t) => ids.includes(t.id));
           if (!items.length) return '';
-          return `<div class="side-nav-grupo">
-            <p class="side-nav-grupo-titulo">${esc(grupo)}</p>
-            ${items
-              .map(
-                (t) => `<button type="button" id="nav-tab-${t.id}" class="side-nav-item${t.id === tab ? ' active' : ''}" data-nav-tab="${t.id}" aria-controls="compras-content"${t.id === tab ? ' aria-current="page"' : ''}>${esc(t.label)}</button>`
-              )
-              .join('')}
+          const tituloGrupo =
+            grupo === 'Panel'
+              ? '<p class="side-nav-grupo-titulo sr-only">Panel</p>'
+              : `<p class="side-nav-grupo-titulo">${esc(grupo)}</p>`;
+          return `<div class="side-nav-grupo" aria-label="${esc(grupo)}">
+            ${tituloGrupo}
+            ${items.map((t) => botonNavegacion(t, tab)).join('')}
           </div>`;
         })
         .join('')}
     `;
   }
 
+  const esPanel = tab === 'panel';
+  const kicker = esPanel ? 'ADQUISICIONES Y COMPRAS' : seccionActual(visibles);
+  const titulo = esPanel ? 'Resumen General' : activo?.label || 'Panel';
+  const subtitulo = esPanel
+    ? 'Vista general del ciclo de compra, pendientes por rol y alertas del período.'
+    : 'Ciclo completo de compra: solicitud, cotización, OC, recepción, factura y devolución.';
+
   root.innerHTML = `
     <div id="compras-aviso" class="compras-aviso" role="alert" aria-live="assertive" tabindex="-1" hidden></div>
     <div class="compras-header${esAdminTI ? ' admin-ti-activo' : ''}">
       <div>
-        <p class="muted compras-seccion" aria-live="polite">${esc(seccionActual(visibles))}</p>
+        <p class="muted compras-seccion" aria-live="polite">${esc(kicker)}</p>
         <div class="compras-titulo-fila">
-          <h1 id="compras-titulo" tabindex="-1">${esc(activo?.label || 'Panel')}</h1>
+          <h1 id="compras-titulo" tabindex="-1">${esc(titulo)}</h1>
           ${esAdminTI ? '<span class="admin-ti-badge" aria-label="Privilegios elevados: Administrador TI"><svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 1.5l1.8 3.6 4 .6-2.9 2.8.7 4L8 10.6 4.4 12.5l.7-4L2.2 5.7l4-.6L8 1.5z"></path></svg>Privilegios elevados</span>' : ''}
         </div>
-        <p class="muted">Ciclo completo de compra: solicitud, cotización, OC, recepción, factura y devolución.</p>
+        <p class="muted">${esc(subtitulo)}</p>
       </div>
       <div class="compras-header-acciones">
         <button type="button" class="link" id="compras-exportar-csv">Exportar CSV de esta vista</button>

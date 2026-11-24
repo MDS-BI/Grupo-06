@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { JSDOM } from 'jsdom';
 import { CLAVE_DEMO } from '../../../src/compras/autenticacion.js';
+import { clave } from '../../../src/compras/almacenamiento.js';
 
 const html = fs.readFileSync(
   fileURLToPath(new URL('../../../index.html', import.meta.url)),
@@ -106,6 +107,7 @@ describe('acceso a la interfaz de compras', () => {
     expect(qs('login-overlay').hidden).toBe(false);
     expect(qs('login-rol').value).toBe('');
     expect(qs('campo-nombre').hidden).toBe(true);
+    expect(localStorage.getItem(clave('sesion'))).toBeNull();
   });
 
   it('ingresa con nombre para jefatura y muestra la sesión identificada', () => {
@@ -130,6 +132,33 @@ describe('acceso a la interfaz de compras', () => {
     expect(qs('login-error').hidden).toBe(false);
     expect(qs('login-error').textContent).toContain('no corresponde al rol');
     expect(qs('login-overlay').hidden).toBe(false);
+  });
+
+  it('muestra el ingreso aunque exista una sesión guardada sin autenticación', async () => {
+    const { setSesion } = await import('../../../src/compras/almacenamiento.js');
+    setSesion({ usuario_id: 'u-admin-1', rol: 'admin_ti' });
+    const { boot } = await import('../../../src/app.js');
+    await boot();
+
+    expect(qs('login-overlay').hidden).toBe(false);
+    expect(qs('sesion-indicador').hidden).toBe(true);
+  });
+
+  it('alterna el selector entre Modo Real y Modo Demo', () => {
+    expect(qs('login-modo-real').getAttribute('aria-pressed')).toBe('true');
+
+    qs('login-modo-demo').click();
+
+    expect(qs('login-modo-demo').getAttribute('aria-pressed')).toBe('true');
+    expect(qs('login-modo-real').getAttribute('aria-pressed')).toBe('false');
+    expect(qs('login-modo-rol').open).toBe(true);
+    expect(qs('login-directorio').hidden).toBe(false);
+
+    qs('login-modo-real').click();
+
+    expect(qs('login-modo-real').getAttribute('aria-pressed')).toBe('true');
+    expect(qs('login-modo-rol').open).toBe(false);
+    expect(qs('login-directorio').hidden).toBe(true);
   });
 
   it('mantiene accesibles encabezados, pestañas, etiquetas y tablas', () => {

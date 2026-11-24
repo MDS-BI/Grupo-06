@@ -45,6 +45,27 @@
               <p class="muted">Autentícate con tu correo institucional.</p>
             </div>
 
+            <div class="login-modo" role="group" aria-label="Modo de acceso">
+              <button
+                type="button"
+                id="login-modo-demo"
+                class="login-modo-opcion"
+                aria-pressed="false"
+                aria-controls="login-modo-rol login-directorio"
+              >
+                Modo Demo
+              </button>
+              <button
+                type="button"
+                id="login-modo-real"
+                class="login-modo-opcion activo"
+                aria-pressed="true"
+                aria-controls="login-email"
+              >
+                Modo Real
+              </button>
+            </div>
+
             <div class="campo">
               <label for="login-email">Correo corporativo</label>
               <input
@@ -91,7 +112,7 @@
             <p id="login-error" class="login-error" role="alert" hidden></p>
 
             <div class="form-actions">
-              <button type="submit" class="primary login-submit">Ingresar al ERP</button>
+              <button type="submit" class="primary login-submit">Iniciar sesión</button>
               <button
                 type="button"
                 id="btn-modo-presentacion"

@@ -42,7 +42,7 @@ Describir las interfaces que el módulo `002` expone hacia el usuario y hacia ot
 - `generarCSV(columnas, filas)`: devuelve el contenido completo del archivo.
 - `descargarCSV(nombre, contenido)`: crea el Blob, dispara la descarga y libera la URL temporal.
 - `exportarListado(nombre, filas, columnas, { descargar })`: compone y, por defecto, descarga el archivo.
-- `exportarProveedores({ filas, filtro, descargar, usuario })`, `exportarSolicitudes(usuario, { filtro, descargar })`, `exportarOrdenes({ filas, filtro, descargar })`, `exportarRecepciones({ filas, filtro, descargar })` y `exportarFacturas({ filas, filtro, descargar })` son los puntos de entrada usados por los botones **Exportar CSV** de cada pestaña.
+- `exportarProveedores({ filas, filtro, descargar, usuario })`, `exportarSolicitudes(usuario, { filtro, descargar })`, `exportarOrdenes({ filas, filtro, descargar })`, `exportarRecepciones({ filas, filtro, descargar })`, `exportarFacturas({ filas, filtro, descargar })` y `exportarTrazabilidad({ entidad, entidad_id, filtro, descargar, usuario })` son los puntos de entrada usados por los botones **Exportar CSV** de cada pestaña y por la cadena documental.
 
 ### Formato del archivo
 
@@ -54,7 +54,7 @@ Describir las interfaces que el módulo `002` expone hacia el usuario y hacia ot
 | Cabecera              | Primera fila, con rótulos en español definidos en `COLUMNAS_*`                                                      |
 | Escapado              | Los valores con `"`, `;`, salto de línea o coma se envuelven en comillas dobles y las comillas internas se duplican |
 | Seguridad             | Un valor que empieza con `=`, `+`, `-` o `@` y no es numérico se prefija con `'` para evitar fórmulas               |
-| Nombres de archivo    | `proveedores.csv`, `solicitudes.csv`, `ordenes-compra.csv`, `recepciones.csv` y `facturas.csv`                      |
+| Nombres de archivo    | `proveedores.csv`, `solicitudes.csv`, `ordenes-compra.csv`, `recepciones.csv`, `facturas.csv` y `trazabilidad.csv` (historial, solo `admin_ti`) |
 | Valores vacíos        | Cadena vacía; una cuenta sin registrar se muestra como `No registrado` en la vista, nunca como un número inventado  |
 
 ### Reglas de contenido

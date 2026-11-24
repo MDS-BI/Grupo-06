@@ -208,6 +208,31 @@ h3 {
 .login-form-head .muted { color: #A9B7CC; font-size: 0.9rem; margin: 0 0 22px; }
 .login-form .campo { margin-bottom: 18px; }
 
+.login-modo {
+  display: inline-flex;
+  gap: 4px;
+  margin: 0 0 22px;
+  padding: 4px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 999px;
+  background: rgba(9, 13, 22, 0.66);
+}
+
+.login-modo-opcion {
+  padding: 6px 16px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: #A9B7CC;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.login-modo-opcion:hover { color: #E6EDF3; }
+.login-modo-opcion.activo { background: #2F81F7; color: #F0F6FC; }
+
 .login-form label {
   display: block;
   margin-bottom: 8px;
@@ -611,19 +636,48 @@ h3 {
 }
 
 .side-nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   width: 100%;
-  padding: 9px 12px;
+  padding: 9px 12px 9px 14px;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: 6px;
   background: transparent;
-  color: inherit;
+  color: #E6EDF3;
   font-size: 0.9rem;
   text-align: left;
   cursor: pointer;
 }
 
-.side-nav-item:hover { background: rgba(255, 255, 255, 0.09); color: #ffffff; }
-.side-nav-item.active { background: var(--accent); color: #ffffff; }
+.side-nav-item svg {
+  flex: 0 0 auto;
+  color: #8B949E;
+}
+
+.side-nav-item:hover {
+  background: rgba(177, 186, 196, 0.12);
+  color: #E6EDF3;
+}
+
+.side-nav-item.active {
+  background: rgba(177, 186, 196, 0.16);
+  color: #F0F6FC;
+  font-weight: 700;
+}
+
+.side-nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 3px;
+  height: 20px;
+  background: #2F81F7;
+  border-radius: 99px;
+  transform: translateY(-50%);
+}
 
 .nav-module {
   display: flex;
@@ -991,6 +1045,21 @@ button.danger:hover {
   .nav-module .nav-label {
     font-size: 0.88rem;
     font-weight: 500;
+  }
+
+  .side-nav-titulo,
+  .side-nav-grupo-titulo:not(.sr-only) {
+    display: none;
+  }
+  .side-nav-grupo {
+    align-items: center;
+  }
+  .side-nav-item {
+    justify-content: center;
+    padding: 10px 8px;
+  }
+  .side-nav-item span {
+    display: none;
   }
 }
 

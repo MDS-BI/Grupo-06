@@ -33,6 +33,7 @@ function escapar(valor) {
 let wired = false;
 let loginActivo = false;
 let modoPresentacion = false;
+let modoAcceso = 'real';
 
 function showModule() {
   // El único módulo de esta aplicación es Adquisiciones y Compras.
@@ -100,6 +101,30 @@ function alternarModoPresentacion() {
   sincronizarModoPresentacion();
   if (modoPresentacion) qs('login-directorio-lista')?.querySelector('.directory-user')?.focus();
   else qs('btn-modo-presentacion')?.focus();
+}
+
+/** Alterna entre el acceso por correo (Real) y el acceso por rol/directorio (Demo). */
+function aplicarModoAcceso(modo) {
+  modoAcceso = modo === 'demo' ? 'demo' : 'real';
+  const demo = modoAcceso === 'demo';
+
+  for (const [id, activo] of [
+    ['login-modo-demo', demo],
+    ['login-modo-real', !demo]
+  ]) {
+    const boton = qs(id);
+    if (!boton) continue;
+    boton.classList.toggle('activo', activo);
+    boton.setAttribute('aria-pressed', String(activo));
+  }
+
+  const panelRol = qs('login-modo-rol');
+  if (panelRol) panelRol.open = demo;
+
+  if (modoPresentacion !== demo) {
+    modoPresentacion = demo;
+    sincronizarModoPresentacion();
+  }
 }
 
 function aplicarTema(config) {
@@ -293,6 +318,7 @@ function bloquearInterfaz() {
   ocultarErrorLogin();
   modoPresentacion = false;
   sincronizarModoPresentacion();
+  aplicarModoAcceso('real');
 
   const workspace = document.querySelector('.workspace');
   if (workspace) {
@@ -421,6 +447,8 @@ function cablearEventos() {
   qs('login-clave')?.addEventListener('input', () => limpiarErrorCampo('login-clave'));
   qs('login-rol')?.addEventListener('change', () => actualizarCampoNombre({ enfocar: true }));
   qs('login-mostrar-clave')?.addEventListener('click', alternarVisibilidadClave);
+  qs('login-modo-demo')?.addEventListener('click', () => aplicarModoAcceso('demo'));
+  qs('login-modo-real')?.addEventListener('click', () => aplicarModoAcceso('real'));
   qs('btn-modo-presentacion')?.addEventListener('click', alternarModoPresentacion);
   qs('btn-tema')?.addEventListener('click', alternarTema);
   qs('btn-logout')?.addEventListener('click', () => {
@@ -440,10 +468,13 @@ export function initApp(resolved) {
   poblarDirectorioUsuarios();
   aplicarEtiquetas(resolved.config);
   cablearEventos();
-  showModule();
 
-  if (estaAutenticado()) desbloquearInterfaz(false);
-  else bloquearInterfaz();
+  if (estaAutenticado()) {
+    showModule();
+    desbloquearInterfaz(false);
+  } else {
+    bloquearInterfaz();
+  }
 }
 
 export async function boot(overrideConfig) {

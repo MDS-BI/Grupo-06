@@ -4,6 +4,7 @@ import {
   asegurarSemilla,
   estaAutenticado,
   leer,
+  limpiarSesion,
   marcarAutenticacion,
   setSesion
 } from './almacenamiento.js';
@@ -143,6 +144,6 @@ export function listarDirectorioUsuarios() {
 
 /** Cierra la sesión de demostración sin borrar los datos del módulo. */
 export function cerrarSesion() {
-  marcarAutenticacion(false);
+  limpiarSesion();
   return { ok: true, autenticado: estaAutenticado() };
 }

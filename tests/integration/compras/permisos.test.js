@@ -210,7 +210,7 @@ describe('permisos y visibilidad por rol', () => {
     intruso.click();
     expect(qs('compras-aviso').textContent).toBe('Tu rol no tiene acceso a esta vista');
     expect(qs('compras-aviso').hidden).toBe(false);
-    expect(qs('compras-titulo').textContent).toBe('Panel');
+    expect(qs('compras-titulo').textContent).toBe('Resumen General');
   });
 
   it('muestra el historial solo a roles con permiso y el botón de exportación solo a admin_ti', async () => {
@@ -239,7 +239,7 @@ describe('permisos y visibilidad por rol', () => {
 
   it('muestra el encabezado Grupo › Vista y nunca la tarjeta de sesión', async () => {
     await preparar('bodega');
-    expect(qs('compras-titulo').textContent).toBe('Panel');
+    expect(qs('compras-titulo').textContent).toBe('Resumen General');
     abrirVista('solicitudes');
     expect(qs('compras-titulo').textContent).toBe('Solicitudes');
     expect(qs('compras-root').querySelector('.compras-seccion').textContent).toBe(
