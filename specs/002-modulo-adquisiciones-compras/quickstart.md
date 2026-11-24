@@ -8,7 +8,7 @@
 
 - Node.js y npm compatibles con las versiones de Vite y Vitest declaradas en `package.json`.
 - Un navegador de escritorio moderno con `localStorage` disponible.
-- No se necesita backend, base de datos ni conexión a internet después de instalar dependencias. El acceso es simulado: elige un rol y usa la clave genérica `Compras2026`. Solicitante, Comprador y Jefe de Compras piden nombre. El rol queda fijo hasta cerrar sesión; para usar otro rol, cierre sesión e ingrese de nuevo.
+- No se necesita backend, base de datos ni conexión a internet después de instalar dependencias. El acceso es simulado: escriba su correo corporativo o use el directorio de acceso rápido con la clave genérica `Compras2026`; también está disponible el acceso por rol. Solicitante, Comprador y Jefe de Compras piden nombre. El rol queda fijo hasta cerrar sesión; para usar otro rol, cierre sesión e ingrese de nuevo.
 
 ## Configuración
 
@@ -25,7 +25,7 @@
    ```
 
 3. Abra la URL local que muestra Vite (por defecto `http://localhost:5173`).
-4. En la pantalla de acceso elija **Comprador**, escriba `Carla Díaz` e ingrese la clave genérica `Compras2026`. **Jefe de Compras** también pide nombre: la semilla tiene dos usuarios de ese rol, `Marcela Rojas` y `Jorge Muñoz`. Si elige **Encargado de Bodega** o **Administrador TI**, el campo de nombre se oculta y la sesión muestra solo el rol. El botón **Mostrar** permite verificar la clave y **Cerrar sesión** devuelve a esta pantalla sin borrar los datos. Con la sesión iniciada no es posible cambiar de rol: en los escenarios, "como `<rol>`" significa cerrar sesión e ingresar con ese rol.
+4. En la pantalla de acceso escriba `carla.diaz@example.com` o pulse su entrada en el directorio, e ingrese la clave genérica `Compras2026`. Por el acceso alternativo por rol, elija **Comprador**, escriba `Carla Díaz` y use la misma clave. **Jefe de Compras** también pide nombre: la semilla tiene dos usuarios de ese rol, `Marcela Rojas` y `Jorge Muñoz`. Si ingresa como **Encargado de Bodega** o **Administrador TI**, el campo de nombre se oculta y la sesión muestra el rol con su centro de costo. El botón **Mostrar** permite verificar la clave y **Cerrar sesión** devuelve a esta pantalla sin borrar los datos. Con la sesión iniciada no es posible cambiar de rol: en los escenarios, "como `<rol>`" significa cerrar sesión e ingresar con ese rol.
 
 La primera visita carga automáticamente `src/compras/semilla.json`: 7 usuarios (dos de ellos `jefe_compras`), 4 centros de costo, 20 productos, 8 proveedores, 10 solicitudes, 7 cotizaciones, 8 órdenes de compra, 5 recepciones, 7 documentos de facturación, 2 devoluciones, 10 referencias de catálogo y 2 evaluaciones. Todos los datos son ficticios y las fechas se ajustan al día actual.
 
@@ -42,7 +42,7 @@ Después recargue la página para que se vuelva a cargar la semilla.
 | Comando                | Resultado esperado                                                                                              |
 | ---------------------- | --------------------------------------------------------------------------------------------------------------- |
 | `npm run dev`          | Servidor Vite activo; la interfaz pide acceso y luego muestra solo el módulo Adquisiciones y Compras.          |
-| `npx vitest run`       | 150 pruebas aprobadas y 56 omitidas (las omitidas pertenecen al template base).                                 |
+| `npx vitest run`       | 232 pruebas aprobadas y 56 omitidas (las omitidas pertenecen al template base).                                 |
 | `npm run lint`         | 0 errores y 0 advertencias.                                                                                      |
 | `npm run build`        | Build de producción sin errores.                                                                                |
 | `npm run preview`      | El build se sirve en `http://localhost:4173` con el mismo comportamiento.                                       |

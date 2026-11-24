@@ -6,7 +6,7 @@ Trabajo grupal de **Modelación de Sistemas 2026-2**, Departamento de Ingenierí
 
 ## Estado del Repositorio
 
-**MVP funcional y probado en su núcleo, con tareas de cierre pendientes.** La aplicación ya no expone el template base en la interfaz: `index.html` contiene una única navegación (**Compras**) y un selector **Rol Activo** en la barra superior. El acceso se realiza eligiendo un rol y usando la clave genérica de demostración **`Compras2026`** (no protege datos reales; los roles siguen siendo simulados). Solo **Solicitante** y **Comprador** piden nombre; Jefatura, Bodega y Admin TI ingresan únicamente con su rol. El módulo cubre US1 a US11: el ciclo solicitud → cotización → orden de compra → recepción → factura → devolución, además del panel por rol, catálogo, evaluaciones y exportación CSV.
+**MVP funcional y probado en su núcleo, con tareas de cierre pendientes.** La aplicación ya no expone el template base en la interfaz: `index.html` contiene una única navegación (**Compras**) y un indicador de sesión de solo lectura en la barra superior. El acceso se realiza desde un portal corporativo: se puede escribir el correo institucional o usar el directorio de acceso rápido, con la clave genérica de demostración **`Compras2026`** (no protege datos reales; los roles siguen siendo simulados). También queda disponible el acceso por rol. **Solicitante**, **Comprador** y **Jefe de Compras** piden nombre; Bodega y Admin TI ingresan sin él y se muestran por rol. El rol queda fijo hasta cerrar sesión. El módulo cubre US1 a US12: el ciclo solicitud → cotización → orden de compra → recepción → factura → devolución, además del panel por rol, catálogo, evaluaciones, navegación por visibilidad y exportación CSV.
 
 El código de soporte del template base (`src/storage.js`, `src/module-config.js` y `src/components/`) se conserva como dependencia técnica, pero sus vistas (Panel, Entidades, Documentos y Búsqueda) ya no forman parte de la interfaz. Las pruebas de integración heredadas se mantienen en el repositorio con `describe.skip` y una nota que explica el motivo. El nombre por defecto de la aplicación es **Adquisiciones y Compras**.
 
@@ -27,15 +27,15 @@ npm run preview       # vista previa del build (http://localhost:4173)
 
 ### Interfaz actual
 
-- **Acceso**: pantalla de ingreso con selector de rol, campo de nombre condicional (solo Solicitante y Comprador), clave genérica `Compras2026`, opción para mostrar/ocultar la clave y cierre de sesión desde la barra superior. Los demás roles no tienen nombre: la sesión muestra únicamente su rol.
-- **Barra superior**: marca *Adquisiciones y Compras* con logotipo monograma SVG, selector **Rol Activo** y botón **Cerrar sesión**. Al cambiar el rol se recalculan los permisos y el contenido del panel en vivo, sin recargar la página.
+- **Acceso**: portal corporativo con campo de correo, directorio de siete usuarios con acceso de un clic y acceso alternativo por rol. La clave genérica es `Compras2026`; el nombre se pide solo a Solicitante, Comprador y Jefe de Compras. Incluye errores junto al campo, opción para mostrar/ocultar la clave y cierre de sesión.
+- **Barra superior**: marca *Adquisiciones y Compras* con logotipo monograma SVG, indicador de sesión con usuario, rol y centro de costo, distintivo de control de roles solo para Administrador TI y botón **Cerrar sesión**. El rol no cambia en vivo: para probar otro, cierre sesión e ingrese de nuevo.
 - **Barra lateral**: una sola sección, **Compras**, marcada como página activa (`aria-current="page"`) y con nombre accesible también cuando el icono se colapsa.
 - **Pestañas del módulo**: Panel, Proveedores, Solicitudes, Cotizaciones, Órdenes de compra, Recepciones, Facturas, Devoluciones, Catálogo y Evaluaciones. La exportación CSV está disponible desde el módulo.
 - **Panel**: pendientes por rol con contador y acceso directo, alertas de facturas por vencer, seguimiento de OC sin recepción, indicadores del mes y acciones rápidas.
 
 ### Roles y datos semilla
 
-La sesión inicial corresponde al rol `solicitante`. El selector **Rol Activo** permite probar en vivo los cinco roles definidos en la especificación:
+La semilla define cinco roles para la especificación; la sesión se fija al ingresar y se comprueba cerrando sesión entre roles:
 
 | Rol | Permisos principales |
 |---|---|
@@ -45,9 +45,9 @@ La sesión inicial corresponde al rol `solicitante`. El selector **Rol Activo** 
 | `bodega` | Registrar recepciones y devoluciones. |
 | `admin_ti` | Acceso completo, incluida la edición de datos bancarios de proveedores. |
 
-El RUT de personas naturales y el número de cuenta bancaria se enmascaran según el rol; solo `admin_ti` puede editar la cuenta y al hacerlo se actualiza `fecha_cambio_cuenta`. La regla está centralizada en `COMPRAS_PARAMETROS.datosBancarios` (`src/module-config.js`) y la consumen `src/compras/reglas.js`, `src/compras/proveedores.js` y la vista de Proveedores, de modo que al cambiar el rol en la barra superior la tabla se actualiza de inmediato.
+El RUT de personas naturales y el número de cuenta bancaria se enmascaran según el rol; solo `admin_ti` puede editar la cuenta y al hacerlo se actualiza `fecha_cambio_cuenta`. La regla está centralizada en `COMPRAS_PARAMETROS.datosBancarios` (`src/module-config.js`) y la consumen `src/compras/reglas.js`, `src/compras/proveedores.js`, `src/compras/visibilidad.js` y la vista de Proveedores; al ingresar con otro rol, la tabla se renderiza con esos permisos.
 
-La primera visita carga automáticamente `src/compras/semilla.json` con datos ficticios: 6 usuarios, 4 centros de costo, 20 productos, 8 proveedores, 10 solicitudes, 7 cotizaciones, 8 órdenes de compra, 5 recepciones, 7 documentos de facturación (incluidas notas de crédito), 2 devoluciones, 10 referencias de catálogo y 2 evaluaciones. Las fechas se desplazan al día actual para mantener vigentes los vencimientos y plazos.
+La primera visita carga automáticamente `src/compras/semilla.json` con datos ficticios: 7 usuarios con correo corporativo y centro de costo, 4 centros de costo, 20 productos, 8 proveedores, 10 solicitudes, 7 cotizaciones, 8 órdenes de compra, 5 recepciones, 7 documentos de facturación (incluidas notas de crédito), 2 devoluciones, 10 referencias de catálogo y 2 evaluaciones. Las fechas se desplazan al día actual para mantener vigentes los vencimientos y plazos.
 
 Las colecciones del módulo se guardan en `localStorage` con el prefijo `erp_compras:`; los proveedores se comparten con la entidad base (`erp_base_module:entities`). Para reiniciar los datos, limpia las claves `erp_compras:*` y `erp_base_module:entities` del almacenamiento local o ejecuta `await import('/src/compras/almacenamiento.js').then((m) => m.reiniciarCompras())` desde la consola con Vite abierto; después recarga la página.
 
@@ -55,7 +55,7 @@ Las colecciones del módulo se guardan en `localStorage` con el prefijo `erp_com
 
 Estado al cierre de esta iteración:
 
-- `npx vitest run`: pendiente revalidar suite completa tras cambios UI/sesi?n; ?ltima verificaci?n focalizada 2026-11-24: `tests/integration/compras/vista.test.js` + `autenticacion.test.js` **17/17 OK**.
+- `npx vitest run`: **232 pruebas aprobadas y 56 omitidas** (las omitidas pertenecen al template base); verificación completa 2026-11-24 tras la fusión del portal corporativo, la visibilidad por rol y el asistente IA.
 - `npm run lint`: **OK (2026-11-24)**.
 - `npm run format:check`: **sin diferencias** en el alcance de `.prettierignore` (núcleo base `src/storage.js` y `tests/unit/storage.test.js`).
 - `npm run build`: **build de producción sin errores**.

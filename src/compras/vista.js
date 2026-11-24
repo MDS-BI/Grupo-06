@@ -70,6 +70,7 @@ import {
 import { listarEvaluaciones, registrarEvaluacion, promedioProveedor } from './evaluaciones.js';
 import { construirPanel } from './panel.js';
 import { cadenaDocumental, historialDe } from './trazabilidad.js';
+import { abrirAsistente } from './asistente.js';
 import {
   exportarProveedores,
   exportarSolicitudes,
@@ -438,6 +439,8 @@ function iconoSvg(nombre, tamano = 20) {
     comprometido: '<path d="M3 17l5-5 4 4 7-9"></path><path d="M14 7h5v5"></path>',
     abiertas: '<circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path>',
     aprobadas: '<path d="M20 6L9 17l-5-5"></path>',
+    asistente:
+      '<path d="M21 12a8 8 0 0 1-8 8H8l-4 2 1.2-4A8 8 0 1 1 21 12z"></path><path d="M12 8l1.1 2.4L15.5 11l-2.4 1.1L12 14.5l-1.1-2.4L8.5 11l2.4-.6L12 8z"></path>',
     montoPago:
       '<rect x="2" y="5" width="20" height="14" rx="2"></rect><path d="M2 10h20"></path><path d="M6 15h4"></path>'
   };
@@ -590,6 +593,14 @@ function renderPanel() {
         </button>`
           )
           .join('')}
+        <button type="button" class="action-card action-card--asistente" data-accion="asistente-ia">
+          <span class="action-card-icon" aria-hidden="true">${iconoSvg('asistente')}</span>
+          <span class="action-card-body">
+            <strong>Asistente IA de Compras</strong>
+            <span class="muted">Consulta estados y ejecuta acciones permitidas según tu rol.</span>
+            <span class="action-card-badge">IA Corporativa</span>
+          </span>
+        </button>
       </div>
     </div>
     <div class="card">
@@ -650,6 +661,9 @@ function renderPanel() {
   content
     .querySelectorAll('[data-ir]')
     .forEach((btn) => btn.addEventListener('click', () => irA(btn.dataset.ir)));
+  content
+    .querySelectorAll('[data-accion="asistente-ia"]')
+    .forEach((btn) => btn.addEventListener('click', abrirAsistente));
 }
 
 function renderProveedores() {

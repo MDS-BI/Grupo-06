@@ -9,6 +9,7 @@ export const COLECCIONES = Object.freeze([
   'usuarios',
   'centros_costo',
   'productos',
+  'proveedores',
   'solicitudes',
   'cotizaciones',
   'ordenes',
@@ -19,6 +20,24 @@ export const COLECCIONES = Object.freeze([
   'evaluaciones',
   'trazabilidad'
 ]);
+
+/** Nombres corporativos de los usuarios semilla que no traen el campo `nombre`. */
+const NOMBRES_USUARIO_SEMILLA = Object.freeze({
+  'u-bodega-1': 'Encargado de Bodega',
+  'u-admin-1': 'Administrador TI'
+});
+
+/** Completa el nombre de un usuario sin sobrescribir los nombres ya registrados. */
+function normalizarUsuario(usuario) {
+  if (!usuario || typeof usuario !== 'object') return usuario;
+  if (String(usuario.nombre ?? '').trim()) return usuario;
+  const nombre = NOMBRES_USUARIO_SEMILLA[usuario.id];
+  return nombre ? { ...usuario, nombre } : usuario;
+}
+
+function normalizarUsuarios(lista) {
+  return Array.isArray(lista) ? lista.map(normalizarUsuario) : lista;
+}
 
 const ENTIDAD_POR_COLECCION = Object.freeze({
   solicitudes: 'solicitud',
@@ -67,7 +86,9 @@ function escribirCrudo(nombre, valor) {
 export function leer(nombre) {
   try {
     const raw = leerCrudo(nombre);
-    return raw ? JSON.parse(raw) : [];
+    const datos = raw ? JSON.parse(raw) : [];
+    // La normalización en lectura también cubre datos previos guardados sin nombre.
+    return nombre === 'usuarios' ? normalizarUsuarios(datos) : datos;
   } catch (e) {
     console.error(`No se pudo leer la colección ${nombre}`, e);
     return [];
@@ -195,13 +216,28 @@ function proveedorDesdeSemilla(p, hoy) {
   };
 }
 
+/** Colecciones semilla que aún no existen en el almacenamiento. */
+function coleccionesSinDatos() {
+  return COLECCIONES.filter((nombre) => {
+    if (!Array.isArray(semilla[nombre])) return false;
+    return !leerCrudo(nombre);
+  });
+}
+
 export function cargarSemilla({ forzar = false, hoy = hoyISO() } = {}) {
-  if (!forzar && semillaCargada()) return { cargada: false, motivo: 'ya_cargada' };
+  const yaCargada = semillaCargada();
+  const faltantes = coleccionesSinDatos();
+  if (!forzar && yaCargada && faltantes.length === 0) {
+    return { cargada: false, motivo: 'ya_cargada' };
+  }
   const delta = diasEntre('2026-11-03', hoy);
   const datos = desplazarFechas(clonar(semilla), delta);
   try {
     for (const nombre of COLECCIONES) {
-      if (Array.isArray(datos[nombre])) guardar(nombre, datos[nombre]);
+      if (!Array.isArray(datos[nombre])) continue;
+      // Si la semilla ya estaba cargada, solo rellenamos lo que falta sin borrar cambios del usuario.
+      if (!forzar && yaCargada && !faltantes.includes(nombre)) continue;
+      guardar(nombre, nombre === 'usuarios' ? normalizarUsuarios(datos[nombre]) : datos[nombre]);
     }
     if (Array.isArray(datos.proveedores)) {
       const actuales = loadEntities();
@@ -219,7 +255,9 @@ export function cargarSemilla({ forzar = false, hoy = hoyISO() } = {}) {
 }
 
 export function asegurarSemilla() {
-  if (semillaCargada()) return { cargada: false, motivo: 'ya_cargada' };
+  if (semillaCargada() && coleccionesSinDatos().length === 0) {
+    return { cargada: false, motivo: 'ya_cargada' };
+  }
   return cargarSemilla();
 }
 
@@ -242,24 +280,43 @@ export function marcarAutenticacion(valor = true) {
   return Boolean(valor);
 }
 
+/** Completa la identidad de la sesión con el usuario semilla correspondiente. */
+function completarSesion(sesion) {
+  const usuarios = leer('usuarios');
+  const usuario =
+    usuarios.find((u) => u.id === sesion.usuario_id) ||
+    usuarios.find((u) => u.rol === sesion.rol);
+  return {
+    ...SESION_DEFAULT,
+    ...sesion,
+    nombre: sesion.nombre || usuario?.nombre || etiquetaRolTexto(sesion.rol),
+    centro_costo_id: sesion.centro_costo_id || usuario?.centro_costo_id || ''
+  };
+}
+
 export function getSesion() {
   try {
     const raw = leerCrudo(SESION_KEY);
-    if (!raw) return { ...SESION_DEFAULT };
+    if (!raw) return completarSesion({ ...SESION_DEFAULT });
     const sesion = JSON.parse(raw);
-    if (!ROLES.includes(sesion.rol)) return { ...SESION_DEFAULT };
-    return { ...SESION_DEFAULT, ...sesion };
+    if (!ROLES.includes(sesion.rol)) return completarSesion({ ...SESION_DEFAULT });
+    return completarSesion(sesion);
   } catch {
-    return { ...SESION_DEFAULT };
+    return completarSesion({ ...SESION_DEFAULT });
   }
 }
 
 export function setSesion(sesion) {
   const rol = ROLES.includes(sesion.rol) ? sesion.rol : 'solicitante';
   const usuarios = leer('usuarios');
-  const candidato =
-    usuarios.find((u) => u.rol === rol) || usuarios.find((u) => u.id === sesion.usuario_id);
-  const out = { usuario_id: sesion.usuario_id || candidato?.id || SESION_DEFAULT.usuario_id, rol };
+  const usuario =
+    usuarios.find((u) => u.id === sesion.usuario_id) || usuarios.find((u) => u.rol === rol);
+  const out = {
+    usuario_id: usuario?.id || sesion.usuario_id || SESION_DEFAULT.usuario_id,
+    nombre: usuario?.nombre || sesion.nombre || etiquetaRolTexto(rol),
+    rol,
+    centro_costo_id: usuario?.centro_costo_id || sesion.centro_costo_id || ''
+  };
   escribirCrudo(SESION_KEY, JSON.stringify(out));
   return out;
 }
@@ -268,17 +325,19 @@ export function getUsuarioActivo() {
   const sesion = getSesion();
   const usuarios = leer('usuarios');
   const candidato =
-    usuarios.find((u) => u.id === sesion.usuario_id) || usuarios.find((u) => u.rol === sesion.rol);
-  const conNombre = ROLES_CON_NOMBRE.includes(sesion.rol);
+    usuarios.find((u) => u.id === sesion.usuario_id) ||
+    usuarios.find((u) => u.rol === sesion.rol);
   const usuario = candidato || {
     id: sesion.usuario_id,
-    nombre: sesion.rol,
-    rol: sesion.rol
+    nombre: sesion.nombre || etiquetaRolTexto(sesion.rol),
+    rol: sesion.rol,
+    centro_costo_id: sesion.centro_costo_id
   };
   return {
     ...usuario,
-    nombre: conNombre ? usuario.nombre || etiquetaRolTexto(sesion.rol) : sesion.rol,
-    rol: sesion.rol
+    nombre: String(usuario.nombre || '').trim() || etiquetaRolTexto(sesion.rol),
+    rol: sesion.rol,
+    centro_costo_id: usuario.centro_costo_id || sesion.centro_costo_id || ''
   };
 }
 
