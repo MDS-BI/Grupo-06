@@ -306,31 +306,31 @@ export function etiquetaUsuario(id) {
 }
 
 export function setRolActivo(rol) {
-  // Con sesión iniciada, solo admin_ti puede cambiar el rol activo de demostración.
-  if (estaAutenticado()) {
-    const actual = getUsuarioActivo();
-    if (actual?.rol !== 'admin_ti') return getSesion();
-  }
+  // El rol queda fijo durante una sesión iniciada: solo se cambia al cerrar sesión.
+  if (estaAutenticado()) return getSesion();
   const usuarios = leer('usuarios');
   const usuario = usuarios.find((u) => u.rol === rol);
   return setSesion({ rol, usuario_id: usuario?.id });
 }
 
 export const PERMISOS = Object.freeze({
-  crear_solicitud: ['solicitante', 'comprador', 'jefe_compras', 'admin_ti'],
-  aprobar_solicitud: ['jefe_compras', 'admin_ti'],
-  gestionar_proveedores: ['comprador', 'jefe_compras', 'admin_ti'],
+  crear_solicitud: ['solicitante', 'comprador', 'jefe_compras', 'bodega', 'admin_ti'],
+  aprobar_solicitud: ['jefe_compras'],
+  gestionar_proveedores: ['comprador'],
   editar_datos_bancarios: ['admin_ti'],
-  emitir_oc: ['comprador', 'jefe_compras', 'admin_ti'],
-  gestionar_cotizaciones: ['comprador', 'jefe_compras', 'admin_ti'],
-  registrar_recepcion: ['bodega', 'admin_ti'],
-  registrar_factura: ['comprador', 'jefe_compras', 'admin_ti'],
-  conciliar_factura: ['comprador', 'jefe_compras', 'admin_ti'],
-  aprobar_pago: ['jefe_compras', 'admin_ti'],
-  registrar_devolucion: ['bodega', 'admin_ti'],
-  aprobar_devolucion: ['jefe_compras', 'admin_ti'],
-  gestionar_catalogo: ['comprador', 'jefe_compras', 'admin_ti'],
-  evaluar_proveedor: ['comprador', 'jefe_compras', 'admin_ti'],
+  desbloquear_proveedor: ['admin_ti'],
+  emitir_oc: ['comprador'],
+  gestionar_cotizaciones: ['comprador'],
+  registrar_recepcion: ['bodega'],
+  registrar_factura: ['comprador'],
+  conciliar_factura: ['comprador'],
+  aprobar_pago: ['jefe_compras'],
+  registrar_devolucion: ['bodega'],
+  aprobar_devolucion: ['jefe_compras'],
+  gestionar_catalogo: ['comprador'],
+  evaluar_proveedor: ['comprador', 'jefe_compras'],
+  consultar_trazabilidad: ['jefe_compras', 'admin_ti'],
+  exportar_trazabilidad: ['admin_ti'],
   exportar: ['solicitante', 'comprador', 'jefe_compras', 'bodega', 'admin_ti']
 });
 

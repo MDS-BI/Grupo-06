@@ -135,7 +135,7 @@ Los flujos de cada historia están en `tests/integration/compras/`: `proveedores
 
 - T101 y T110: cierre de OC con saldo pendiente y cálculo y visualización de `credito_a_favor` cuando una devolución `defectuosa` descuenta una factura ya aprobada.
 - T104, T109 y T118: anulación con `motivo_anulacion` en facturas, devoluciones, cotizaciones y recepciones, con su registro en trazabilidad.
-- Rediseño de permisos y navegación por rol (FR-033 a FR-036): los pasos marcados en los escenarios 1, 2, 3 y 4 fallarán hasta que se implemente.
-- Creación de solicitudes por los cinco roles, segundo `jefe_compras` en la semilla y rol fijo por sesión (FR-005, FR-006, FR-034, FR-037): los pasos 1, 3 y 4 del escenario 1 y los pasos 2 y 3 del escenario 3 fallarán hasta que se implementen; hoy la barra superior todavía muestra el selector **Rol Activo**.
+- Rediseño de permisos y navegación por rol (FR-033 a FR-036): permisos y visibilidad base implementados (T121-T123); la navegación agrupada y el modo solo lectura por vista (T125-T132) siguen pendientes.
+- Creación de solicitudes por los cinco roles, segundo `jefe_compras` en la semilla y rol fijo por sesión (FR-005, FR-006, FR-037): implementados en T121, T146 y T147; la barra superior muestra el indicador de solo lectura y no existe selector **Rol Activo**. La navegación agrupada por rol (FR-034) sigue pendiente en T125.
 
 T107, T108 y T120 están cerradas: `npm run format:check` pasa sin diferencias en el alcance de `.prettierignore`, la accesibilidad (SC-013) se verifica en `vista.test.js` (errores junto al campo con `role="alert"`/`aria-describedby`) y la auditoría de SC-003 en `flujo-compras.test.js`.

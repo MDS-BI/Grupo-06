@@ -44,12 +44,12 @@ describe('vista de compras', () => {
     expect(qs('compras-root').textContent).toContain('Adquisiciones y Compras');
     expect(qs('sesion-indicador').hidden).toBe(false);
     expect(qs('sesion-indicador').textContent).toContain('Solicitante');
-    expect(qs('admin-rol-control').hidden).toBe(true);
+    expect(qs('rol-activo')).toBeNull();
     expect(qs('compras-root').querySelectorAll('[data-tab]').length).toBe(10);
   });
 
   it('muestra indicador de sesión de solo lectura para roles no admin', () => {
-    expect(qs('admin-rol-control').hidden).toBe(true);
+    expect(qs('rol-activo')).toBeNull();
     expect(qs('sesion-indicador').textContent).toContain('Solicitante');
     expect(qs('compras-root').textContent).not.toContain('Sesión activa');
   });
@@ -69,24 +69,20 @@ describe('vista de compras', () => {
     expect(qs('compras-content').textContent).toContain('Acciones rápidas');
   });
 
-  it('solo admin_ti puede ver y usar el cambio de rol activo', async () => {
+  it('mantiene el rol fijo y no muestra selector de rol activo', async () => {
     qs('nav-compras').click();
-    expect(qs('admin-rol-control').hidden).toBe(true);
+    expect(qs('rol-activo')).toBeNull();
+    expect(qs('sesion-indicador').textContent).toContain('Solicitante');
 
-    qs('btn-logout').click();
-    const { iniciarSesion } = await import('../../../src/compras/autenticacion.js');
-    iniciarSesion('admin_ti', '', 'Compras2026');
-    qs('login-overlay').hidden = true;
-    document.querySelector('.workspace').inert = false;
-    qs('btn-logout').hidden = false;
-    const { boot } = await import('../../../src/app.js');
-    await boot();
+    await activarAdmin();
+    expect(qs('rol-activo')).toBeNull();
+    expect(qs('sesion-indicador').textContent).toContain('Administrador TI');
 
-    expect(qs('admin-rol-control').hidden).toBe(false);
-    const selector = qs('rol-activo');
-    selector.value = 'comprador';
-    selector.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
-    expect(qs('sesion-indicador').textContent).toContain('Comprador');
+    const { getUsuarioActivo, setRolActivo } = await import(
+      '../../../src/compras/almacenamiento.js'
+    );
+    setRolActivo('comprador');
+    expect(getUsuarioActivo().rol).toBe('admin_ti');
   });
 
   it('enmascara RUT para persona natural y muestra "No registrado" cuando falta cuenta', async () => {
@@ -102,7 +98,7 @@ describe('vista de compras', () => {
         region: 'Metropolitana',
         condicion_pago_dias: 30
       },
-      { id: 'u-admin-1', rol: 'admin_ti' }
+      { id: 'u-comprador-1', rol: 'comprador' }
     );
     const { boot } = await import('../../../src/app.js');
     await boot();
@@ -171,6 +167,14 @@ async function activarAdmin() {
   await boot();
 }
 
+async function activarComprador() {
+  qs('btn-logout').click();
+  const { iniciarSesion } = await import('../../../src/compras/autenticacion.js');
+  iniciarSesion('comprador', 'Carla Díaz', 'Compras2026');
+  const { boot } = await import('../../../src/app.js');
+  await boot();
+}
+
 function luminancia(hex) {
   const canales = [1, 3, 5]
     .map((inicio) => parseInt(hex.slice(inicio, inicio + 2), 16) / 255)
@@ -219,7 +223,7 @@ describe('accesibilidad del módulo de compras', () => {
   });
 
   it('muestra el error de validación junto al campo afectado', async () => {
-    await activarAdmin();
+    await activarComprador();
     qs('compras-root').querySelector('[data-tab="proveedores"]').click();
     qs('prov-nuevo').click();
     qs('prov-razon').value = 'Proveedor Prueba SpA';

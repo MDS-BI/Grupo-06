@@ -186,6 +186,32 @@ export function actualizarProveedor(id, cambios, usuario) {
   return lista[idx];
 }
 
+export function actualizarDatosBancarios(id, datos, usuario) {
+  exigirPermiso('editar_datos_bancarios', usuario);
+  const lista = loadEntities();
+  const idx = lista.findIndex((p) => p.id === id || p.entity_id === id);
+  if (idx === -1) throw new Error('Proveedor no encontrado');
+  const previo = lista[idx];
+  const banco = String(datos.banco ?? previo.banco ?? '').trim();
+  const numeroCuenta = String(datos.numero_cuenta ?? previo.numero_cuenta ?? '').trim();
+  const fusionado = { ...previo, banco, numero_cuenta: numeroCuenta };
+  const { valid, errors } = validarProveedor(fusionado, { idExcluir: previo.id });
+  if (!valid) throw new Error(Object.values(errors)[0]);
+  const bancoCambio =
+    banco !== String(previo.banco ?? '').trim() ||
+    numeroCuenta !== String(previo.numero_cuenta ?? '').trim();
+  lista[idx] = {
+    ...previo,
+    banco,
+    numero_cuenta: numeroCuenta,
+    fecha_cambio_cuenta: bancoCambio ? hoyISO() : previo.fecha_cambio_cuenta || '',
+    updatedAt: new Date().toISOString()
+  };
+  saveEntities(lista);
+  if (bancoCambio) registrarCambioBancario(lista[idx], usuario);
+  return lista[idx];
+}
+
 export function cambiarEstadoProveedor(id, nuevoEstado, usuario) {
   exigirPermiso('gestionar_proveedores', usuario);
   if (!ESTADOS_PROVEEDOR.includes(nuevoEstado)) throw new Error('Estado de proveedor inválido');

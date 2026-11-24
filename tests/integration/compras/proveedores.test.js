@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
+  actualizarDatosBancarios,
   actualizarProveedor,
   cambiarEstadoProveedor,
   crearProveedor,
@@ -60,24 +61,33 @@ describe('proveedores', () => {
       )
     ).toThrow(/Solo el rol admin_ti/);
 
-    const proveedor = crearProveedor(
-      { ...DATOS_BASE, banco: 'Banco X', numero_cuenta: '123456' },
-      USUARIOS.admin
-    );
-    expect(proveedor.banco).toBe('Banco X');
-    expect(cuentaCambiadaRecientemente(proveedor)).toBe(true);
+    const proveedor = crearProveedor(DATOS_BASE, USUARIOS.comprador);
+    expect(proveedor.banco).toBe('');
+    expect(cuentaCambiadaRecientemente(proveedor)).toBe(false);
 
     expect(() =>
-      actualizarProveedor(proveedor.id, { numero_cuenta: '999999' }, USUARIOS.comprador)
+      actualizarProveedor(
+        proveedor.id,
+        { banco: 'Banco X', numero_cuenta: '999999' },
+        USUARIOS.comprador
+      )
     ).toThrow(/Solo el rol admin_ti/);
+    expect(() =>
+      actualizarDatosBancarios(
+        proveedor.id,
+        { banco: 'Banco X', numero_cuenta: '123456' },
+        USUARIOS.comprador
+      )
+    ).toThrow(/no puede ejecutar esta acción/);
 
-    const actualizado = actualizarProveedor(
+    const actualizado = actualizarDatosBancarios(
       proveedor.id,
-      { numero_cuenta: '999999' },
+      { banco: 'Banco X', numero_cuenta: '123456' },
       USUARIOS.admin
     );
-    expect(actualizado.numero_cuenta).toBe('999999');
-    expect(actualizado.fecha_cambio_cuenta).toBeTruthy();
+    expect(actualizado.banco).toBe('Banco X');
+    expect(actualizado.numero_cuenta).toBe('123456');
+    expect(cuentaCambiadaRecientemente(actualizado)).toBe(true);
   });
 
   it('respeta el ciclo de estados del proveedor', () => {
@@ -132,11 +142,13 @@ describe('proveedores', () => {
   });
 
   it('registra los cambios bancarios con el valor enmascarado', () => {
-    const proveedor = crearProveedor(
-      { ...DATOS_BASE, banco: 'Banco X', numero_cuenta: '123456' },
+    const proveedor = crearProveedor(DATOS_BASE, USUARIOS.comprador);
+    actualizarDatosBancarios(
+      proveedor.id,
+      { banco: 'Banco X', numero_cuenta: '123456' },
       USUARIOS.admin
     );
-    actualizarProveedor(proveedor.id, { numero_cuenta: '999999' }, USUARIOS.admin);
+    actualizarDatosBancarios(proveedor.id, { numero_cuenta: '999999' }, USUARIOS.admin);
 
     const eventos = listarEventos({
       entidad: 'proveedor',
@@ -152,9 +164,9 @@ describe('proveedores', () => {
   });
 
   it('no elimina proveedores con órdenes de compra', () => {
-    expect(() => eliminarProveedor('prov-001', USUARIOS.admin)).toThrow(/órdenes de compra/);
+    expect(() => eliminarProveedor('prov-001', USUARIOS.comprador)).toThrow(/órdenes de compra/);
     const proveedor = crearProveedor(DATOS_BASE, USUARIOS.comprador);
-    eliminarProveedor(proveedor.id, USUARIOS.admin);
+    eliminarProveedor(proveedor.id, USUARIOS.comprador);
     expect(obtenerProveedor(proveedor.id)).toBeUndefined();
   });
 

@@ -1,14 +1,10 @@
 import { loadModuleConfig, normalizeConfig, setActiveConfig } from './module-config.js';
 import { renderLogo, applyShellLabels, setActiveModule } from './components/shell.js';
-import {
-  getUsuarioActivo,
-  setRolActivo,
-  estaAutenticado
-} from './compras/almacenamiento.js';
+import { getUsuarioActivo, estaAutenticado } from './compras/almacenamiento.js';
 import { cerrarSesion, iniciarSesion, listarUsuarios } from './compras/autenticacion.js';
 import { requiereNombre } from './compras/reglas.js';
 import { etiquetaRol } from './compras/vista.js';
-import { renderComprasView } from './compras/vista.js';
+import { reiniciarVistaCompras, renderComprasView } from './compras/vista.js';
 
 function qs(id) {
   return document.getElementById(id);
@@ -95,10 +91,7 @@ function sincronizarSesionUI() {
   const usuario = getUsuarioActivo();
   const autenticado = estaAutenticado();
   const indicador = qs('sesion-indicador');
-  const controlAdmin = qs('admin-rol-control');
-  const selector = qs('rol-activo');
   const topbar = document.querySelector('.topbar');
-  const esAdmin = autenticado && usuario.rol === 'admin_ti';
   const esAdminTIActivo = autenticado && usuario.rol === 'admin_ti';
 
   if (indicador) {
@@ -112,17 +105,6 @@ function sincronizarSesionUI() {
     } else {
       indicador.textContent = '';
     }
-  }
-  if (controlAdmin) {
-    controlAdmin.hidden = !esAdmin;
-    controlAdmin.classList.toggle('admin-ti-activo', esAdminTIActivo);
-  }
-  if (selector) {
-    selector.disabled = !esAdmin;
-    selector.classList.toggle('admin-ti-activo', esAdminTIActivo);
-    selector.value = [...selector.options].some((opcion) => opcion.value === usuario.rol)
-      ? usuario.rol
-      : selector.options[0].value;
   }
   if (topbar) topbar.classList.toggle('admin-ti-activo', esAdminTIActivo);
 }
@@ -216,7 +198,10 @@ function desbloquearInterfaz(renderizar = true) {
   if (logout) logout.hidden = false;
 
   sincronizarSesionUI();
-  if (renderizar) renderComprasView();
+  if (renderizar) {
+    reiniciarVistaCompras();
+    renderComprasView();
+  }
   qs('compras-root')?.querySelector('h1')?.focus();
 }
 
@@ -285,19 +270,6 @@ function cablearEventos() {
   document.querySelectorAll('.nav-module').forEach((boton) =>
     boton.addEventListener('click', () => showModule())
   );
-
-  const selectorRol = qs('rol-activo');
-  if (selectorRol) {
-    selectorRol.addEventListener('change', (evento) => {
-      if (getUsuarioActivo().rol !== 'admin_ti') {
-        sincronizarSesionUI();
-        return;
-      }
-      setRolActivo(evento.target.value);
-      sincronizarSesionUI();
-      renderComprasView();
-    });
-  }
 
   qs('login-form')?.addEventListener('submit', enviarLogin);
   qs('login-rol')?.addEventListener('change', () => actualizarCampoNombre({ enfocar: true }));

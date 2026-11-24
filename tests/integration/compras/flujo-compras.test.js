@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
+  anularSolicitud,
   aprobarSolicitud,
   crearSolicitud,
   enviarSolicitud,
@@ -23,6 +24,7 @@ import { aprobarPago, conciliarFactura, registrarFactura } from '../../../src/co
 import {
   aprobarDevolucion,
   devolucionesAprobadasNeto,
+  rechazarDevolucion,
   registrarDevolucion
 } from '../../../src/compras/devoluciones.js';
 import { registrarEvaluacion } from '../../../src/compras/evaluaciones.js';
@@ -176,6 +178,18 @@ describe('flujo completo de compras', () => {
     expect(performance.now() - inicio).toBeLessThan(300000);
   });
 
+  it('solo el autor o jefe_compras puede anular una solicitud', () => {
+    const solicitud = crearSolicitudDePrueba();
+
+    expect(() => anularSolicitud(solicitud.id, USUARIOS.admin, 'Duplicada')).toThrow(
+      /No puedes anular esta solicitud/
+    );
+
+    const anulada = anularSolicitud(solicitud.id, USUARIOS.jefe, 'Duplicada');
+    expect(anulada.estado).toBe('anulada');
+    expect(anulada.motivo_anulacion).toBe('Duplicada');
+  });
+
   it('exige motivo y aprobación segregada en devoluciones', () => {
     const { orden } = flujoHastaRecepcion();
     registrarRecepcion(
@@ -209,6 +223,12 @@ describe('flujo completo de compras', () => {
 
     expect(devolucion.estado).toBe('pendiente_aprobacion');
     expect(devolucion.aprobada_por).toBeNull();
+    expect(() => aprobarDevolucion(devolucion.id, USUARIOS.admin)).toThrow(
+      /no puede ejecutar esta acción/
+    );
+    expect(() => rechazarDevolucion(devolucion.id, 'No aplica', USUARIOS.admin)).toThrow(
+      /no puede ejecutar esta acción/
+    );
 
     const aprobada = aprobarDevolucion(devolucion.id, USUARIOS.jefe);
     expect(aprobada.estado).toBe('aprobada');

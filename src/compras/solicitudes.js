@@ -249,9 +249,7 @@ export function anularSolicitud(id, usuario = getUsuarioActivo(), motivo = '') {
     throw new Error('La solicitud ya no puede anularse');
   }
   const autorizado =
-    usuario.rol === 'admin_ti' ||
-    usuario.rol === 'jefe_compras' ||
-    (usuario.rol === 'solicitante' && solicitud.solicitante_id === usuario.id);
+    usuario.rol === 'jefe_compras' || solicitud.solicitante_id === usuario.id;
   if (!autorizado) throw new Error('No puedes anular esta solicitud');
   if (!String(motivo ?? '').trim()) throw new Error('La anulación exige un motivo');
   return cambiarEstado(

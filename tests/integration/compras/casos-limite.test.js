@@ -29,6 +29,40 @@ import { guardar, leer } from '../../../src/compras/almacenamiento.js';
 import { cambiarEstadoProveedor } from '../../../src/compras/proveedores.js';
 import { cargarDatos, USUARIOS } from './helpers.js';
 
+describe('segregación de funciones', () => {
+  beforeEach(() => {
+    cargarDatos();
+  });
+
+  it('impide recepcionar una OC emitida por el mismo usuario sin excepción de rol', () => {
+    const solicitud = solicitudAprobada({ monto: 100000, producto: 'prod-008' });
+    const orden = emitirOrdenCompra(
+      { solicitud_id: solicitud.id, proveedor_id: 'prov-001' },
+      USUARIOS.comprador
+    );
+    const ordenes = leer('ordenes');
+    const idx = ordenes.findIndex((o) => o.id === orden.id);
+    ordenes[idx] = { ...ordenes[idx], emitida_por: USUARIOS.bodega.id };
+    guardar('ordenes', ordenes);
+
+    expect(() =>
+      registrarRecepcion(
+        {
+          orden_id: orden.id,
+          lineas: [
+            {
+              orden_linea_id: orden.lineas[0].linea_id,
+              cantidad_recibida: 1,
+              cantidad_aceptada: 1
+            }
+          ]
+        },
+        USUARIOS.bodega
+      )
+    ).toThrow(/Quien emitió la OC no puede registrar su recepción/);
+  });
+});
+
 function solicitudAprobada({ monto = 100000, producto = 'prod-001', cantidad = 1 } = {}) {
   const solicitud = crearSolicitud(
     {
@@ -648,6 +682,7 @@ describe('casos límite de compras', () => {
     const devolucion = registrarDevolucion(
       {
         orden_id: orden.id,
+        aprobador_id: USUARIOS.jefe.id,
         lineas: [
           {
             orden_linea_id: orden.lineas[0].linea_id,
@@ -656,7 +691,7 @@ describe('casos límite de compras', () => {
           }
         ]
       },
-      USUARIOS.admin
+      USUARIOS.bodega
     );
 
     expect(devolucion.estado).toBe('aprobada');

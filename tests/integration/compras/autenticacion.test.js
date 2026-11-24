@@ -97,7 +97,7 @@ describe('acceso a la interfaz de compras', () => {
     expect(qs('login-error').hidden).toBe(true);
     expect(qs('login-overlay').hidden).toBe(true);
     expect(qs('btn-logout').hidden).toBe(false);
-    expect(qs('admin-rol-control').hidden).toBe(true);
+    expect(qs('rol-activo')).toBeNull();
     expect(qs('sesion-indicador').textContent).toContain('Carla Díaz');
     expect(qs('sesion-indicador').textContent).toContain('Comprador');
 
@@ -116,7 +116,7 @@ describe('acceso a la interfaz de compras', () => {
     enviarLogin();
 
     expect(qs('login-overlay').hidden).toBe(true);
-    expect(qs('admin-rol-control').hidden).toBe(true);
+    expect(qs('rol-activo')).toBeNull();
     expect(qs('sesion-indicador').textContent).toContain('Marcela Rojas');
     expect(qs('sesion-indicador').textContent).toContain('Jefe de Compras');
   });

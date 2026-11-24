@@ -47,7 +47,7 @@ export function registrarRecepcion(datos, usuario = getUsuarioActivo()) {
   if (!['emitida', 'recibida_parcial'].includes(orden.estado)) {
     throw new Error('Solo se puede recepcionar una OC emitida o recibida parcialmente');
   }
-  if (orden.emitida_por === usuario.id && usuario.rol !== 'admin_ti') {
+  if (orden.emitida_por === usuario.id) {
     throw new Error(
       'Quien emitió la OC no puede registrar su recepción (segregación de funciones)'
     );

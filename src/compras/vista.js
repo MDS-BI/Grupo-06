@@ -133,6 +133,11 @@ let catFiltro = '';
 let evalOrdenId = '';
 let traza = null;
 
+export function reiniciarVistaCompras() {
+  tab = 'panel';
+  traza = null;
+}
+
 function qs(id) {
   return document.getElementById(id);
 }
