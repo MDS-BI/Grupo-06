@@ -37,6 +37,10 @@ function ingresar(email) {
   enviarLogin();
 }
 
+function activarModoPresentacion() {
+  qs('btn-modo-presentacion').click();
+}
+
 beforeEach(async () => {
   dom = new JSDOM(html, { url: 'http://localhost/' });
   const w = dom.window;
@@ -83,7 +87,32 @@ describe('portal corporativo de acceso', () => {
     expect(usuarios.find((u) => u.id === 'u-admin-1').nombre).toBe('Administrador TI');
   });
 
-  it('muestra el directorio con los siete usuarios reales y sus centros', () => {
+  it('oculta el directorio interno hasta activar el modo presentación', () => {
+    const grilla = document.querySelector('.login-grid');
+    const primerUsuario = qs('login-directorio-lista').querySelector('.directory-user');
+    expect(qs('login-directorio').hidden).toBe(true);
+    expect(qs('btn-modo-presentacion').getAttribute('aria-pressed')).toBe('false');
+    expect(grilla.classList.contains('login-grid--presentacion')).toBe(false);
+    expect(document.activeElement).not.toBe(primerUsuario);
+
+    activarModoPresentacion();
+
+    expect(qs('login-directorio').hidden).toBe(false);
+    expect(qs('btn-modo-presentacion').textContent).toContain('Desactivar');
+    expect(qs('btn-modo-presentacion').getAttribute('aria-pressed')).toBe('true');
+    expect(grilla.classList.contains('login-grid--presentacion')).toBe(true);
+    expect(document.activeElement).toBe(primerUsuario);
+
+    activarModoPresentacion();
+
+    expect(qs('login-directorio').hidden).toBe(true);
+    expect(qs('btn-modo-presentacion').getAttribute('aria-pressed')).toBe('false');
+    expect(grilla.classList.contains('login-grid--presentacion')).toBe(false);
+    expect(document.activeElement).toBe(qs('btn-modo-presentacion'));
+  });
+
+  it('muestra el directorio con los siete usuarios reales y sus centros al activar el modo', () => {
+    activarModoPresentacion();
     const botones = [...qs('login-directorio-lista').querySelectorAll('.directory-user')];
     expect(botones.map((b) => b.dataset.email).sort()).toEqual([...CORREOS].sort());
     expect(botones).toHaveLength(7);
@@ -106,6 +135,7 @@ describe('portal corporativo de acceso', () => {
   });
 
   it('ingresa con un clic desde el acceso rápido de bodega', () => {
+    activarModoPresentacion();
     const boton = [...qs('login-directorio-lista').querySelectorAll('.directory-user')].find(
       (item) => item.dataset.email === 'bodega@example.com'
     );
@@ -114,6 +144,18 @@ describe('portal corporativo de acceso', () => {
     expect(qs('login-overlay').hidden).toBe(true);
     expect(qs('sesion-indicador').textContent).toContain('Encargado de Bodega');
     expect(qs('sesion-indicador').textContent).toContain('CC-BOD · Bodega');
+  });
+
+  it('vuelve a ocultar el directorio al cerrar sesión', () => {
+    activarModoPresentacion();
+    expect(qs('login-directorio').hidden).toBe(false);
+
+    ingresar('bodega@example.com');
+    qs('btn-logout').click();
+
+    expect(qs('login-overlay').hidden).toBe(false);
+    expect(qs('login-directorio').hidden).toBe(true);
+    expect(qs('btn-modo-presentacion').getAttribute('aria-pressed')).toBe('false');
   });
 
   it('asocia el error al campo y lo limpia al escribir', () => {

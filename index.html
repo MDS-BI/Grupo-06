@@ -57,7 +57,9 @@
                 aria-describedby="login-email-ayuda login-email-error"
                 required
               />
-              <p id="login-email-ayuda" class="campo-ayuda">Consulta el directorio lateral si no recuerdas tu correo.</p>
+              <p id="login-email-ayuda" class="campo-ayuda">
+                Activa el modo presentación para consultar el directorio interno si no recuerdas tu correo.
+              </p>
               <p id="login-email-error" class="error campo-error" role="alert" hidden></p>
             </div>
 
@@ -90,6 +92,15 @@
 
             <div class="form-actions">
               <button type="submit" class="primary login-submit">Ingresar al ERP</button>
+              <button
+                type="button"
+                id="btn-modo-presentacion"
+                class="btn-modo-presentacion"
+                aria-controls="login-directorio"
+                aria-pressed="false"
+              >
+                Activar modo presentación
+              </button>
             </div>
 
             <details id="login-modo-rol" class="login-legacy">
@@ -133,7 +144,12 @@
             </details>
           </form>
 
-          <aside class="login-directory" aria-labelledby="login-directorio-titulo">
+          <aside
+            id="login-directorio"
+            class="login-directory"
+            aria-labelledby="login-directorio-titulo"
+            hidden
+          >
             <div class="directory-head">
               <p class="login-eyebrow">DIRECTORIO INTERNO</p>
               <h2 id="login-directorio-titulo">Acceso rápido de evaluación</h2>

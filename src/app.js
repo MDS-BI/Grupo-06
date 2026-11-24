@@ -32,6 +32,7 @@ function escapar(valor) {
 
 let wired = false;
 let loginActivo = false;
+let modoPresentacion = false;
 
 function showModule() {
   // El único módulo de esta aplicación es Adquisiciones y Compras.
@@ -74,6 +75,31 @@ function alternarTema() {
     // ignorar
   }
   aplicarModo(siguiente);
+}
+
+function sincronizarModoPresentacion() {
+  const panel = qs('login-directorio');
+  const boton = qs('btn-modo-presentacion');
+  const grilla = document.querySelector('.login-grid');
+  if (panel) panel.hidden = !modoPresentacion;
+  if (grilla) grilla.classList.toggle('login-grid--presentacion', modoPresentacion);
+  if (boton) {
+    boton.textContent = modoPresentacion
+      ? 'Desactivar modo presentación'
+      : 'Activar modo presentación';
+    boton.setAttribute('aria-pressed', String(modoPresentacion));
+    boton.setAttribute(
+      'aria-label',
+      modoPresentacion ? 'Ocultar directorio interno' : 'Mostrar directorio interno'
+    );
+  }
+}
+
+function alternarModoPresentacion() {
+  modoPresentacion = !modoPresentacion;
+  sincronizarModoPresentacion();
+  if (modoPresentacion) qs('login-directorio-lista')?.querySelector('.directory-user')?.focus();
+  else qs('btn-modo-presentacion')?.focus();
 }
 
 function aplicarTema(config) {
@@ -265,6 +291,8 @@ function bloquearInterfaz() {
   loginActivo = true;
   cerrarAsistente();
   ocultarErrorLogin();
+  modoPresentacion = false;
+  sincronizarModoPresentacion();
 
   const workspace = document.querySelector('.workspace');
   if (workspace) {
@@ -393,6 +421,7 @@ function cablearEventos() {
   qs('login-clave')?.addEventListener('input', () => limpiarErrorCampo('login-clave'));
   qs('login-rol')?.addEventListener('change', () => actualizarCampoNombre({ enfocar: true }));
   qs('login-mostrar-clave')?.addEventListener('click', alternarVisibilidadClave);
+  qs('btn-modo-presentacion')?.addEventListener('click', alternarModoPresentacion);
   qs('btn-tema')?.addEventListener('click', alternarTema);
   qs('btn-logout')?.addEventListener('click', () => {
     cerrarSesion();
