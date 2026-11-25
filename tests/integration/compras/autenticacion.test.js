@@ -55,7 +55,7 @@ describe('acceso a la interfaz de compras', () => {
     expect(qs('login-nombre')).toBeNull();
     expect(qs('login-modo-rol')).toBeNull();
 
-    ingresar('jefe.compras@example.com', 'clave-erronea');
+    ingresar('andres.contreras@pyme.cl', 'clave-erronea');
 
     expect(qs('login-error').hidden).toBe(false);
     expect(qs('login-error').textContent).toContain('Clave incorrecta');
@@ -71,13 +71,13 @@ describe('acceso a la interfaz de compras', () => {
   });
 
   it('ingresa con correo de comprador y muestra la sesión identificada', () => {
-    ingresar('carla.diaz@example.com');
+    ingresar('francisca.herrera@pyme.cl');
 
     expect(qs('login-error').hidden).toBe(true);
     expect(qs('login-overlay').hidden).toBe(true);
     expect(qs('btn-logout').hidden).toBe(false);
     expect(qs('rol-activo')).toBeNull();
-    expect(qs('sesion-indicador').textContent).toContain('Carla Díaz');
+    expect(qs('sesion-indicador').textContent).toContain('Francisca Herrera Díaz');
     expect(qs('sesion-indicador').textContent).toContain('Comprador');
 
     qs('btn-logout').click();
@@ -88,11 +88,11 @@ describe('acceso a la interfaz de compras', () => {
   });
 
   it('ingresa con correo de jefatura y muestra la sesión identificada', () => {
-    ingresar('jefe.compras@example.com');
+    ingresar('andres.contreras@pyme.cl');
 
     expect(qs('login-overlay').hidden).toBe(true);
     expect(qs('rol-activo')).toBeNull();
-    expect(qs('sesion-indicador').textContent).toContain('Marcela Rojas');
+    expect(qs('sesion-indicador').textContent).toContain('Andrés Contreras Pérez');
     expect(qs('sesion-indicador').textContent).toContain('Jefe de Compras');
   });
 
@@ -107,7 +107,7 @@ describe('acceso a la interfaz de compras', () => {
   });
 
   it('mantiene accesibles encabezados, pestañas, etiquetas y tablas', () => {
-    ingresar('ana.perez@example.com');
+    ingresar('camila.rojas@pyme.cl');
 
     const raiz = qs('compras-root');
     expect(qs('view-compras').getAttribute('aria-labelledby')).toBe('compras-titulo');

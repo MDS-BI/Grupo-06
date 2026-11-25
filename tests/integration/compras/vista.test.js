@@ -29,7 +29,7 @@ beforeEach(async () => {
   const { boot } = await import('../../../src/app.js');
   await boot();
   const { iniciarSesion } = await import('../../../src/compras/autenticacion.js');
-  iniciarSesion('solicitante', 'Ana Pérez', 'Compras2026');
+  iniciarSesion('solicitante', 'Camila Rojas Soto', 'Compras2026');
   await boot();
 });
 
@@ -58,7 +58,7 @@ describe('vista de compras', () => {
 
     document.querySelector('[data-nav-tab="proveedores"]').click();
     expect(qs('compras-content').textContent).toContain('Proveedores');
-    expect(qs('compras-content').querySelectorAll('tbody tr').length).toBe(8);
+    expect(qs('compras-content').querySelectorAll('tbody tr').length).toBe(12);
 
     document.querySelector('[data-nav-tab="solicitudes"]').click();
     expect(qs('compras-content').textContent).toContain('Solicitudes');
@@ -82,10 +82,63 @@ describe('vista de compras', () => {
     expect(getUsuarioActivo().rol).toBe('admin_ti');
   });
 
+  it('muestra el padrón de usuarios con RUT completo solo para Administración TI', async () => {
+    expect(document.getElementById('padron-usuarios')).toBeNull();
+
+    await activarAdmin();
+    const padron = document.getElementById('padron-usuarios');
+    expect(padron).toBeTruthy();
+    expect(padron.textContent).toContain('18.100.001-5');
+    expect(padron.textContent).toContain('18.123.456-3');
+    expect(padron.textContent).not.toContain('••••••••-•');
+    expect(padron.textContent).not.toContain('18.XXX.XXX-5');
+  });
+
+  it('usa catálogos bancarios y auto-completa CuentaRUT desde el RUT del proveedor', async () => {
+    await activarAdmin();
+    document.querySelector('[data-nav-tab="proveedores"]').click();
+
+    expect(qs('prov-cargar-base').textContent).toContain('Cargar catálogo base');
+    expect(qs('prov-banco-banco').tagName).toBe('SELECT');
+    expect(qs('prov-banco-tipo').tagName).toBe('SELECT');
+    expect(qs('prov-banco-banco').querySelectorAll('option')).toHaveLength(13);
+    expect(qs('prov-banco-tipo').querySelectorAll('option')).toHaveLength(6);
+    expect(qs('prov-banco-banco').textContent).toContain('BancoEstado');
+    expect(qs('prov-banco-tipo').textContent).toContain('CuentaRUT (BancoEstado)');
+
+    const proveedor = qs('prov-banco-proveedor');
+    proveedor.value = 'prov-001';
+    proveedor.dispatchEvent(new window.Event('change', { bubbles: true }));
+
+    const tipo = qs('prov-banco-tipo');
+    tipo.value = 'CuentaRUT (BancoEstado)';
+    tipo.dispatchEvent(new window.Event('change', { bubbles: true }));
+
+    expect(qs('prov-banco-banco').value).toBe('BancoEstado');
+    expect(qs('prov-banco-cuenta').value).toBe('12345678');
+    expect(qs('prov-cuenta-ayuda').hidden).toBe(false);
+    expect(qs('prov-cuenta-ayuda').textContent).toContain('Auto-completado desde el RUT');
+
+    tipo.value = 'Cuenta Corriente';
+    tipo.dispatchEvent(new window.Event('change', { bubbles: true }));
+    expect(qs('prov-cuenta-ayuda').hidden).toBe(true);
+    expect(qs('prov-banco-cuenta').value).toBe('12345678');
+  });
+
+  it('recupera los catálogos maestros desde el botón de carga base', async () => {
+    await activarAdmin();
+    document.querySelector('[data-nav-tab="proveedores"]').click();
+    const { saveEntities } = await import('../../../src/storage.js');
+    saveEntities([]);
+
+    qs('prov-cargar-base').click();
+    expect(qs('compras-content').querySelectorAll('tbody tr')).toHaveLength(12);
+  });
+
   it('enmascara RUT para persona natural y muestra "No registrado" cuando falta cuenta', async () => {
     qs('btn-logout').click();
     const { iniciarSesion } = await import('../../../src/compras/autenticacion.js');
-    iniciarSesion('comprador', 'Carla Díaz', 'Compras2026');
+    iniciarSesion('comprador', 'Francisca Herrera Díaz', 'Compras2026');
     crearProveedor(
       {
         razon_social: 'Proveedor Sin Cuenta SpA',
@@ -111,7 +164,7 @@ describe('vista de compras', () => {
     const { iniciarSesion } = await import('../../../src/compras/autenticacion.js');
     const { guardar, leer } = await import('../../../src/compras/almacenamiento.js');
     const { hoyISO, sumarDias } = await import('../../../src/compras/reglas.js');
-    iniciarSesion('jefe_compras', 'Marcela Rojas', 'Compras2026');
+    iniciarSesion('jefe_compras', 'Andrés Contreras Pérez', 'Compras2026');
     const facturas = leer('facturas');
     facturas.find((f) => f.id === 'fac-001').fecha_vencimiento = sumarDias(hoyISO(), -2);
     guardar('facturas', facturas);
@@ -168,7 +221,7 @@ async function activarAdmin() {
 async function activarComprador() {
   qs('btn-logout').click();
   const { iniciarSesion } = await import('../../../src/compras/autenticacion.js');
-  iniciarSesion('comprador', 'Carla Díaz', 'Compras2026');
+  iniciarSesion('comprador', 'Francisca Herrera Díaz', 'Compras2026');
   const { boot } = await import('../../../src/app.js');
   await boot();
 }

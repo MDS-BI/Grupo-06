@@ -1,7 +1,8 @@
 import {
   getUsuarioActivo,
   asegurarSemilla,
-  etiquetaUsuario,
+  cargarCatalogoBase,
+  datosUsuario,
   leer,
   puede
 } from './almacenamiento.js';
@@ -45,7 +46,8 @@ import {
 import {
   listarRecepciones,
   registrarRecepcion,
-  unidadesAceptadasPorProducto
+  unidadesAceptadasPorProducto,
+  vistaRecepcion
 } from './recepciones.js';
 import {
   listarFacturas,
@@ -72,8 +74,25 @@ import {
 import { listarEvaluaciones, registrarEvaluacion, promedioProveedor } from './evaluaciones.js';
 import { construirPanel } from './panel.js';
 import { cadenaDocumental, historialDe } from './trazabilidad.js';
-import { GRUPOS, nivelVista, vistasVisibles } from './visibilidad.js';
+import {
+  GRUPOS,
+  RUT_OCULTO,
+  enmascararRut,
+  nivelVista,
+  puedeVerRutEmpleado,
+  puedeVerRutProveedor,
+  vistasVisibles
+} from './visibilidad.js';
 import { abrirAsistente } from './asistente.js';
+import {
+  AYUDA_CUENTA_RUT,
+  BANCOS_CHILE,
+  TIPOS_CUENTA,
+  datosCuentaRut,
+  esCuentaRut,
+  normalizarBanco,
+  normalizarTipoCuenta
+} from './catalogos-bancarios.js';
 import {
   exportarProveedores,
   exportarSolicitudes,
@@ -239,8 +258,14 @@ function textoPlazo(dias, conUnidad = false) {
 function badge(estado) {
   return `<span class="badge badge-${esc(estado)}">${esc(etiquetaEstado(estado))}</span>`;
 }
-function nombreUsuario(id) {
-  return etiquetaUsuario(id);
+/** Celda de identidad con el RUT solo cuando la sesión puede verlo. */
+function celdaUsuario(id, contexto = 'listado') {
+  const identidad = datosUsuario(id, getUsuarioActivo(), contexto);
+  const rut =
+    identidad.rut_visible && identidad.rut_visible !== RUT_OCULTO
+      ? ` <span class="muted">${esc(identidad.rut_visible)}</span>`
+      : '';
+  return `${esc(identidad.nombre)}${rut}`;
 }
 function nombreProveedor(id) {
   return obtenerProveedor(id)?.name || id || '';
@@ -624,7 +649,9 @@ function renderTrazaCadena() {
       ${eventos
         .map(
           (e) =>
-            `<tr><td>${esc(fechaHora(e.fecha_hora))}</td><td>${esc(e.accion)}</td><td>${esc(etiquetaEstado(e.estado_anterior))}</td><td>${esc(etiquetaEstado(e.estado_nuevo))}</td><td>${esc(nombreUsuario(e.usuario_id))}</td><td>${esc(e.detalle)}</td></tr>`
+            `<tr><td>${esc(fechaHora(e.fecha_hora))}</td><td>${esc(e.accion)}</td><td>${esc(etiquetaEstado(e.estado_anterior))}</td><td>${esc(etiquetaEstado(e.estado_nuevo))}</td><td>${celdaUsuario(e.usuario_id, 'auditoria')}</td><td>${esc(
+              e.detalle
+            )}</td></tr>`
         )
         .join('')}
       </tbody></table>`
@@ -642,6 +669,25 @@ function renderTrazaCadena() {
       exportarTrazabilidad({ entidad: traza.tipo, entidad_id: traza.id, usuario })
     );
   }
+}
+
+/** Padrón de usuarios de Administración TI con RUT resuelto por la matriz canónica. */
+function renderPadronUsuarios(usuario) {
+  const filas = leer('usuarios')
+    .map((empleado) => {
+      const esPropio = empleado.id === usuario?.id;
+      const permiso = puedeVerRutEmpleado(usuario?.rol, 'listado', esPropio);
+      const rut = permiso
+        ? enmascararRut(empleado.rut, usuario?.rol, 'listado', esPropio)
+        : RUT_OCULTO;
+      const nombre = datosUsuario(empleado.id, usuario).nombre;
+      return `<tr><td>${esc(nombre)}</td><td>${esc(ETIQUETAS_ROL[empleado.rol] || empleado.rol)}</td><td>${esc(rut)}</td></tr>`;
+    })
+    .join('');
+  return `<div class="card" id="padron-usuarios">
+    <h2>Padrón de Usuarios · Administración TI</h2>
+    <table><thead><tr><th>Nombre</th><th>Rol</th><th>RUT</th></tr></thead><tbody>${filas}</tbody></table>
+  </div>`;
 }
 
 function renderPanel() {
@@ -711,6 +757,7 @@ function renderPanel() {
       <h2>Resumen del ciclo de compras</h2>
       <div class="flow-summary">${resumenFlujo()}</div>
     </div>
+    ${usuario?.rol === 'admin_ti' ? renderPadronUsuarios(usuario) : ''}
     <div class="card">
       <h2>Pendientes por rol</h2>
       ${
@@ -773,23 +820,51 @@ function renderPanel() {
 function renderProveedores() {
   const usuario = getUsuarioActivo();
   const visibilidad = validarVisibilidadDatosBancarios(usuario.rol);
+  const rutProveedorVisible = puedeVerRutProveedor(usuario.rol);
   const puedeGestionar = puedeOperar('proveedores', 'gestionar_proveedores', usuario);
   const puedeBanco = puedeOperar('proveedores', 'editar_datos_bancarios', usuario);
   const puedeDesbloquear = puedeOperar('proveedores', 'desbloquear_proveedor', usuario);
-  const lista = (provFiltro ? buscarProveedores(provFiltro) : listarProveedores()).map((p) =>
-    vistaProveedor(p, usuario.rol)
-  );
-  const editando = provEditId ? vistaProveedor(obtenerProveedor(provEditId), usuario.rol) : null;
+  const lista = (provFiltro
+    ? buscarProveedores(provFiltro, usuario)
+    : listarProveedores()
+  ).map((p) => vistaProveedor(p, usuario.rol));
+  const proveedorEditado = provEditId ? obtenerProveedor(provEditId) : null;
+  const editando = proveedorEditado;
+  const editandoBanco = proveedorEditado
+    ? vistaProveedor(proveedorEditado, usuario.rol)
+    : null;
   const seleccionBanco = provBancoId ? lista.find((p) => p.id === provBancoId) : lista[0];
   provBancoId = seleccionBanco?.id || '';
+
+  /** Aplica la regla de CuentaRUT sobre los controles ya renderizados. */
+  function aplicarAutoRellenoCuentaRut() {
+    const tipo = qs('prov-banco-tipo');
+    const ayuda = qs('prov-cuenta-ayuda');
+    const banco = qs('prov-banco-banco');
+    const cuenta = qs('prov-banco-cuenta');
+    if (!tipo || !ayuda || !banco || !cuenta) return;
+    if (!esCuentaRut(tipo.value)) {
+      ayuda.textContent = '';
+      ayuda.hidden = true;
+      return;
+    }
+    const proveedor = obtenerProveedor(qs('prov-banco-proveedor')?.value || provBancoId);
+    const datos = datosCuentaRut(proveedor);
+    banco.value = datos.banco;
+    if (datos.numero_cuenta) cuenta.value = datos.numero_cuenta;
+    ayuda.textContent = AYUDA_CUENTA_RUT;
+    ayuda.hidden = false;
+  }
+
   const content = qs('compras-content');
   content.innerHTML = `
     <div class="card">
       <div class="toolbar">
-        <input id="prov-search" aria-label="Buscar proveedores" placeholder="Buscar por razón social, RUT, giro o región" value="${esc(provFiltro)}" />
+        <input id="prov-search" class="prov-search" aria-label="Buscar proveedores" placeholder="Buscar por razón social, nombre de fantasía, RUT, rubro, contacto o región" value="${esc(provFiltro)}" />
         <button type="button" id="prov-buscar" class="secondary">Buscar</button>
         ${puedeGestionar ? '<button type="button" id="prov-nuevo" class="primary">Nuevo proveedor</button>' : ''}
         <button type="button" id="prov-exportar" class="secondary">Exportar CSV</button>
+        <button type="button" id="prov-cargar-base" class="secondary" title="Disponible también en Modo Real: completa los catálogos maestros sin borrar tus registros">Cargar catálogo base de proveedores/insumos</button>
       </div>
       ${
         puedeGestionar && provFormVisible
@@ -803,7 +878,12 @@ function renderProveedores() {
         <div class="field-row"><div><label>Teléfono</label><input id="prov-telefono" value="${esc(editando?.phone || '')}" /></div><div><label>Correo</label><input id="prov-email" value="${esc(editando?.email || '')}" /></div></div>
         <div class="field-row"><div><label>Categoría</label><input id="prov-categoria" value="${esc(editando?.category || '')}" /></div><div><label>Tamaño</label><select id="prov-tamano">${opciones(['micro', 'pequeña', 'mediana', 'grande'], editando?.tamano_empresa)}</select></div></div>
         <div class="field-row"><div><label>Condición de pago (días) *</label><input id="prov-dias" type="number" min="0" step="1" value="${esc(editando?.condicion_pago_dias ?? 30)}" /></div><div><label>Acuerdo de plazo mayor</label><input id="prov-acuerdo" value="${esc(editando?.acuerdo_plazo_mayor || '')}" placeholder="Obligatorio si supera 30 días" /></div></div>
-        <div class="field-row"><div><label>Banco</label><input id="prov-banco" value="${esc(editando?.banco || '')}" disabled /></div><div><label>Número de cuenta</label><input id="prov-cuenta" value="${esc(editando?.numero_cuenta || '')}" disabled /></div></div>
+        <div class="field-row"><div><label>Banco</label><select id="prov-banco" disabled>${opciones(
+          BANCOS_CHILE,
+          normalizarBanco(editandoBanco?.banco || '')
+        )}</select></div><div><label>Número de cuenta</label><input id="prov-cuenta" value="${esc(
+          editandoBanco?.numero_cuenta || ''
+        )}" disabled /></div></div>
         <p class="muted">Los datos bancarios solo pueden ser editados por Administrador TI.</p>
         <div class="form-actions"><button type="submit" class="primary">Guardar</button><button type="button" id="prov-cancelar" class="secondary">Cancelar</button></div>
       </form>`
@@ -817,8 +897,15 @@ function renderProveedores() {
         <div class="field-row"><div><label>Proveedor *</label><select id="prov-banco-proveedor">${opciones(
           lista.map((p) => ({ value: p.id, label: `${p.code} · ${p.name}` })),
           provBancoId
-        )}</select></div><div><label>Banco *</label><input id="prov-banco-banco" value="${esc(seleccionBanco?.banco || '')}" /></div></div>
-        <div class="field-row"><div><label>Tipo de cuenta</label><select id="prov-banco-tipo">${opciones(['corriente', 'ahorro'], seleccionBanco?.tipo_cuenta)}</select></div><div><label>Número de cuenta *</label><input id="prov-banco-cuenta" value="${esc(seleccionBanco?.numero_cuenta || '')}" /></div></div>
+        )}</select></div><div><label>Banco *</label><select id="prov-banco-banco">${opciones(
+          BANCOS_CHILE,
+          normalizarBanco(seleccionBanco?.banco || '')
+        )}</select></div></div>
+        <div class="field-row"><div><label>Tipo de cuenta</label><select id="prov-banco-tipo">${opciones(
+          TIPOS_CUENTA,
+          normalizarTipoCuenta(seleccionBanco?.tipo_cuenta || '')
+        )}</select></div><div><label>Número de cuenta *</label><input id="prov-banco-cuenta" value="${esc(seleccionBanco?.numero_cuenta || '')}" /></div></div>
+        <p id="prov-cuenta-ayuda" class="campo-ayuda" hidden></p>
         <div class="form-actions"><button type="submit" class="primary">Guardar datos bancarios</button></div>
       </form>`
           : ''
@@ -826,16 +913,23 @@ function renderProveedores() {
     </div>
     <div class="card">
       <h2>Proveedores</h2>
-      <p class="muted" id="prov-visibilidad">${visibilidad.visible ? 'RUT y cuenta visibles para tu rol.' : 'RUT y cuenta enmascarados para tu rol.'}${puedeBanco ? '' : ' Solo Administrador TI puede editar datos bancarios.'}</p>
+      <p class="muted" id="prov-visibilidad">RUT tributario ${rutProveedorVisible ? 'visible' : 'oculto'} para tu rol. Cuenta ${visibilidad.visible ? 'visible' : visibilidad.editable ? 'visible y editable' : 'enmascarada'}.${puedeBanco ? '' : ' Solo Administrador TI puede editar datos bancarios.'}</p>
       ${
         lista.length === 0
           ? '<div class="empty">No hay proveedores que coincidan.</div>'
           : `
-      <table><thead><tr><th>Código</th><th>Razón social</th><th>RUT</th><th>Cuenta</th><th>Tipo</th><th>Región</th><th>Condición</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>
+      <table><thead><tr><th>Razón social</th><th>RUT tributario</th><th>Rubro</th><th>Contacto</th><th>Banco y cuenta</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>
       ${lista
         .map(
           (p) => `<tr>
-        <td>${esc(p.code)}</td><td>${esc(p.name)}</td><td>${esc(p.rut_visible)}</td><td>${esc(p.cuenta_visible)}</td><td>${esc(p.tipo_persona)}</td><td>${esc(p.region)}</td><td>${esc(p.condicion_pago_dias)} días</td><td>${badge(p.estado_proveedor)}</td>
+        <td>${esc(p.name)}${p.code ? `<span class="muted"> · ${esc(p.code)}</span>` : ''}</td>
+        <td>${esc(p.rut_visible)}</td>
+        <td>${esc(p.rubro || p.category || p.giro || '—')}</td>
+        <td>${esc(p.email || p.phone || '—')}</td>
+        <td>${esc(p.banco || '—')} · ${esc(p.cuenta_visible)}</td>
+        <td><span class="badge badge-${esc(p.estado_proveedor)}">${esc(
+          p.estado || etiquetaEstado(p.estado_proveedor)
+        )}</span></td>
         <td class="actions">
           ${puedeGestionar ? `<button type="button" class="link" data-prov-accion="editar" data-id="${esc(p.id)}">Editar</button>` : ''}
           ${puedeGestionar && p.estado_proveedor === 'potencial' ? `<button type="button" class="link" data-prov-accion="aprobar" data-id="${esc(p.id)}">Aprobar</button>` : ''}
@@ -868,11 +962,21 @@ function renderProveedores() {
       renderComprasTab();
     });
   qs('prov-exportar').addEventListener('click', () => exportarProveedores({ filtro: provFiltro }));
+  qs('prov-cargar-base').addEventListener('click', () => {
+    ejecutar(() => cargarCatalogoBase());
+  });
   if (puedeBanco) {
     qs('prov-banco-proveedor').addEventListener('change', (ev) => {
       provBancoId = ev.target.value;
-      renderComprasTab();
+      const seleccionado = obtenerProveedor(provBancoId);
+      if (!esCuentaRut(qs('prov-banco-tipo').value)) {
+        qs('prov-banco-banco').value = normalizarBanco(seleccionado?.banco || '');
+        qs('prov-banco-cuenta').value = seleccionado?.numero_cuenta || '';
+      }
+      aplicarAutoRellenoCuentaRut();
     });
+    qs('prov-banco-tipo').addEventListener('change', aplicarAutoRellenoCuentaRut);
+    aplicarAutoRellenoCuentaRut();
     qs('prov-banco-form').addEventListener('submit', (ev) => {
       ev.preventDefault();
       const id = qs('prov-banco-proveedor').value;
@@ -914,15 +1018,6 @@ function renderProveedores() {
         condicion_pago_dias: qs('prov-dias').value,
         acuerdo_plazo_mayor: qs('prov-acuerdo').value
       };
-      if (
-        editando &&
-        String(editando.tipo_persona || '')
-          .toLowerCase()
-          .startsWith('natural') &&
-        !visibilidad.visible
-      ) {
-        delete datos.rut;
-      }
       ejecutar(() => {
         if (provEditId) actualizarProveedor(provEditId, datos, usuario);
         else crearProveedor(datos, usuario);
@@ -1019,7 +1114,7 @@ function renderSolicitudes() {
       ${lista
         .map(
           (s) => `<tr>
-        <td>${esc(s.numero)}</td><td>${esc(nombreUsuario(s.solicitante_id))}</td><td>${esc(s.centro_costo_id)}</td><td>${esc(s.prioridad)}</td><td>${fecha(s.fecha_requerida)}</td><td>${clp(s.monto_estimado)}</td><td>${badge(s.estado)}</td>
+        <td>${esc(s.numero)}</td><td>${celdaUsuario(s.solicitante_id)}</td><td>${esc(s.centro_costo_id)}</td><td>${esc(s.prioridad)}</td><td>${fecha(s.fecha_requerida)}</td><td>${clp(s.monto_estimado)}</td><td>${badge(s.estado)}</td>
         <td class="actions">
           <button type="button" class="link" data-traza="solicitud" data-id="${esc(s.id)}">Cadena</button>
           ${s.estado === 'borrador' && puedeCrear && esPropia(s, usuario) ? `<button type="button" class="link" data-sol-accion="enviar" data-id="${esc(s.id)}">Enviar</button>` : ''}
@@ -1374,7 +1469,8 @@ function renderRecepciones() {
   if (!recOrdenId || !ordenes.some((o) => o.id === recOrdenId)) recOrdenId = ordenes[0]?.id || '';
   const orden = recOrdenId ? ordenesVisiblesLista.find((o) => o.id === recOrdenId) : null;
   const pendientes = orden ? lineasPendientes(orden) : [];
-  const lista = recepcionesVisibles(usuario);
+  const lista = recepcionesVisibles(usuario).map((r) => vistaRecepcion(r, usuario));
+  const rutProveedorEnRecepcion = puedeVerRutProveedor(usuario.rol, 'recepcion');
   const content = qs('compras-content');
   content.innerHTML = `
     ${
@@ -1417,8 +1513,24 @@ function renderRecepciones() {
         lista.length === 0
           ? '<div class="empty">Sin recepciones registradas.</div>'
           : `
-      <table><thead><tr><th>Número</th><th>OC</th><th>Fecha</th><th>Estado</th><th>Registrada por</th><th>Líneas</th><th>Acciones</th></tr></thead><tbody>
-      ${lista.map((r) => `<tr><td>${esc(r.numero)}</td><td>${esc(r.orden_id)}</td><td>${fecha(r.fecha_recepcion)}</td><td>${badge(r.estado)}</td><td>${esc(nombreUsuario(r.registrada_por))}</td><td>${(r.lineas || []).map((l) => `${esc(nombreProducto(l.producto_id))}: ${l.cantidad_aceptada}`).join(', ')}</td><td class="actions"><button type="button" class="link" data-traza="recepcion" data-id="${esc(r.id)}">Cadena</button></td></tr>`).join('')}
+      <table><thead><tr><th>Número</th><th>OC</th><th>Proveedor / RUT</th><th>Fecha</th><th>Estado</th><th>Registrada por</th><th>Líneas</th><th>Acciones</th></tr></thead><tbody>
+      ${lista
+        .map(
+          (r) => `<tr><td>${esc(r.numero)}</td><td>${esc(r.orden_numero)}</td><td>${esc(
+            r.proveedor?.name || r.proveedor_id || ''
+          )}${
+            rutProveedorEnRecepcion && r.proveedor_rut
+              ? ` <span class="muted">${esc(r.proveedor_rut)}</span>`
+              : ''
+          }</td><td>${fecha(r.fecha_recepcion)}</td><td>${badge(r.estado)}</td><td>${celdaUsuario(
+            r.registrada_por
+          )}</td><td>${(r.lineas || [])
+            .map((l) => `${esc(nombreProducto(l.producto_id))}: ${l.cantidad_aceptada}`)
+            .join(', ')}</td><td class="actions"><button type="button" class="link" data-traza="recepcion" data-id="${esc(
+            r.id
+          )}">Cadena</button></td></tr>`
+        )
+        .join('')}
       </tbody></table>`
       }
       ${
@@ -1432,7 +1544,7 @@ function renderRecepciones() {
       }
     </div>
   `;
-  qs('rec-exportar').addEventListener('click', () => exportarRecepciones());
+  qs('rec-exportar').addEventListener('click', () => exportarRecepciones({ usuario }));
   if (puedeOperar('recepciones', 'registrar_recepcion', usuario) && orden) {
     qs('rec-orden').addEventListener('change', (ev) => {
       recOrdenId = ev.target.value;
@@ -1533,7 +1645,7 @@ function renderFacturas() {
       ${orden ? `<p class="muted">Notas de crédito de la OC: ${listarFacturas({ orden_id: orden.id, tipo_documento: 'nota_credito' }).length}</p>` : ''}
     </div>
   `;
-  qs('fac-exportar').addEventListener('click', () => exportarFacturas());
+  qs('fac-exportar').addEventListener('click', () => exportarFacturas({ usuario }));
   if (puedeOperar('facturas', 'registrar_factura', usuario) && orden) {
     qs('fac-orden').addEventListener('change', (ev) => {
       facOrdenId = ev.target.value;
@@ -1622,7 +1734,7 @@ function renderDevoluciones() {
         .map(
           (
             d
-          ) => `<tr><td>${esc(d.numero)}</td><td>${esc(d.orden_id)}</td><td>${fecha(d.fecha_devolucion)}</td><td>${clp(d.neto)}</td><td>${badge(d.estado)}</td><td>${esc(nombreUsuario(d.registrada_por))}</td>
+          ) => `<tr><td>${esc(d.numero)}</td><td>${esc(d.orden_id)}</td><td>${fecha(d.fecha_devolucion)}</td><td>${clp(d.neto)}</td><td>${badge(d.estado)}</td><td>${celdaUsuario(d.registrada_por)}</td>
         <td class="actions">
           <button type="button" class="link" data-traza="devolucion" data-id="${esc(d.id)}">Cadena</button>
           ${d.estado === 'pendiente_aprobacion' && puedeOperar('devoluciones', 'aprobar_devolucion', usuario) ? `<button type="button" class="link" data-dev-accion="aprobar" data-id="${esc(d.id)}">Aprobar</button><button type="button" class="link danger" data-dev-accion="rechazar" data-id="${esc(d.id)}">Rechazar</button>` : ''}
@@ -1676,7 +1788,7 @@ function renderCatalogo() {
   const proveedores = listarProveedores();
   const productos = productosActivos();
   let lista = listarCatalogo({ proveedor_id: catProveedorId || undefined }).map((c) =>
-    catalogoEnriquecido(c)
+    catalogoEnriquecido(c, hoyISO(), usuario)
   );
   if (catFiltro) {
     const q = catFiltro.toLowerCase();

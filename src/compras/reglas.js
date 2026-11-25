@@ -1,10 +1,16 @@
+import { COMPRAS_PARAMETROS, puedeEditarDatosBancarios } from '../module-config.js';
 import {
-  COMPRAS_PARAMETROS,
-  puedeVerDatosBancarios,
-  puedeEditarDatosBancarios
-} from '../module-config.js';
+  enmascararCuentaPorRol,
+  enmascararRut,
+  puedeVerDatosBancarios
+} from './visibilidad.js';
 
-export { puedeVerDatosBancarios, puedeEditarDatosBancarios };
+export {
+  enmascararCuentaPorRol as enmascararCuenta,
+  enmascararRut,
+  puedeEditarDatosBancarios,
+  puedeVerDatosBancarios
+};
 
 export const IVA = COMPRAS_PARAMETROS.iva;
 export const UMBRAL_COTIZACIONES = COMPRAS_PARAMETROS.umbralCotizaciones;
@@ -147,25 +153,6 @@ export function formatearRut(rut) {
   const partes = limpio.includes('-') ? limpio.split('-') : [limpio.slice(0, -1), limpio.slice(-1)];
   const cuerpo = partes[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
   return `${cuerpo}-${partes[1]}`;
-}
-
-export function enmascararRut(rut, rol) {
-  if (puedeVerDatosBancarios(rol)) return formatearRut(rut);
-  const limpio = normalizarRut(rut);
-  if (!validarRut(limpio)) return '***';
-  const partes = limpio.includes('-') ? limpio.split('-') : [limpio.slice(0, -1), limpio.slice(-1)];
-  const cuerpo = partes[0];
-  return `${cuerpo.slice(0, 2)}.***.***-${partes[1]}`;
-}
-
-export function enmascararCuenta(cuenta, rol) {
-  const limpio = String(cuenta ?? '').replace(/\s/g, '');
-  if (puedeVerDatosBancarios(rol)) return limpio;
-  if (!limpio) return '';
-  if (limpio.length <= 4) {
-    return `${'*'.repeat(Math.max(0, limpio.length - 2))}${limpio.slice(-2)}`;
-  }
-  return `****${limpio.slice(-4)}`;
 }
 
 export function validarCondicionPago(dias, acuerdoPlazoMayor) {

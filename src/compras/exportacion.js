@@ -1,10 +1,11 @@
-import { exigirPermiso, getUsuarioActivo } from './almacenamiento.js';
+import { datosUsuario, exigirPermiso, getUsuarioActivo, leer } from './almacenamiento.js';
 import { listarSolicitudes } from './solicitudes.js';
-import { listarProveedores, vistaProveedor } from './proveedores.js';
+import { listarProveedores, obtenerProveedor, vistaProveedor } from './proveedores.js';
 import { listarOrdenes } from './ordenes-compra.js';
-import { listarRecepciones } from './recepciones.js';
+import { listarRecepciones, vistaRecepcion } from './recepciones.js';
 import { listarFacturas } from './facturas.js';
 import { listarEventos } from './trazabilidad.js';
+import { enmascararDatosEnTexto, puedeVerRutProveedor } from './visibilidad.js';
 
 const SEPARADOR = ';';
 
@@ -92,6 +93,7 @@ const COLUMNAS_PROVEEDORES = [
   { key: 'code', header: 'Código' },
   { key: 'name', header: 'Razón social' },
   { key: 'rut_visible', header: 'RUT' },
+  { key: 'cuenta_visible', header: 'Cuenta' },
   { key: 'tipo_persona', header: 'Tipo de persona' },
   { key: 'giro', header: 'Giro' },
   { key: 'region', header: 'Región' },
@@ -103,6 +105,7 @@ const COLUMNAS_SOLICITUDES = [
   { key: 'numero', header: 'Número' },
   { key: 'estado', header: 'Estado' },
   { key: 'solicitante_id', header: 'Solicitante' },
+  { key: 'solicitante_rut', header: 'RUT solicitante' },
   { key: 'centro_costo_id', header: 'Centro de costo' },
   { key: 'fecha_requerida', header: 'Fecha requerida' },
   { key: 'monto_estimado', header: 'Monto estimado' }
@@ -121,10 +124,12 @@ const COLUMNAS_ORDENES = [
 
 const COLUMNAS_RECEPCIONES = [
   { key: 'numero', header: 'Número' },
-  { key: 'orden_id', header: 'Orden' },
+  { key: 'orden_numero', header: 'Orden' },
+  { key: 'proveedor_rut', header: 'RUT proveedor' },
   { key: 'estado', header: 'Estado' },
   { key: 'fecha_recepcion', header: 'Fecha recepción' },
-  { key: 'registrada_por', header: 'Registrada por' }
+  { key: 'registrada_por', header: 'Registrada por' },
+  { key: 'registrada_por_rut', header: 'RUT registradora' }
 ];
 
 const COLUMNAS_FACTURAS = [
@@ -132,6 +137,7 @@ const COLUMNAS_FACTURAS = [
   { key: 'folio', header: 'Folio' },
   { key: 'orden_id', header: 'Orden' },
   { key: 'proveedor_id', header: 'Proveedor' },
+  { key: 'proveedor_rut', header: 'RUT proveedor' },
   { key: 'estado', header: 'Estado' },
   { key: 'fecha_vencimiento', header: 'Vencimiento' },
   { key: 'neto', header: 'Neto' },
@@ -149,8 +155,17 @@ const COLUMNAS_TRAZABILIDAD = [
   { key: 'estado_nuevo', header: 'Estado nuevo' },
   { key: 'usuario_id', header: 'Usuario' },
   {
+    header: 'RUT usuario',
+    valor: (evento) => datosUsuario(evento.usuario_id, evento._usuario, 'auditoria').rut_visible
+  },
+  {
     header: 'Detalle',
-    valor: (evento) => String(evento.detalle ?? '').replace(/\d{6,}/g, '****')
+    valor: (evento) =>
+      enmascararDatosEnTexto(
+        evento.detalle,
+        evento._usuario?.rol,
+        leer('usuarios').map((u) => u.rut)
+      )
   }
 ];
 
@@ -161,11 +176,16 @@ export function exportarProveedores({
   usuario = getUsuarioActivo()
 } = {}) {
   const q = String(filtro ?? '').toLowerCase();
+  const camposBusqueda = (p) => [
+    p.name,
+    p.code,
+    ...(puedeVerRutProveedor(usuario?.rol) ? [p.taxId] : [])
+  ];
   const lista = (filas || listarProveedores())
     .filter(
       (p) =>
         !q ||
-        [p.name, p.code, p.taxId].some((v) =>
+        camposBusqueda(p).some((v) =>
           String(v ?? '')
             .toLowerCase()
             .includes(q)
@@ -180,15 +200,20 @@ export function exportarSolicitudes(
   { filtro = '', descargar = true } = {}
 ) {
   const q = String(filtro ?? '').toLowerCase();
-  const lista = filtrarSolicitudesPorRol(listarSolicitudes(usuario), usuario).filter(
-    (s) =>
-      !q ||
-      [s.numero, s.estado, s.justificacion].some((v) =>
-        String(v ?? '')
-          .toLowerCase()
-          .includes(q)
-      )
-  );
+  const lista = filtrarSolicitudesPorRol(listarSolicitudes(usuario), usuario)
+    .filter(
+      (s) =>
+        !q ||
+        [s.numero, s.estado, s.justificacion].some((v) =>
+          String(v ?? '')
+            .toLowerCase()
+            .includes(q)
+        )
+    )
+    .map((s) => ({
+      ...s,
+      solicitante_rut: datosUsuario(s.solicitante_id, usuario).rut_visible
+    }));
   return exportarListado('solicitudes', lista, COLUMNAS_SOLICITUDES, { descargar });
 }
 
@@ -218,29 +243,41 @@ export function exportarRecepciones({
   usuario = getUsuarioActivo()
 } = {}) {
   const q = String(filtro ?? '').toLowerCase();
-  const lista = filtrarRecepcionesPorSolicitante(filas || listarRecepciones(), usuario).filter(
-    (r) =>
-      !q ||
-      [r.numero, r.orden_id, r.estado].some((v) =>
-        String(v ?? '')
-          .toLowerCase()
-          .includes(q)
-      )
-  );
+  const lista = filtrarRecepcionesPorSolicitante(filas || listarRecepciones(), usuario)
+    .filter(
+      (r) =>
+        !q ||
+        [r.numero, r.orden_id, r.estado].some((v) =>
+          String(v ?? '')
+            .toLowerCase()
+            .includes(q)
+        )
+    )
+    .map((r) => vistaRecepcion(r, usuario));
   return exportarListado('recepciones', lista, COLUMNAS_RECEPCIONES, { descargar });
 }
 
-export function exportarFacturas({ filas, filtro = '', descargar = true } = {}) {
+export function exportarFacturas({
+  filas,
+  filtro = '',
+  descargar = true,
+  usuario = getUsuarioActivo()
+} = {}) {
   const q = String(filtro ?? '').toLowerCase();
-  const lista = (filas || listarFacturas()).filter(
-    (f) =>
-      !q ||
-      [f.folio, f.tipo_documento, f.estado, f.proveedor_id].some((v) =>
-        String(v ?? '')
-          .toLowerCase()
-          .includes(q)
-      )
-  );
+  const lista = (filas || listarFacturas())
+    .filter(
+      (f) =>
+        !q ||
+        [f.folio, f.tipo_documento, f.estado, f.proveedor_id].some((v) =>
+          String(v ?? '')
+            .toLowerCase()
+            .includes(q)
+        )
+    )
+    .map((f) => {
+      const proveedor = obtenerProveedor(f.proveedor_id);
+      return { ...f, proveedor_rut: proveedor ? vistaProveedor(proveedor, usuario?.rol).rut_visible : '' };
+    });
   return exportarListado('facturas', lista, COLUMNAS_FACTURAS, { descargar });
 }
 
@@ -253,15 +290,17 @@ export function exportarTrazabilidad({
 } = {}) {
   exigirPermiso('exportar_trazabilidad', usuario);
   const q = String(filtro ?? '').toLowerCase();
-  const lista = listarEventos({ entidad, entidad_id }).filter(
-    (e) =>
-      !q ||
-      [e.fecha_hora, e.entidad, e.entidad_id, e.accion, e.usuario_id, e.detalle].some((v) =>
-        String(v ?? '')
-          .toLowerCase()
-          .includes(q)
-      )
-  );
+  const lista = listarEventos({ entidad, entidad_id })
+    .filter(
+      (e) =>
+        !q ||
+        [e.fecha_hora, e.entidad, e.entidad_id, e.accion, e.usuario_id, e.detalle].some((v) =>
+          String(v ?? '')
+            .toLowerCase()
+            .includes(q)
+        )
+    )
+    .map((e) => ({ ...e, _usuario: usuario }));
   return exportarListado('trazabilidad', lista, COLUMNAS_TRAZABILIDAD, { descargar });
 }
 

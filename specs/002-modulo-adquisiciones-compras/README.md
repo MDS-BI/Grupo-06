@@ -125,7 +125,7 @@ La fuente de verdad es `PERMISOS` y `puede()` en `src/compras/almacenamiento.js`
 **Perfiles en lenguaje de negocio**:
 
 - **Solicitante**: crea y ve solo sus solicitudes; consulta en solo lectura el catálogo y las OC/recepciones originadas en sus solicitudes.
-- **Comprador**: opera proveedores, cotizaciones, OC, recepciones ajenas en solo lectura, facturas, catálogo y evaluaciones; registra y concilia facturas. No ve datos bancarios completos.
+- **Comprador**: opera proveedores, cotizaciones, OC, recepciones ajenas en solo lectura, facturas, catálogo y evaluaciones; registra y concilia facturas. Ve el RUT tributario completo y la cuenta como `****XXXX`.
 - **Jefe de compras**: aprueba o rechaza solicitudes ajenas, aprueba pagos y devoluciones, evalúa proveedores y consulta trazabilidad. Ve datos bancarios completos, pero no los edita.
 - **Encargado de bodega**: registra recepciones y devoluciones; crea y ve solo sus propias solicitudes; ve OC en solo lectura.
 - **Administrador TI**: administra datos bancarios, desbloquea proveedores y consulta/exporta trazabilidad. Ve el resto en solo lectura, salvo sus propias solicitudes. **No** emite OC, registra recepciones ni aprueba solicitudes, pagos o devoluciones.
@@ -139,20 +139,21 @@ La lista anterior de permisos es la implementada en código. Cuando una descripc
 - Estas reglas se aplican **sin excepciones**, incluido `admin_ti`.
 - El rol queda fijo durante la sesión (FR-037), de modo que una misma sesión no puede crear con un rol y aprobar con otro.
 
-### 2.3 Enmascaramiento y datos bancarios
+### 2.3 Matriz de visibilidad de datos sensibles
 
-La regla única está en `COMPRAS_PARAMETROS.datosBancarios` (`src/module-config.js`):
+La regla única está en `src/compras/visibilidad.js`; `reglas.js` conserva solo adaptadores de compatibilidad.
 
-```js
-rolesVisibles: ['admin_ti', 'jefe_compras']
-rolesEdicion: ['admin_ti']
-```
+| Dato sensible | `solicitante` | `comprador` | `jefe_compras` | `bodega` | `admin_ti` |
+| --- | --- | --- | --- | --- | --- |
+| RUT personal de otro empleado | `••••••••-•` | `••••••••-•` | `18.XXX.XXX-5` solo en auditoría | `••••••••-•` | Completo |
+| RUT tributario de proveedores | Sin acceso | Completo | Completo | Solo en recepciones y guías de despacho | Completo |
+| Cuenta bancaria | `No disponible` | `****XXXX` | Completa (solo lectura) | `No disponible` | Completa (edición) |
 
-- Solo `admin_ti` y `jefe_compras` ven sin enmascarar el número de cuenta y el RUT de proveedores personas naturales.
-- Únicamente `admin_ti` puede editar banco y cuenta.
-- Para los demás roles, la cuenta se muestra como `****4333`; si tiene 4 dígitos o menos se conservan solo los últimos 2; sin cuenta se muestra **No registrado**. El RUT se muestra como `12.***.***-9`.
-- El enmascaramiento se aplica **en el origen de los datos**: ficha, listados, búsquedas, comparativa, panel, tooltips, mensajes de error, historial, CSV y respuestas del asistente. Un rol sin permiso nunca recibe el valor completo.
-- Cada cambio bancario actualiza `fecha_cambio_cuenta` y genera un evento de trazabilidad con el valor **enmascarado**, nunca el número completo.
+- El RUT personal propio se ve sin enmascarar en el indicador/perfil para los cinco roles.
+- `vistaProveedor()` entrega `rut_visible` y `cuenta_visible` ya calculados; para `solicitante` y `bodega` no incluye `banco`, `tipo_cuenta`, `numero_cuenta` ni `fecha_cambio_cuenta`.
+- Si la cuenta tiene 4 dígitos o menos se conservan solo los últimos 2 para `comprador`; sin cuenta se muestra **No registrado** y con cuenta sin acceso **No disponible**.
+- La matriz se aplica **en el origen de los datos**: ficha, listados, modales, búsquedas, comparativa, panel, tooltips, mensajes de error, historial, CSV y respuestas del asistente. Un rol sin permiso nunca recibe el valor completo ni dígitos no autorizados.
+- Únicamente `admin_ti` puede editar banco y cuenta. Cada cambio actualiza `fecha_cambio_cuenta` y genera un evento de trazabilidad con la representación autorizada por la matriz, nunca el número completo.
 - El panel alerta facturas no aprobadas de proveedores con cambio de cuenta en los últimos 30 días (riesgo de fraude por suplantación).
 
 ### 2.4 Umbral de cotizaciones
@@ -283,7 +284,7 @@ Los datos son ficticios, pero las reglas están pensadas para no transferir sesg
 | Sesgo contra pymes | Las micro y pequeñas empresas sufren más los pagos tardíos y quedan fuera de licitaciones por su historial de volumen. | `tamano_empresa` permite medir el gasto en micro/pequeñas; plazo de pago vigilado por Ley 21.131; se recomienda revisar distribución de adjudicaciones. |
 | Precios desactualizados | Un precio antiguo puede hacer que un proveedor parezca caro o barato sin causa real. | Catálogo con `fecha_actualizacion`; más de 90 días se marca desactualizado; al crear solicitudes se sugiere el menor precio **vigente**. |
 | Sesgo de sesión/rol | Cambiar de rol en vivo permitiría a una persona crear y aprobar. | Rol fijo por sesión y dos jefes en la semilla para demostrar aprobación ajena. |
-| Datos personales | RUT y cuenta pueden exponer a personas naturales. | Enmascaramiento en origen, visibilidad restringida y cambios bancarios auditados solo enmascarados. |
+| Datos personales | RUT de empleados, RUT tributario y cuenta pueden exponer a personas naturales. | Matriz única en `visibilidad.js` aplicada en origen, visibilidad restringida por rol y canal, y cambios bancarios auditados con la representación autorizada. |
 | Datos sintéticos mal interpretados | Los nombres, RUT y correos parecen reales. | Todos los datos son ficticios y se documentan como tales en spec, quickstart y este README. |
 
 **Marco normativo de referencia**: Ley 19.628 y Ley 21.719 sobre protección de datos personales, Ley 21.131 de pago a 30 días. Las compras públicas (Ley 19.886 / Mercado Público) quedan fuera de alcance porque el cliente es una pyme privada.

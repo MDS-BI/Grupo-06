@@ -4,10 +4,12 @@ import {
   generarId,
   exigirPermiso,
   exigirMotivoAnulacion,
-  getUsuarioActivo
+  getUsuarioActivo,
+  datosUsuario
 } from './almacenamiento.js';
 import { generarNumero, siguienteSecuencia, hoyISO, puedeTransicionar } from './reglas.js';
 import { obtenerOrden, lineasPendientes, recepcionesDeOrden } from './ordenes-compra.js';
+import { obtenerProveedor, vistaProveedor } from './proveedores.js';
 import { registrarEvento } from './trazabilidad.js';
 
 export function listarRecepciones({ orden_id } = {}) {
@@ -18,6 +20,22 @@ export function listarRecepciones({ orden_id } = {}) {
 
 export function obtenerRecepcion(id) {
   return leer('recepciones').find((r) => r.id === id);
+}
+
+/** Recepción con el RUT del proveedor visible solo según la matriz RBAC. */
+export function vistaRecepcion(recepcion, usuario = getUsuarioActivo()) {
+  const orden = obtenerOrden(recepcion?.orden_id);
+  const proveedor = orden ? obtenerProveedor(orden.proveedor_id) : null;
+  const vistaProveedorRecepcion = proveedor
+    ? vistaProveedor(proveedor, usuario?.rol, 'recepcion')
+    : null;
+  return {
+    ...recepcion,
+    orden_numero: orden?.numero || recepcion?.orden_id || '',
+    proveedor: vistaProveedorRecepcion,
+    proveedor_rut: vistaProveedorRecepcion?.rut_visible || '',
+    registrada_por_rut: datosUsuario(recepcion?.registrada_por, usuario)?.rut_visible || ''
+  };
 }
 
 function actualizarEstadoOrden(ordenId, usuario = getUsuarioActivo()) {

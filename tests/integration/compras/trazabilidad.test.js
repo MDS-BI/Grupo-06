@@ -31,7 +31,11 @@ import {
   registrarDevolucion
 } from '../../../src/compras/devoluciones.js';
 import { eliminar, leer, puedeEliminar } from '../../../src/compras/almacenamiento.js';
-import { cadenaDocumental, historialDe } from '../../../src/compras/trazabilidad.js';
+import {
+  cadenaDocumental,
+  historialDe,
+  registrarEvento
+} from '../../../src/compras/trazabilidad.js';
 import { cargarDatos, USUARIOS } from './helpers.js';
 
 function solicitudAprobada(justificacion = 'Auditoría de compras') {
@@ -297,5 +301,21 @@ describe('trazabilidad transversal', () => {
     expect(valorRecibidoNeto(obtenerOrden(orden.id))).toBe(0);
     expect(lineasPendientes(obtenerOrden(orden.id))[0].cantidad_pendiente).toBe(2);
     expect(obtenerOrden(orden.id).estado).toBe('cerrada');
+  });
+
+  it('persiste el detalle de auditoría sin RUT de empleado ni cuenta completos', () => {
+    const rutEmpleado = leer('usuarios').find((u) => u.id === USUARIOS.jefe.id)?.rut;
+    expect(rutEmpleado).toBeTruthy();
+
+    const evento = registrarEvento('proveedor', 'prov-001', 'cambio_bancario', {
+      usuario: USUARIOS.admin,
+      detalle: `RUT ${rutEmpleado} y cuenta 555444333`
+    });
+
+    expect(evento.detalle).not.toContain(rutEmpleado);
+    expect(evento.detalle).not.toContain(String(rutEmpleado).replace(/[.\s-]/g, ''));
+    expect(evento.detalle).not.toContain('555444333');
+    expect(evento.detalle).toContain('18.XXX.XXX-5');
+    expect(evento.detalle).toContain('****4333');
   });
 });

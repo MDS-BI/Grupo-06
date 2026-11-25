@@ -26,7 +26,7 @@ Describir las interfaces que el módulo `002` expone hacia el usuario y hacia ot
   La visibilidad de cada vista (opera / solo lectura / no ve) se resuelve con la matriz de FR-033; `PERMISOS` solo gobierna las acciones.
 - La regla "quien emite la OC no la recibe" se valida aparte de `PERMISOS` y sin excepciones por rol (FR-014).
 - `aprobar_solicitud` exige además que el aprobador sea distinto del solicitante; la solicitud creada por un `jefe_compras` la aprueba otro `jefe_compras` (FR-006, regla 8).
-- La edición de datos bancarios es exclusiva de `admin_ti`. La visibilidad sin enmascarar de RUT de persona natural y número de cuenta corresponde a `admin_ti` y `jefe_compras`, según `COMPRAS_PARAMETROS.datosBancarios`. Ninguna otra vista, búsqueda, mensaje ni exportación puede entregar el valor completo (FR-004 y FR-025).
+- La edición de datos bancarios es exclusiva de `admin_ti`. La visibilidad se resuelve con la matriz de `src/compras/visibilidad.js`: RUT personal completo solo para `admin_ti` (parcial en auditoría para `jefe_compras`), RUT tributario completo para `comprador`, `jefe_compras` y `admin_ti` (solo recepciones/guías para `bodega`, oculto para `solicitante`) y cuenta completa solo para `jefe_compras` y `admin_ti`. Ninguna otra vista, búsqueda, mensaje ni exportación puede entregar el valor completo (FR-004, FR-025, SC-009).
 
 ## Interfaz de navegación
 
@@ -55,13 +55,13 @@ Describir las interfaces que el módulo `002` expone hacia el usuario y hacia ot
 | Escapado              | Los valores con `"`, `;`, salto de línea o coma se envuelven en comillas dobles y las comillas internas se duplican |
 | Seguridad             | Un valor que empieza con `=`, `+`, `-` o `@` y no es numérico se prefija con `'` para evitar fórmulas               |
 | Nombres de archivo    | `proveedores.csv`, `solicitudes.csv`, `ordenes-compra.csv`, `recepciones.csv`, `facturas.csv` y `trazabilidad.csv` (historial, solo `admin_ti`) |
-| Valores vacíos        | Cadena vacía; una cuenta sin registrar se muestra como `No registrado` en la vista, nunca como un número inventado  |
+| Valores vacíos        | Cadena vacía; `cuenta_visible` es `No registrado` sin cuenta y `No disponible` con cuenta sin acceso, nunca un número inventado |
 
 ### Reglas de contenido
 
 - Solo se exportan los registros que el rol activo ya puede ver, aplicando el mismo filtro que la pantalla (FR-024).
 - Un rol con solo lectura exporta lo que ve; si el rol no ve la vista, no hay botón **Exportar CSV**. El historial de trazabilidad solo lo exporta `admin_ti`.
-- Los proveedores se transforman con `vistaProveedor()` antes de exportarse: la columna `RUT` contiene el valor enmascarado para roles sin permiso. No se exporta el número de cuenta bancaria.
+- Los proveedores se transforman con `vistaProveedor()` antes de exportarse: la columna `RUT` contiene `rut_visible` y la columna `Cuenta` contiene `cuenta_visible`, ambos según la matriz de `visibilidad.js` para el rol y el canal. Las solicitudes, recepciones y trazabilidad exportan el RUT personal de empleados mediante `datosUsuario()`, que ya aplica la matriz.
 - Si el entorno no dispone de `Blob` o `URL.createObjectURL` (por ejemplo, en pruebas), `descargarCSV()` devuelve el contenido sin lanzar un error.
 
 ## Interfaz de integración con otros módulos
@@ -79,6 +79,6 @@ Los identificadores de producto, proveedor, usuario y centro de costo se compart
 ## Expectativas de compatibilidad
 
 - Un cambio en el separador, la codificación o el orden de las columnas debe revisarse contra SC-010 y actualizar las pruebas de `tests/unit/compras/exportacion.test.js`.
-- Un cambio en `PERMISOS`, en la matriz de visibilidad (FR-033) o en `COMPRAS_PARAMETROS.datosBancarios` debe reflejarse en la vista, en el guardado de proveedores, en el CSV y en las pruebas de no exposición (SC-009) y de permisos (SC-015, SC-016).
+- Un cambio en `PERMISOS`, en la matriz de visibilidad (FR-033) o en la matriz sensible de `src/compras/visibilidad.js` (FR-004, FR-025) debe reflejarse en la vista, en el guardado de proveedores, en el CSV y en las pruebas de no exposición (SC-009) y de permisos (SC-015, SC-016).
 - Un cambio en las claves o en la forma de los registros debe revisarse contra [almacenamiento-compras.md](almacenamiento-compras.md) antes de afectar a otros módulos.
 - La interfaz debe seguir los patrones visuales y de mensajes del módulo base, incluidos estados vacíos y errores en español (principio III de la constitución).

@@ -15,6 +15,7 @@ import {
   reiniciarAsistente,
   sincronizarAsistente
 } from './compras/asistente.js';
+import { inicializarCookiesUI } from './compras/cookies.js';
 
 function qs(id) {
   return document.getElementById(id);
@@ -396,6 +397,7 @@ export function initApp(resolved) {
   poblarDirectorioUsuarios();
   aplicarEtiquetas(resolved.config);
   cablearEventos();
+  inicializarCookiesUI();
 
   if (estaAutenticado()) {
     showModule();

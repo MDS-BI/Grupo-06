@@ -64,14 +64,16 @@ Después recargue la página para que se vuelva a cargar la semilla.
 
 ### 2. Proveedores y datos sensibles (US1, FR-001 a FR-004, FR-025, SC-009)
 
-1. Abra **Proveedores** y busque el proveedor persona natural de la semilla (RUT `9.876.543-3`, cuenta `555444333`).
-2. Ingresando como `comprador` (o como `bodega`), confirme que el RUT aparece como `98.***.***-3` y la cuenta como `****4333`, y que los campos bancarios están deshabilitados.
-3. Cierre sesión e ingrese como `jefe_compras`: RUT y cuenta deben verse completos, sin habilitar la edición bancaria.
-4. Cierre sesión e ingrese como `admin_ti`: además debe poder editar banco y cuenta. Modifique la cuenta, guarde y confirme que se actualizó `fecha_cambio_cuenta`; el cambio queda registrado en `erp_compras:trazabilidad` con el valor enmascarado.
-5. Con `admin_ti`, desbloquee el proveedor bloqueado de la semilla y confirme que vuelve a `aprobado`. Ingresando como `comprador`, la acción de desbloquear no aparece. Con `admin_ti`, no se pueden crear proveedores ni editar sus datos generales.
-6. Busque un proveedor sin cuenta registrada y confirme el texto **No registrado**.
+1. Ingrese como `comprador`, abra **Proveedores** y busque el proveedor de la semilla con RUT tributario `9.876.543-3` y cuenta `555444333`. Confirme que el RUT aparece completo, la cuenta como `****4333` y que los campos bancarios no son editables.
+2. Cierre sesión e ingrese como `jefe_compras`: RUT y cuenta deben verse completos, sin habilitar la edición bancaria.
+3. Cierre sesión e ingrese como `admin_ti`: además debe poder editar banco y cuenta. Modifique la cuenta, guarde y confirme que se actualizó `fecha_cambio_cuenta`; el cambio queda registrado en `erp_compras:trazabilidad` con la representación autorizada por `visibilidad.js`.
+4. Ingrese como `bodega` y abra una **Recepción**: el RUT del proveedor debe verse completo solo en la recepción y en la guía de despacho, nunca la cuenta. Confirme que `bodega` no tiene acceso al directorio de **Proveedores**.
+5. Ingrese como `solicitante`: confirme que no ve el directorio de proveedores, el RUT tributario ni cuentas en catálogo, OC ni recepciones; en el indicador de sesión ve solo su propio RUT sin enmascarar.
+6. Abra la trazabilidad como `jefe_compras` y confirme que el RUT personal de otro empleado aparece como `18.XXX.XXX-5`; como `admin_ti` aparece completo y como `solicitante`, `comprador` o `bodega` aparece `••••••••-•` o no se entrega.
+7. Con `admin_ti`, desbloquee el proveedor bloqueado de la semilla y confirme que vuelve a `aprobado`. Ingresando como `comprador`, la acción de desbloquear no aparece. Con `admin_ti`, no se pueden crear proveedores ni editar sus datos generales.
+8. Busque un proveedor sin cuenta registrada y confirme **No registrado**; busque una cuenta existente con `solicitante` o `bodega` y confirme **No disponible** en `cuenta_visible`, sin ningún dígito.
 
-**Resultado esperado**: en roles sin permiso ni la tabla, ni el formulario, ni el CSV contienen el valor completo. El cambio bancario actualiza `fecha_cambio_cuenta` y deja un evento de trazabilidad con el valor enmascarado.
+**Resultado esperado**: tablas, modales, búsquedas, CSV y respuestas del asistente entregan solo la representación autorizada por la matriz de `visibilidad.js` para cada rol y canal; nunca el valor completo ni dígitos no autorizados. El cambio bancario actualiza `fecha_cambio_cuenta` y deja un evento de trazabilidad con la representación autorizada.
 
 ### 3. Ciclo completo de compra (US2, US6, US3, US4, US7; SC-002)
 
@@ -111,7 +113,7 @@ Con los datos semilla ya hay documentos en todos los estados. Para repetir el ci
 2. Abra el archivo en una planilla de cálculo en español.
 3. Repita la exportación ingresando como `comprador` y luego como `jefe_compras`.
 
-**Resultado esperado**: las tildes, la `ñ` y los símbolos se ven correctos; las columnas están separadas por `;`; se conserva el filtro; y el RUT de personas naturales sigue enmascarado para `comprador`. El formato del archivo se detalla en [contracts/exportacion-e-integracion.md](contracts/exportacion-e-integracion.md).
+**Resultado esperado**: las tildes, la `ñ` y los símbolos se ven correctos; las columnas están separadas por `;`; se conserva el filtro; y el RUT tributario exportado sigue la matriz: completo para `comprador`, `••••••••-•` para `solicitante` y visible para `bodega` solo en recepciones. El formato del archivo se detalla en [contracts/exportacion-e-integracion.md](contracts/exportacion-e-integracion.md).
 
 ### 7. Persistencia y reinicio
 

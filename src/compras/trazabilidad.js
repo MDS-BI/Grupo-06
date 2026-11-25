@@ -1,5 +1,20 @@
 import { leer, guardar, generarId, getUsuarioActivo } from './almacenamiento.js';
 import { enmascararCuenta, hoyISO } from './reglas.js';
+import { sanitizarRutsEnTexto } from './visibilidad.js';
+
+/** El historial nunca persiste RUT de empleados, RUT tributario ni cuentas completas. */
+function detalleSinDatosSensibles(detalle) {
+  const rutsEmpleado = leer('usuarios')
+    .map((u) => u.rut)
+    .filter(Boolean);
+  const texto = sanitizarRutsEnTexto(detalle, {
+    rutsEmpleado,
+    rolEmpleado: 'jefe_compras',
+    contextoEmpleado: 'auditoria',
+    rolProveedor: 'solicitante'
+  });
+  return texto.replace(/\b\d{6,}\b/g, (cuenta) => enmascararCuenta(cuenta, 'comprador') || '****');
+}
 
 export const TIPOS_DOCUMENTO = Object.freeze({
   solicitud: { coleccion: 'solicitudes', tab: 'solicitudes', etiqueta: 'Solicitud' },
@@ -24,7 +39,7 @@ export function registrarEvento(entidad, entidadId, accion, opciones = {}) {
     estado_nuevo: opciones.nuevo ?? '',
     usuario_id: usuario?.id || '',
     usuario_rol: usuario?.rol || '',
-    detalle: String(opciones.detalle ?? '').trim(),
+    detalle: detalleSinDatosSensibles(opciones.detalle).trim(),
     fecha: hoyISO(ahora),
     fecha_hora: ahora.toISOString()
   };

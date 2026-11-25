@@ -1,6 +1,7 @@
 import semilla from './semilla.json';
 import { loadEntities, saveEntities } from '../storage.js';
 import { ROLES, ROLES_CON_NOMBRE, diasEntre, hoyISO, sumarDias } from './reglas.js';
+import { rutEmpleadoVisible } from './visibilidad.js';
 
 const PREFIX = 'erp_compras:';
 const memoria = new Map();
@@ -205,12 +206,14 @@ function proveedorDesdeSemilla(p, hoy) {
     id: p.entity_id,
     entity_id: p.entity_id,
     name: p.razon_social,
+    nombre_fantasia: p.nombre_fantasia || '',
     code: p.codigo,
     taxId: p.rut,
     email: p.email,
     phone: p.telefono,
     address: p.direccion,
     category: p.categoria,
+    rubro: p.rubro || p.categoria || '',
     description: p.giro,
     paymentTerms: `neto ${p.condicion_pago_dias}`,
     tipo_persona: p.tipo_persona,
@@ -218,15 +221,29 @@ function proveedorDesdeSemilla(p, hoy) {
     region: p.region,
     comuna: p.comuna,
     tamano_empresa: p.tamano_empresa,
+    estado: p.estado || '',
     estado_proveedor: p.estado_proveedor,
+    calificacion_promedio: Number(p.calificacion_promedio) || 0,
     condicion_pago_dias: p.condicion_pago_dias,
     acuerdo_plazo_mayor: p.acuerdo_plazo_mayor || '',
     banco: p.banco || '',
+    tipo_cuenta: p.tipo_cuenta || '',
     numero_cuenta: p.numero_cuenta || '',
     fecha_cambio_cuenta: fechaCambio || '',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
+}
+
+/** Completa los proveedores semilla que falten sin sobrescribir los del usuario. */
+function completarProveedoresSemilla(datos, hoy) {
+  const actuales = loadEntities();
+  const existentes = new Set(actuales.map((e) => e.entity_id));
+  const nuevos = (datos.proveedores || [])
+    .filter((p) => !existentes.has(p.entity_id))
+    .map((p) => proveedorDesdeSemilla(p, hoy));
+  if (nuevos.length > 0) saveEntities([...actuales, ...nuevos]);
+  return nuevos.length;
 }
 
 /** Colecciones semilla que aún no existen en el almacenamiento. */
@@ -252,14 +269,7 @@ export function cargarSemilla({ forzar = false, hoy = hoyISO() } = {}) {
       if (!forzar && yaCargada && !faltantes.includes(nombre)) continue;
       guardar(nombre, nombre === 'usuarios' ? normalizarUsuarios(datos[nombre]) : datos[nombre]);
     }
-    if (Array.isArray(datos.proveedores)) {
-      const actuales = loadEntities();
-      const existentes = new Set(actuales.map((e) => e.entity_id));
-      const nuevos = datos.proveedores
-        .filter((p) => !existentes.has(p.entity_id))
-        .map((p) => proveedorDesdeSemilla(p, hoy));
-      if (nuevos.length > 0) saveEntities([...actuales, ...nuevos]);
-    }
+    completarProveedoresSemilla(datos, hoy);
     marcarSemillaCargada(true);
     return { cargada: true, motivo: 'ok' };
   } catch (e) {
@@ -272,6 +282,22 @@ export function asegurarSemilla() {
     return { cargada: false, motivo: 'ya_cargada' };
   }
   return cargarSemilla();
+}
+
+/**
+ * Deja disponibles los catálogos maestros de proveedores e insumos incluso en
+ * Modo Real. Solo agrega lo que falta: nunca sobrescribe registros del usuario.
+ */
+export function cargarCatalogoBase({ hoy = hoyISO() } = {}) {
+  const datos = desplazarFechas(clonar(semilla), diasEntre('2026-11-03', hoy));
+  const proveedoresAgregados = completarProveedoresSemilla(datos, hoy);
+  for (const nombre of ['centros_costo', 'productos', 'catalogo']) {
+    if (leer(nombre).length === 0 && Array.isArray(datos[nombre])) {
+      guardar(nombre, datos[nombre]);
+    }
+  }
+  cargarSemilla({ hoy });
+  return { cargada: true, motivo: 'catalogo_base', proveedores_agregados: proveedoresAgregados };
 }
 
 const SESION_KEY = 'sesion';
@@ -309,6 +335,7 @@ function completarSesion(sesion) {
     ...SESION_DEFAULT,
     ...sesion,
     nombre: sesion.nombre || usuario?.nombre || etiquetaRolTexto(sesion.rol),
+    rut: sesion.rut || usuario?.rut || '',
     centro_costo_id: sesion.centro_costo_id || usuario?.centro_costo_id || ''
   };
 }
@@ -333,6 +360,7 @@ export function setSesion(sesion) {
   const out = {
     usuario_id: usuario?.id || sesion.usuario_id || SESION_DEFAULT.usuario_id,
     nombre: usuario?.nombre || sesion.nombre || etiquetaRolTexto(rol),
+    rut: usuario?.rut || sesion.rut || '',
     rol,
     centro_costo_id: usuario?.centro_costo_id || sesion.centro_costo_id || ''
   };
@@ -356,6 +384,7 @@ export function getUsuarioActivo() {
     ...usuario,
     nombre: String(usuario.nombre || '').trim() || etiquetaRolTexto(sesion.rol),
     rol: sesion.rol,
+    rut: usuario.rut || sesion.rut || '',
     centro_costo_id: usuario.centro_costo_id || sesion.centro_costo_id || ''
   };
 }
@@ -380,6 +409,19 @@ export function etiquetaUsuario(id) {
     return usuario.nombre || etiquetaRolTexto(usuario.rol);
   }
   return etiquetaRolTexto(usuario.rol);
+}
+
+/** Identidad segura de un usuario frente a la sesión activa (FR-004, FR-025). */
+export function datosUsuario(id, usuarioSesion = getUsuarioActivo(), contexto = 'listado') {
+  const usuario = leer('usuarios').find((u) => u.id === id || u.entity_id === id);
+  if (!usuario) return { id: id || '', nombre: id || '', cargo: '', rut_visible: '' };
+  return {
+    id: usuario.id,
+    nombre: etiquetaUsuario(usuario.id),
+    cargo: etiquetaRolTexto(usuario.rol),
+    centro_costo_id: usuario.centro_costo_id || '',
+    rut_visible: rutEmpleadoVisible(usuario, usuarioSesion, contexto)
+  };
 }
 
 export function setRolActivo(rol) {

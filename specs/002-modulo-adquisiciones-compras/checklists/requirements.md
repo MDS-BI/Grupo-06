@@ -34,7 +34,7 @@
 - [x] US1 a US11 usan exactamente la misma estructura: encabezado `Historia de Usuario N - Título (Prioridad: Pn)`, narrativa **Como / necesito / para**, **Por qué esta prioridad**, **Prueba Independiente** y **Escenarios de Aceptación** con pasos **Dado (Dada/Dadas) / cuando / entonces**.
 - [x] La sección Clarifications explicita el umbral de 1.000.000 CLP neto para exigir tres cotizaciones o justificación de proveedor único (FR-008, FR-021).
 - [x] La sección Clarifications explicita la tolerancia de conciliación del 1 % del neto (FR-022).
-- [x] La sección Clarifications explicita que solo `admin_ti` y `jefe_compras` ven sin enmascarar RUT de personas naturales y cuenta bancaria, y que solo `admin_ti` edita (FR-004).
+- [x] La sección Clarifications explicita la matriz unificada: RUT personal completo solo para `admin_ti` y parcial en auditoría para `jefe_compras`, RUT tributario completo para `comprador`, `jefe_compras` y `admin_ti` (solo recepciones para `bodega`), cuenta completa para `jefe_compras` y `admin_ti` y `****XXXX` para `comprador`, con edición exclusiva de `admin_ti` (FR-004, SC-009).
 - [x] La sección Clarifications explicita el CSV en UTF-8 con BOM y separador `;` (FR-024).
 - [x] La sección Clarifications explicita el flujo completo de dañados y devoluciones con su enmascaramiento, trazabilidad, cadena documental, anulación y cambios bancarios (FR-025 a FR-030).
 - [x] Existe un requisito de interfaz explícito (FR-032) que prohíbe las vistas genéricas del template base, con escenario de aceptación en US5 y criterio medible SC-014.
@@ -62,6 +62,16 @@
 - [x] data-model.md v1.3 documenta en §6 el riesgo asumido de que el comprador cotice y emita la OC de una solicitud propia y el riesgo del ingreso simulado con rol fijo; §9 tiene una sola fila v1.3 con todos los cambios.
 - [x] `research.md` registra las decisiones 12 (todos crean solicitudes; alternativas descartadas: `admin_ti` aprueba como excepción y rol `gerente`) y 13 (rol fijo por sesión; alternativa descartada: selector de rol libre).
 - [x] `tasks.md` ajusta T121 (`crear_solicitud` para los cinco roles), agrega la Fase 20 (T146–T155) y actualiza la matriz de trazabilidad; `plan.md` registra T146–T155 en Deuda conocida.
+
+## Catálogos bancarios, CuentaRUT y semilla enriquecida (2026-11-25)
+
+- [x] FR-038 enumera los doce bancos chilenos y los cinco tipos de cuenta, exige listas desplegables y determina la normalización de alias y el rechazo de valores fuera del catálogo.
+- [x] FR-039 define el auto-relleno de CuentaRUT desde el cuerpo numérico del RUT del proveedor, el banco fijo `BancoEstado`, el aviso editable y la restricción de banco.
+- [x] FR-040 fija las siete columnas del listado, el buscador amplio y sincronizado, y el mínimo de ocho proveedores sintéticos con RUT Módulo 11 y datos completos (semilla-base de 12).
+- [x] FR-041 mantiene el botón **Cargar catálogo base de proveedores/insumos** en Modo Real sin sobrescribir registros del usuario.
+- [x] US1 incorpora escenarios verificables para catálogos, auto-relleno, listado y carga base; SC-018 y SC-019 miden el cumplimiento.
+- [x] `data-model.md` v1.5 documenta los nuevos atributos de PROVEEDOR, los catálogos de §3.3.1, la regla de CuentaRUT y la semilla de 12 proveedores en §9.3.
+- [x] Las pruebas unitarias de catálogos y las pruebas de integración de proveedores y vista cubren banco, tipo de cuenta, auto-relleno, columnas, semilla y botón de carga base.
 
 ## Notas
 

@@ -26,6 +26,7 @@ import {
   validarRut,
   validarVisibilidadDatosBancarios
 } from '../../../src/compras/reglas.js';
+import { RUT_OCULTO } from '../../../src/compras/visibilidad.js';
 
 describe('reglas de compras', () => {
   it('expone los parámetros definitivos del negocio', () => {
@@ -68,22 +69,31 @@ describe('reglas de compras', () => {
       expect(formatearRut('invalido')).toBe('invalido');
     });
 
-    it('enmascara RUT y cuenta según el rol', () => {
-      expect(enmascararRut('12345678-5', 'comprador')).toBe('12.***.***-5');
-      expect(enmascararRut('12345678-5', 'admin_ti')).toBe('12.345.678-5');
-      expect(enmascararRut('12345678-5', 'jefe_compras')).toBe('12.345.678-5');
-      expect(enmascararRut('invalido', 'bodega')).toBe('***');
+    it('aplica la matriz unificada al RUT personal de empleados y a la cuenta', () => {
+      expect(enmascararRut('12.345.678-5', 'comprador')).toBe(RUT_OCULTO);
+      expect(enmascararRut('12.345.678-5', 'bodega')).toBe(RUT_OCULTO);
+      expect(enmascararRut('12.345.678-5', 'solicitante')).toBe(RUT_OCULTO);
+      expect(enmascararRut('12.345.678-5', 'jefe_compras', 'auditoria')).toBe('12.XXX.XXX-5');
+      expect(enmascararRut('12.345.678-5', 'jefe_compras')).toBe(RUT_OCULTO);
+      expect(enmascararRut('12.345.678-5', 'admin_ti')).toBe('12.345.678-5');
+      expect(enmascararRut('12.345.678-5', 'bodega', 'listado', true)).toBe('12.345.678-5');
+      expect(enmascararRut('invalido', 'jefe_compras', 'auditoria')).toBe('XX.XXX.XXX-K');
       expect(enmascararCuenta('123456789', 'comprador')).toBe('****6789');
       expect(enmascararCuenta('123456789', 'admin_ti')).toBe('123456789');
       expect(enmascararCuenta('123456789', 'jefe_compras')).toBe('123456789');
+      expect(enmascararCuenta('123456789', 'bodega')).toBe('');
+      expect(enmascararCuenta('123456789', 'solicitante')).toBe('');
       expect(enmascararCuenta('', 'admin_ti')).toBe('');
     });
 
-    it('enmascara cuentas cortas conservando solo los últimos dos dígitos', () => {
+    it('enmascara cuentas cortas y oculta el valor para roles sin acceso', () => {
       expect(enmascararCuenta('1234', 'comprador')).toBe('**34');
-      expect(enmascararCuenta('123', 'bodega')).toBe('*23');
-      expect(enmascararCuenta('12', 'solicitante')).toBe('12');
-      expect(enmascararCuenta('1', 'solicitante')).toBe('1');
+      expect(enmascararCuenta('123', 'comprador')).toBe('*23');
+      expect(enmascararCuenta('12', 'comprador')).toBe('**');
+      expect(enmascararCuenta('1', 'comprador')).toBe('*');
+      expect(enmascararCuenta('123', 'bodega')).toBe('');
+      expect(enmascararCuenta('12', 'solicitante')).toBe('');
+      expect(enmascararCuenta('1', 'solicitante')).toBe('');
       expect(enmascararCuenta('1234', 'jefe_compras')).toBe('1234');
     });
   });

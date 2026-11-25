@@ -9,13 +9,13 @@ const html = fs.readFileSync(
 );
 
 const CORREOS = [
-  'ana.perez@example.com',
-  'luis.soto@example.com',
-  'carla.diaz@example.com',
-  'jefe.compras@example.com',
-  'jorge.munoz@example.com',
-  'bodega@example.com',
-  'admin.ti@example.com'
+  'camila.rojas@pyme.cl',
+  'diego.munoz@pyme.cl',
+  'francisca.herrera@pyme.cl',
+  'andres.contreras@pyme.cl',
+  'valentina.lagos@pyme.cl',
+  'bodega@pyme.cl',
+  'admin.ti@pyme.cl'
 ];
 
 let dom;
@@ -66,7 +66,7 @@ describe('portal corporativo de acceso', () => {
       usuarios: 7,
       centros_costo: 4,
       productos: 20,
-      proveedores: 8,
+      proveedores: 12,
       solicitudes: 10,
       cotizaciones: 7,
       ordenes: 8,
@@ -122,13 +122,13 @@ describe('portal corporativo de acceso', () => {
   });
 
   it('autentica por correo corporativo y muestra identidad, rol y centro activos', () => {
-    ingresar('carla.diaz@example.com');
+    ingresar('francisca.herrera@pyme.cl');
 
     expect(qs('login-error').hidden).toBe(true);
     expect(qs('login-overlay').hidden).toBe(true);
     expect(qs('btn-logout').hidden).toBe(false);
     expect(qs('admin-rol-control').hidden).toBe(true);
-    expect(qs('sesion-indicador').textContent).toContain('Carla Díaz');
+    expect(qs('sesion-indicador').textContent).toContain('Francisca Herrera Díaz');
     expect(qs('sesion-indicador').textContent).toContain('Comprador');
     expect(qs('sesion-indicador').textContent).toContain('CC-COM · Compras');
   });
@@ -136,7 +136,7 @@ describe('portal corporativo de acceso', () => {
   it('ingresa con un clic desde el acceso rápido de bodega', () => {
     activarModoPresentacion();
     const boton = [...qs('login-directorio-lista').querySelectorAll('.directory-user')].find(
-      (item) => item.dataset.email === 'bodega@example.com'
+      (item) => item.dataset.email === 'bodega@pyme.cl'
     );
     boton.click();
 
@@ -149,7 +149,7 @@ describe('portal corporativo de acceso', () => {
     activarModoPresentacion();
     expect(qs('login-directorio').hidden).toBe(false);
 
-    ingresar('bodega@example.com');
+    ingresar('bodega@pyme.cl');
     qs('btn-logout').click();
 
     expect(qs('login-overlay').hidden).toBe(false);
@@ -171,17 +171,17 @@ describe('portal corporativo de acceso', () => {
   });
 
   it('permite la vista de rol solo a administrador TI', () => {
-    ingresar('admin.ti@example.com');
+    ingresar('admin.ti@pyme.cl');
     expect(qs('admin-rol-control').hidden).toBe(false);
     expect(qs('sesion-indicador').textContent).toContain('Administrador TI');
     expect(qs('sesion-indicador').textContent).toContain('CC-COM · Compras');
   });
 
   it('muestra los registros semilla en las diez vistas desde el inicio', () => {
-    ingresar('admin.ti@example.com');
+    ingresar('admin.ti@pyme.cl');
 
     const conteos = {
-      proveedores: 8,
+      proveedores: 12,
       catalogo: 10,
       evaluaciones: 2,
       solicitudes: 10,

@@ -10,6 +10,7 @@
 import { COMPRAS_PARAMETROS } from '../module-config.js';
 import {
   PERMISOS,
+  datosUsuario,
   estaAutenticado,
   getUsuarioActivo,
   leer,
@@ -59,6 +60,53 @@ export const MENSAJE_FUERA_DE_AMBITO =
 
 const SALUDO =
   'Estoy listo para ayudarte con Adquisiciones y Compras. Puedo consultar estados, pendientes y reglas, o preparar acciones según tu rol. Escribe «ayuda» para ver ejemplos.';
+
+export const MENSAJE_NO_PUEDE_AYUDAR =
+  'No puedo ayudarte a {tema}, quizás quisiste decir: {sugerencia1} o {sugerencia2}';
+
+const TEMAS_ALCANCE = Object.freeze([
+  'solicitudes de compra',
+  'cotizaciones de proveedores',
+  'órdenes de compra',
+  'recepciones y bodega',
+  'facturas y conciliación',
+  'devoluciones',
+  'proveedores y catálogo',
+  'evaluaciones de desempeño',
+  'trazabilidad',
+  'pendientes por rol'
+]);
+
+function sugerenciasPorTema(tema) {
+  const t = normalizar(tema);
+  const coincidencias = TEMAS_ALCANCE.filter((item) => {
+    const palabras = normalizar(item).split(/\s+/).filter((p) => p.length > 3);
+    return palabras.some((palabra) => t.includes(palabra) || palabra.includes(t));
+  });
+  if (coincidencias.length >= 2) return coincidencias.slice(0, 2);
+  return ['estado de una solicitud', 'pendientes de tu rol'];
+}
+
+export function mensajeNoPuedeAyudar(tema) {
+  const [sugerencia1, sugerencia2] = sugerenciasPorTema(tema);
+  return MENSAJE_NO_PUEDE_AYUDAR.replace('{tema}', tema || 'eso')
+    .replace('{sugerencia1}', sugerencia1)
+    .replace('{sugerencia2}', sugerencia2);
+}
+
+function respuestaCordial(intencion, usuario) {
+  const nombre = usuario?.nombre || 'there';
+  const rol = etiquetaRol(usuario?.rol);
+  if (intencion.nombre === 'saludo') {
+    return { texto: `¡Hola, ${nombre}! Como ${rol}, estoy aquí para ayudarte con tus compras. ¿Qué necesitas revisar hoy?` };
+  }
+  if (intencion.nombre === 'agradecimiento') {
+    return { texto: `Con gusto, ${nombre}. Quedo atento para ayudarte con cualquier paso del ciclo de compras.` };
+  }
+  return {
+    texto: `Claro, ${nombre}. Como ${rol} puedo ayudarte con: ${SUGERENCIAS[usuario?.rol]?.join(', ') || 'consultas y acciones de compras'}.`
+  };
+}
 
 const ETIQUETAS_ROL = Object.freeze({
   solicitante: 'Solicitante',
@@ -171,6 +219,12 @@ function extraerNumeroDocumento(texto) {
 
 function identificarIntencion(texto) {
   const t = normalizar(texto);
+  if (/^(hola|buenos dias|buenas tardes|buenas noches|hey|hi|saludos)\b/.test(t)) {
+    return { nombre: 'saludo' };
+  }
+  if (/^(gracias|muchas gracias|agradezco|mil gracias)\b/.test(t)) {
+    return { nombre: 'agradecimiento' };
+  }
   if (fueraDeAmbito(t)) return { nombre: 'fuera_ambito' };
 
   if (/^(ayuda|que puedes hacer|comandos|opciones)$/.test(t)) return { nombre: 'ayuda' };
@@ -210,6 +264,12 @@ function identificarIntencion(texto) {
     return { nombre: 'registrar_devolucion' };
   }
   if (/\bbloquear\b.*\bproveedores?\b/.test(t)) return { nombre: 'bloquear_proveedor' };
+  if (
+    /\brut(?:s)?\b.*\b(emplead\w*|funcionari\w*|trabajador\w*|personal|usuarios?)\b/.test(t) ||
+    /\b(emplead\w*|funcionari\w*|trabajador\w*|personal)\b.*\brut/.test(t)
+  ) {
+    return { nombre: 'rut_empleados' };
+  }
   if (/\b(cuentas? bancarias|datos bancarios|numero de cuenta|rut del proveedor)\b/.test(t)) {
     return { nombre: 'datos_bancarios' };
   }
@@ -429,6 +489,19 @@ function respuestaSolicitudesPorAprobar(usuario) {
   };
 }
 
+function respuestaRutEmpleados(usuario) {
+  const empleados = leer('usuarios').map((empleado) => {
+    const identidad = datosUsuario(empleado.id, usuario, 'auditoria');
+    const sufijo = empleado.id === usuario.id ? ' (tú)' : '';
+    return `${identidad.nombre}${sufijo} · ${identidad.cargo}: ${identidad.rut_visible || 'sin registro'}`;
+  });
+  return {
+    texto:
+      `RUT de empleados visibles para ${etiquetaRol(usuario.rol)}:\n` +
+      listaTexto(empleados, 7)
+  };
+}
+
 function respuestaDatosBancarios(usuario, texto) {
   if (!validarVisibilidadDatosBancarios(usuario.rol).visible) {
     return denegarDatosBancarios(usuario);
@@ -445,7 +518,7 @@ function respuestaDatosBancarios(usuario, texto) {
       listaTexto(
         proveedores.map((proveedor) => {
           const vista = vistaProveedor(proveedor, usuario.rol);
-          return `${vista.name} (${vista.code}): RUT ${vista.taxId || 'sin registro'}, cuenta ${vista.numero_cuenta || 'No registrada'}`;
+          return `${vista.name} (${vista.code}): RUT ${vista.rut_visible || 'sin registro'}, cuenta ${vista.cuenta_visible}`;
         })
       )
   };
@@ -461,6 +534,8 @@ function responderConsulta(intencion, usuario, texto) {
       return respuestaPendientes(usuario);
     case 'solicitudes_por_aprobar':
       return respuestaSolicitudesPorAprobar(usuario);
+    case 'rut_empleados':
+      return respuestaRutEmpleados(usuario);
     case 'datos_bancarios':
       return respuestaDatosBancarios(usuario, texto);
     case 'discrepancias': {
@@ -934,7 +1009,12 @@ function prepararAccion(intencion, texto, usuario) {
 /** Punto de entrada del motor. Devuelve `{ texto, accion? }`. */
 export function responder(texto, usuario = getUsuarioActivo()) {
   const intencion = identificarIntencion(texto);
-  if (intencion.nombre === 'fuera_ambito') return { texto: MENSAJE_FUERA_DE_AMBITO };
+  if (['saludo', 'agradecimiento', 'ayuda'].includes(intencion.nombre)) {
+    return respuestaCordial(intencion, usuario);
+  }
+  if (intencion.nombre === 'fuera_ambito') {
+    return { texto: mensajeNoPuedeAyudar(String(texto ?? '').trim()) };
+  }
   const acciones = new Set([
     'crear_solicitud',
     'aprobar_solicitud',

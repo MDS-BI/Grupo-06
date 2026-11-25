@@ -32,7 +32,7 @@ const VISIBLES_POR_ROL = {
 const NOMBRES_POR_ROL = {
   solicitante: 'Ana Pérez',
   comprador: 'Carla Díaz',
-  jefe_compras: 'Marcela Rojas',
+  jefe_compras: 'Andrés Contreras Pérez',
   bodega: '',
   admin_ti: ''
 };

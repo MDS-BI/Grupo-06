@@ -1,6 +1,6 @@
 import { leer, guardar, generarId, exigirPermiso, getUsuarioActivo } from './almacenamiento.js';
 import { DIAS_CATALOGO_DESACTUALIZADO, diasEntre, hoyISO } from './reglas.js';
-import { obtenerProveedor } from './proveedores.js';
+import { obtenerProveedor, vistaProveedor } from './proveedores.js';
 
 export function listarCatalogo({ proveedor_id, incluirInactivos = true } = {}) {
   return leer('catalogo')
@@ -17,22 +17,22 @@ export function esDesactualizado(entrada, hoy = hoyISO()) {
   return diasEntre(entrada.fecha_actualizacion, hoy) > DIAS_CATALOGO_DESACTUALIZADO;
 }
 
-export function catalogoEnriquecido(entrada, hoy = hoyISO()) {
+export function catalogoEnriquecido(entrada, hoy = hoyISO(), usuario = getUsuarioActivo()) {
   const producto = leer('productos').find((p) => p.id === entrada.producto_id);
   const proveedor = obtenerProveedor(entrada.proveedor_id);
   return {
     ...entrada,
     producto,
-    proveedor,
+    proveedor: proveedor ? vistaProveedor(proveedor, usuario?.rol, 'general') : proveedor,
     desactualizado: esDesactualizado(entrada, hoy)
   };
 }
 
-export function buscarCatalogo(termino, hoy = hoyISO()) {
+export function buscarCatalogo(termino, hoy = hoyISO(), usuario = getUsuarioActivo()) {
   const q = String(termino ?? '')
     .trim()
     .toLowerCase();
-  const lista = listarCatalogo().map((c) => catalogoEnriquecido(c, hoy));
+  const lista = listarCatalogo().map((c) => catalogoEnriquecido(c, hoy, usuario));
   if (!q) return lista;
   return lista.filter((c) =>
     [c.producto?.nombre, c.producto?.codigo, c.proveedor?.name, c.proveedor?.code].some((v) =>

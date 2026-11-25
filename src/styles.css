@@ -1130,6 +1130,11 @@ button.danger:hover {
   min-width: 180px;
 }
 
+.toolbar input.prov-search {
+  flex: 1 1 28rem;
+  min-width: 26rem;
+}
+
 .compras-content table {
   width: 100%;
   min-width: 640px;
@@ -1750,3 +1755,17 @@ button.danger:hover {
     scroll-behavior: auto !important;
   }
 }
+
+/* Consentimiento de cookies */
+.app-footer { display:flex; justify-content:center; padding:12px; border-top:1px solid #30363d; background:#161b22; }
+.footer-link { background:none; border:none; color:#8b949e; cursor:pointer; font:inherit; text-decoration:underline; }
+.footer-link:hover { color:#2f81f7; }
+.cookies-banner, .cookies-modal { position:fixed; z-index:1000; left:0; right:0; bottom:0; display:flex; justify-content:center; padding:24px; background:rgba(13,17,23,.85); }
+.cookies-banner[hidden], .cookies-modal[hidden] { display:none; }
+.cookies-card { width:min(560px,100%); background:#161b22; border:1px solid #30363d; border-radius:10px; padding:18px; color:#c9d1d9; box-shadow:0 8px 30px rgba(0,0,0,.45); }
+.cookies-card h2 { margin-top:0; color:#f0f6fc; font-size:18px; }
+.cookies-card label { display:block; margin:10px 0; }
+.cookies-acciones { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+.cookies-btn { padding:8px 14px; border:1px solid #30363d; border-radius:6px; background:#21262d; color:#c9d1d9; cursor:pointer; }
+.cookies-btn.primario { background:#2f81f7; border-color:#2f81f7; color:#fff; }
+.cookies-btn:hover { filter:brightness(1.1); }

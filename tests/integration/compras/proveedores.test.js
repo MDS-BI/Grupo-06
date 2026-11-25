@@ -7,11 +7,14 @@ import {
   cuentaCambiadaRecientemente,
   desbloquearProveedor,
   eliminarProveedor,
+  listarProveedores,
   obtenerProveedor,
   validarProveedor,
   vistaProveedor
 } from '../../../src/compras/proveedores.js';
 import { listarEventos } from '../../../src/compras/trazabilidad.js';
+import { validarRut } from '../../../src/compras/reglas.js';
+import { BANCOS_CHILE, TIPOS_CUENTA } from '../../../src/compras/catalogos-bancarios.js';
 import { cargarDatos, USUARIOS } from './helpers.js';
 
 const DATOS_BASE = Object.freeze({
@@ -34,7 +37,7 @@ describe('proveedores', () => {
     expect(proveedor.entity_id).toMatch(/^prov-/);
     expect(proveedor.name).toBe(DATOS_BASE.razon_social);
     expect(proveedor.taxId).toBe('11.111.111-1');
-    expect(proveedor.code).toBe('PRV-009');
+    expect(proveedor.code).toBe('PRV-013');
     expect(proveedor.estado_proveedor).toBe('potencial');
     expect(obtenerProveedor(proveedor.id)).toBeTruthy();
   });
@@ -57,7 +60,7 @@ describe('proveedores', () => {
   it('solo admin_ti puede registrar y modificar datos bancarios', () => {
     expect(() =>
       crearProveedor(
-        { ...DATOS_BASE, banco: 'Banco X', numero_cuenta: '123456' },
+        { ...DATOS_BASE, banco: 'BancoEstado', numero_cuenta: '123456' },
         USUARIOS.comprador
       )
     ).toThrow(/Solo el rol admin_ti/);
@@ -69,24 +72,24 @@ describe('proveedores', () => {
     expect(() =>
       actualizarProveedor(
         proveedor.id,
-        { banco: 'Banco X', numero_cuenta: '999999' },
+        { banco: 'BancoEstado', numero_cuenta: '999999' },
         USUARIOS.comprador
       )
     ).toThrow(/Solo el rol admin_ti/);
     expect(() =>
       actualizarDatosBancarios(
         proveedor.id,
-        { banco: 'Banco X', numero_cuenta: '123456' },
+        { banco: 'BancoEstado', numero_cuenta: '123456' },
         USUARIOS.comprador
       )
     ).toThrow(/no puede ejecutar esta acción/);
 
     const actualizado = actualizarDatosBancarios(
       proveedor.id,
-      { banco: 'Banco X', numero_cuenta: '123456' },
+      { banco: 'BancoEstado', numero_cuenta: '123456' },
       USUARIOS.admin
     );
-    expect(actualizado.banco).toBe('Banco X');
+    expect(actualizado.banco).toBe('BancoEstado');
     expect(actualizado.numero_cuenta).toBe('123456');
     expect(cuentaCambiadaRecientemente(actualizado)).toBe(true);
   });
@@ -129,20 +132,32 @@ describe('proveedores', () => {
     expect(eventos[0].usuario_id).toBe(USUARIOS.admin.id);
   });
 
-  it('enmascara RUT de persona natural y datos bancarios según rol', () => {
+  it('aplica la matriz RBAC al RUT tributario y a los datos bancarios', () => {
     const natural = obtenerProveedor('prov-003');
     const vistaComprador = vistaProveedor(natural, 'comprador');
-    expect(vistaComprador.rut_visible).toBe('98.***.***-3');
+    expect(vistaComprador.rut_visible).toBe('9.876.543-3');
     expect(vistaComprador.datos_bancarios_visibles).toBe(false);
     expect(vistaComprador.cuenta_visible).toBe('****4333');
-    expect(vistaComprador.taxId).toBe('98.***.***-3');
+    expect(vistaComprador.taxId).toBe('9.876.543-3');
     expect(vistaComprador.numero_cuenta).toBe('****4333');
     expect(vistaComprador.puede_editar_banco).toBe(false);
 
     const vistaBodega = vistaProveedor(natural, 'bodega');
-    expect(vistaBodega.cuenta_visible).toBe('****4333');
+    expect(vistaBodega.rut_visible).toBe('••••••••-•');
+    expect(vistaBodega.cuenta_visible).toBe('No disponible');
     expect(vistaBodega.datos_bancarios_visibles).toBe(false);
+    expect(vistaBodega.taxId).toBeUndefined();
+    expect(vistaBodega.numero_cuenta).toBeUndefined();
+    expect(vistaBodega.banco).toBeUndefined();
     expect(vistaBodega.puede_editar_banco).toBe(false);
+
+    const vistaRecepcion = vistaProveedor(natural, 'bodega', 'recepcion');
+    expect(vistaRecepcion.rut_visible).toBe('9.876.543-3');
+    expect(vistaRecepcion.cuenta_visible).toBe('No disponible');
+
+    const vistaSolicitante = vistaProveedor(natural, 'solicitante');
+    expect(vistaSolicitante.rut_visible).toBe('••••••••-•');
+    expect(vistaSolicitante.cuenta_visible).toBe('No disponible');
 
     const vistaJefe = vistaProveedor(natural, 'jefe_compras');
     expect(vistaJefe.rut_visible).toBe('9.876.543-3');
@@ -157,6 +172,31 @@ describe('proveedores', () => {
     expect(vistaAdmin.puede_editar_banco).toBe(true);
   });
 
+  it('no filtra campos sensibles de proveedores jurídicos desde el registro original', () => {
+    const juridica = obtenerProveedor('prov-001');
+    expect(juridica.tipo_persona).toBe('jurídica');
+
+    const oculta = vistaProveedor(juridica, 'solicitante');
+    for (const clave of [
+      'rut',
+      'taxId',
+      'banco',
+      'tipo_cuenta',
+      'numero_cuenta',
+      'fecha_cambio_cuenta'
+    ]) {
+      expect(oculta[clave]).toBeUndefined();
+    }
+    expect(oculta.rut_visible).toBe('••••••••-•');
+    expect(oculta.cuenta_visible).toBe('No disponible');
+
+    const comprador = vistaProveedor(juridica, 'comprador');
+    expect(comprador.taxId).toBe('12.345.678-5');
+    expect(comprador.numero_cuenta).toBe('****6789');
+    expect(comprador.banco).toBeUndefined();
+    expect(comprador.rut).toBeUndefined();
+  });
+
   it('muestra "No registrado" cuando el proveedor no tiene cuenta bancaria', () => {
     const proveedor = crearProveedor(DATOS_BASE, USUARIOS.comprador);
     const vista = vistaProveedor(proveedor, 'comprador');
@@ -168,7 +208,7 @@ describe('proveedores', () => {
     const proveedor = crearProveedor(DATOS_BASE, USUARIOS.comprador);
     actualizarDatosBancarios(
       proveedor.id,
-      { banco: 'Banco X', numero_cuenta: '123456' },
+      { banco: 'BancoEstado', numero_cuenta: '123456' },
       USUARIOS.admin
     );
     actualizarDatosBancarios(proveedor.id, { numero_cuenta: '999999' }, USUARIOS.admin);
@@ -201,12 +241,63 @@ describe('proveedores', () => {
       giro: '',
       region: '',
       condicion_pago_dias: '',
-      banco: 'Banco X'
+      banco: 'BancoEstado'
     });
     expect(resultado.valid).toBe(false);
     expect(resultado.errors.razon_social).toBeDefined();
     expect(resultado.errors.rut).toBeDefined();
     expect(resultado.errors.tipo_persona).toBeDefined();
     expect(resultado.errors.numero_cuenta).toBeDefined();
+  });
+
+  it('semilla incluye doce proveedores sintéticos completos con RUT válido', () => {
+    const proveedores = listarProveedores();
+    expect(proveedores).toHaveLength(12);
+    for (const proveedor of proveedores) {
+      expect(validarRut(proveedor.taxId)).toBe(true);
+      expect(proveedor.nombre_fantasia).toBeTruthy();
+      expect(proveedor.rubro).toBeTruthy();
+      expect(proveedor.email).toBeTruthy();
+      expect(proveedor.phone).toBeTruthy();
+      expect(proveedor.address).toBeTruthy();
+      expect(['Activo', 'En evaluación', 'Suspendido']).toContain(proveedor.estado);
+      expect(proveedor.calificacion_promedio).toBeGreaterThan(0);
+      expect(BANCOS_CHILE).toContain(proveedor.banco);
+      expect(TIPOS_CUENTA).toContain(proveedor.tipo_cuenta);
+      expect(proveedor.numero_cuenta).toBeTruthy();
+    }
+  });
+
+  it('valida el catálogo bancario y la regla exclusiva de CuentaRUT', () => {
+    const fueraDeCatalogo = validarProveedor({
+      ...DATOS_BASE,
+      banco: 'Banco X',
+      numero_cuenta: '123456'
+    });
+    expect(fueraDeCatalogo.errors.banco).toMatch(/catálogo chileno/);
+
+    const alias = validarProveedor({
+      ...DATOS_BASE,
+      banco: 'Banco Estado',
+      numero_cuenta: '123456',
+      tipo_cuenta: 'corriente'
+    });
+    expect(alias.valid).toBe(true);
+
+    const cuentaRutOtroBanco = validarProveedor({
+      ...DATOS_BASE,
+      banco: 'Banco BCI',
+      numero_cuenta: '123456',
+      tipo_cuenta: 'CuentaRUT (BancoEstado)'
+    });
+    expect(cuentaRutOtroBanco.errors.banco).toMatch(/BancoEstado/);
+
+    const cuentaRutValida = validarProveedor({
+      ...DATOS_BASE,
+      banco: 'BancoEstado',
+      numero_cuenta: '11111111',
+      tipo_cuenta: 'CuentaRUT (BancoEstado)'
+    });
+    expect(cuentaRutValida.valid).toBe(true);
   });
 });

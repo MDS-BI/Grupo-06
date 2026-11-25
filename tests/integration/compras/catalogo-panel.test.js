@@ -176,15 +176,15 @@ describe('panel por rol y alertas', () => {
     expect(contarPendientes(USUARIOS.jefe, HOY)).toBeGreaterThan(0);
   });
 
-  it('no expone RUT ni cuenta de personas naturales en el panel ni en la comparativa', () => {
+  it('respeta la matriz RBAC en el panel y en la comparativa', () => {
     const panel = JSON.stringify(construirPanel(USUARIOS.comprador, HOY));
-    expect(panel).not.toContain('9.876.543-3');
     expect(panel).not.toContain('555444333');
+    expect(panel).not.toContain('98.***.***-3');
 
     const comparativa = JSON.stringify(compararCotizaciones('sol-004', USUARIOS.comprador));
-    expect(comparativa).toContain('98.***.***-3');
+    expect(comparativa).toContain('9.876.543-3');
     expect(comparativa).toContain('****4333');
-    expect(comparativa).not.toContain('9.876.543-3');
     expect(comparativa).not.toContain('555444333');
+    expect(comparativa).not.toContain('98.***.***-3');
   });
 });

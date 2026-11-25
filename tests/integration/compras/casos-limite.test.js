@@ -531,17 +531,27 @@ describe('casos límite de compras', () => {
     expect(vacio.trim().split('\r\n').length).toBe(1);
   });
 
-  it('exporta RUT y cuenta enmascarados según el rol activo', () => {
+  it('exporta RUT y cuenta según la matriz RBAC del rol activo', () => {
     const comprador = exportarProveedores({ descargar: false, usuario: USUARIOS.comprador });
-    expect(comprador).toContain('98.***.***-3');
-    expect(comprador).not.toContain('9.876.543-3');
+    expect(comprador).toContain('9.876.543-3');
+    expect(comprador).toContain('****4333');
     expect(comprador).not.toContain('555444333');
+    expect(comprador).not.toContain('98.***.***-3');
+
+    const bodega = exportarProveedores({ descargar: false, usuario: USUARIOS.bodega });
+    expect(bodega).toContain('••••••••-•');
+    expect(bodega).toContain('No disponible');
+    expect(bodega).not.toContain('9.876.543-3');
+    expect(bodega).not.toContain('555444333');
+    expect(bodega).not.toContain('98.***.***-3');
 
     const jefe = exportarProveedores({ descargar: false, usuario: USUARIOS.jefe });
     expect(jefe).toContain('9.876.543-3');
+    expect(jefe).toContain('555444333');
 
     const admin = exportarProveedores({ descargar: false, usuario: USUARIOS.admin });
     expect(admin).toContain('9.876.543-3');
+    expect(admin).toContain('555444333');
   });
 
   it('aplica tope por línea, segregación y actualiza el estado de la OC', () => {

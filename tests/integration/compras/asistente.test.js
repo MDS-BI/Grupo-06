@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+﻿import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { JSDOM } from 'jsdom';
@@ -7,9 +7,6 @@ const html = fs.readFileSync(
   fileURLToPath(new URL('../../../index.html', import.meta.url)),
   'utf8'
 );
-
-const RECHAZO_DOMINIO =
-  'Solo estoy autorizado para asistir en operaciones y consultas del módulo de Adquisiciones y Compras del ERP.';
 
 let dom;
 
@@ -67,7 +64,7 @@ afterEach(() => {
 
 describe('asistente IA de compras', () => {
   it('muestra la tarjeta al final de acciones rápidas con el estilo de las demás', () => {
-    ingresar('ana.perez@example.com');
+    ingresar('camila.rojas@pyme.cl');
     const tarjetas = [...qs('compras-content').querySelectorAll('.action-grid .action-card')];
     const asistente = tarjetas.at(-1);
 
@@ -86,12 +83,12 @@ describe('asistente IA de compras', () => {
   });
 
   it('abre un drawer fuera del root con identidad, modo restringido y 3 chips del rol', () => {
-    ingresar('jefe.compras@example.com');
+    ingresar('andres.contreras@pyme.cl');
     const overlay = abrirAsistenteDesdeTarjeta();
 
     expect(overlay.hidden).toBe(false);
     expect(qs('compras-root').contains(overlay)).toBe(false);
-    expect(qs('asistente-sesion').textContent).toContain('Marcela Rojas');
+    expect(qs('asistente-sesion').textContent).toContain('Andrés Contreras Pérez');
     expect(qs('asistente-sesion').textContent).toContain('Jefe de Compras');
     expect(qs('asistente-sesion').textContent).toContain('CC-COM · Compras');
     expect(qs('asistente-overlay').textContent).toContain(
@@ -108,17 +105,19 @@ describe('asistente IA de compras', () => {
 
   it('rechaza consultas fuera del dominio con el mensaje estándar exacto', async () => {
     const { responder } = await import('../../../src/compras/asistente.js');
-    expect(responder('¿Cómo está el clima en Santiago?').texto).toBe(RECHAZO_DOMINIO);
-    expect(responder('Cuéntame un chiste').texto).toBe(RECHAZO_DOMINIO);
+    expect(responder('¿Cómo está el clima en Santiago?').texto).toContain(
+      'No puedo ayudarte a'
+    );
+    expect(responder('Cuéntame un chiste').texto).toContain('quizás quisiste decir:');
 
-    ingresar('ana.perez@example.com');
+    ingresar('camila.rojas@pyme.cl');
     abrirAsistenteDesdeTarjeta();
     enviar('¿Y si jugamos fútbol?');
-    expect(ultimoMensaje()).toContain(RECHAZO_DOMINIO);
+    expect(ultimoMensaje()).toContain('No puedo ayudarte a');
   });
 
   it('responde el estado de un documento real por número', () => {
-    ingresar('jefe.compras@example.com');
+    ingresar('andres.contreras@pyme.cl');
     abrirAsistenteDesdeTarjeta();
 
     enviar('Estado de SC-2026-0002');
@@ -131,7 +130,7 @@ describe('asistente IA de compras', () => {
   });
 
   it('deniega acciones no permitidas por rol y registra el intento en trazabilidad', async () => {
-    ingresar('ana.perez@example.com');
+    ingresar('camila.rojas@pyme.cl');
     abrirAsistenteDesdeTarjeta();
 
     enviar('Aprueba la factura 1004');
@@ -154,21 +153,45 @@ describe('asistente IA de compras', () => {
   });
 
   it('aplica enmascaramiento bancario: comprador denegado, admin TI ve la cuenta completa', () => {
-    ingresar('carla.diaz@example.com');
+    ingresar('francisca.herrera@pyme.cl');
     abrirAsistenteDesdeTarjeta();
     enviar('Ver cuentas bancarias completas');
     expect(ultimoMensaje()).toContain('No puedes ver cuentas bancarias completas');
     expect(ultimoMensaje()).not.toContain('123456789');
 
     qs('btn-logout').click();
-    ingresar('admin.ti@example.com');
+    ingresar('admin.ti@pyme.cl');
     abrirAsistenteDesdeTarjeta();
     enviar('Ver cuentas bancarias completas');
     expect(ultimoMensaje()).toContain('123456789');
   });
 
+  it('aplica la matriz de RUT de empleados en las respuestas del asistente', () => {
+    ingresar('camila.rojas@pyme.cl');
+    abrirAsistenteDesdeTarjeta();
+    enviar('Ver RUT de empleados');
+    expect(ultimoMensaje()).toContain('18.123.456-3');
+    expect(ultimoMensaje()).toContain('••••••••-•');
+    expect(ultimoMensaje()).not.toContain('18.100.001-5');
+
+    qs('btn-logout').click();
+    ingresar('andres.contreras@pyme.cl');
+    abrirAsistenteDesdeTarjeta();
+    enviar('Ver RUT de empleados');
+    expect(ultimoMensaje()).toContain('15.XXX.XXX-9');
+    expect(ultimoMensaje()).toContain('18.100.001-5');
+    expect(ultimoMensaje()).not.toContain('18.123.456-3');
+
+    qs('btn-logout').click();
+    ingresar('admin.ti@pyme.cl');
+    abrirAsistenteDesdeTarjeta();
+    enviar('Ver RUT de empleados');
+    expect(ultimoMensaje()).toContain('18.123.456-3');
+    expect(ultimoMensaje()).toContain('18.100.001-5');
+  });
+
   it('prepara una solicitud y solo la crea tras confirmar la acción', async () => {
-    ingresar('ana.perez@example.com');
+    ingresar('camila.rojas@pyme.cl');
     abrirAsistenteDesdeTarjeta();
     enviar('Crear solicitud de 3 Notebooks P-001 para Administración');
 
@@ -193,7 +216,7 @@ describe('asistente IA de compras', () => {
   });
 
   it('cancela una acción sin escribir datos', async () => {
-    ingresar('ana.perez@example.com');
+    ingresar('camila.rojas@pyme.cl');
     abrirAsistenteDesdeTarjeta();
     enviar('Crear solicitud de 2 Notebooks P-001 para Administración');
     qs('asistente-mensajes').querySelector('[data-cancelar]').click();
@@ -204,7 +227,7 @@ describe('asistente IA de compras', () => {
   });
 
   it('limpia la conversación y conserva solo el saludo', () => {
-    ingresar('bodega@example.com');
+    ingresar('bodega@pyme.cl');
     abrirAsistenteDesdeTarjeta();
     enviar('¿Qué tengo pendiente hoy?');
     expect(mensajes().length).toBeGreaterThan(2);
@@ -215,7 +238,7 @@ describe('asistente IA de compras', () => {
   });
 
   it('cierra el drawer con Escape y devuelve el foco', () => {
-    ingresar('ana.perez@example.com');
+    ingresar('camila.rojas@pyme.cl');
     const tarjeta = qs('compras-content').querySelector('[data-accion="asistente-ia"]');
     tarjeta.focus();
     tarjeta.click();
@@ -227,3 +250,5 @@ describe('asistente IA de compras', () => {
     expect(document.activeElement).toBe(tarjeta);
   });
 });
+
+

@@ -173,3 +173,8 @@ Si la configuración es inválida, la aplicación muestra los problemas en el ba
 - Las entidades y documentos del template base se persisten en `localStorage` bajo `erp_base_module:entities` y `erp_base_module:documents`.
 - Al eliminar una entidad del template base, también se eliminan sus documentos asociados (*eliminación en cascada*).
 - El proyecto utiliza intencionalmente HTML, CSS y JavaScript puros, sin frameworks de interfaz.
+
+### Consentimiento de cookies y asistente IA
+
+- **Cookies**: banner GitHub Dark con *Aceptar todas*, *Solo esenciales* y *Configurar preferencias*. El estado se guarda en sessionStorage bajo compras_cookie_consent_v1 y se puede reabrir desde el enlace *Cookies* del footer.
+- **Asistente IA**: responde saludos, agradecimientos y ayuda con el nombre y rol activos. Las consultas fuera de alcance o bloqueadas por RBAC usan el patrón "No puedo ayudarte a {tema}, quizás quisiste decir: {sugerencia1} o {sugerencia2}".

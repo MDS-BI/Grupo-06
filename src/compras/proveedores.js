@@ -1,17 +1,42 @@
 import { loadEntities, saveEntities } from '../storage.js';
-import { generarId, leer, exigirPermiso, puede } from './almacenamiento.js';
+import {
+  generarId,
+  leer,
+  exigirPermiso,
+  getUsuarioActivo,
+  puede
+} from './almacenamiento.js';
 import {
   validarRut,
   formatearRut,
   normalizarRut,
-  enmascararRut,
-  enmascararCuenta,
-  puedeVerDatosBancarios,
   puedeEditarDatosBancarios,
   validarCondicionPago,
   hoyISO
 } from './reglas.js';
+import {
+  CUENTA_NO_DISPONIBLE,
+  enmascararCuentaPorRol,
+  enmascararRutProveedor,
+  puedeVerDatosBancarios,
+  puedeVerRutProveedor
+} from './visibilidad.js';
 import { registrarCambioBancario, registrarEvento } from './trazabilidad.js';
+import {
+  BANCO_ESTADO,
+  esBancoValido,
+  esCuentaRut,
+  esTipoCuentaValido,
+  normalizarBanco,
+  normalizarTipoCuenta
+} from './catalogos-bancarios.js';
+
+/** Etiquetas legibles de estado, derivadas del estado operativo canónico. */
+const ETIQUETA_ESTADO = Object.freeze({
+  potencial: 'En evaluación',
+  aprobado: 'Activo',
+  bloqueado: 'Suspendido'
+});
 
 const ESTADOS_PROVEEDOR = Object.freeze(['potencial', 'aprobado', 'bloqueado']);
 const TRANSICIONES_PROVEEDOR = Object.freeze({
@@ -41,14 +66,23 @@ export function obtenerProveedor(id) {
   return listarProveedores().find((p) => p.id === id || p.entity_id === id);
 }
 
-export function buscarProveedores(termino) {
+export function buscarProveedores(termino, usuario = getUsuarioActivo()) {
   const q = String(termino ?? '')
     .trim()
     .toLowerCase();
   const lista = listarProveedores();
   if (!q) return lista;
+  const campos = (p) => [
+    p.name,
+    p.code,
+    p.giro,
+    p.region,
+    p.email,
+    p.estado_proveedor,
+    ...(puedeVerRutProveedor(usuario?.rol) ? [p.taxId] : [])
+  ];
   return lista.filter((p) =>
-    [p.name, p.code, p.taxId, p.giro, p.region, p.email, p.estado_proveedor].some((v) =>
+    campos(p).some((v) =>
       String(v ?? '')
         .toLowerCase()
         .includes(q)
@@ -91,16 +125,23 @@ export function validarProveedor(datos, { idExcluir } = {}) {
   }
   if (datos.banco || datos.numero_cuenta) {
     if (!valor('banco')) errors.banco = 'El banco es obligatorio si registra datos bancarios';
+    else if (!esBancoValido(valor('banco')))
+      errors.banco = 'Selecciona un banco del catálogo chileno disponible';
     if (!valor('numero_cuenta'))
       errors.numero_cuenta = 'El número de cuenta es obligatorio si registra datos bancarios';
+  }
+  if (valor('tipo_cuenta') && !esTipoCuentaValido(valor('tipo_cuenta'))) {
+    errors.tipo_cuenta = 'Selecciona un tipo de cuenta del catálogo chileno disponible';
+  } else if (esCuentaRut(valor('tipo_cuenta')) && normalizarBanco(valor('banco')) !== BANCO_ESTADO) {
+    errors.banco = 'CuentaRUT solo está disponible en BancoEstado';
   }
   return { valid: Object.keys(errors).length === 0, errors };
 }
 
 function payloadDesdeDatos(datos, previo = {}) {
   const ahora = hoyISO();
-  const banco = String(datos.banco ?? previo.banco ?? '').trim();
-  const tipoCuenta = String(datos.tipo_cuenta ?? previo.tipo_cuenta ?? '').trim();
+  const banco = normalizarBanco(datos.banco ?? previo.banco ?? '');
+  const tipoCuenta = normalizarTipoCuenta(datos.tipo_cuenta ?? previo.tipo_cuenta ?? '');
   const cuenta = String(datos.numero_cuenta ?? previo.numero_cuenta ?? '').trim();
   const cambioCuenta =
     (banco !== (previo.banco || '') ||
@@ -109,12 +150,16 @@ function payloadDesdeDatos(datos, previo = {}) {
     (banco || cuenta);
   return {
     name: String(datos.razon_social ?? datos.name ?? previo.name ?? '').trim(),
+    nombre_fantasia: String(
+      datos.nombre_fantasia ?? previo.nombre_fantasia ?? ''
+    ).trim(),
     code: String(datos.codigo ?? datos.code ?? previo.code ?? '').trim(),
     taxId: formatearRut(String(datos.rut ?? datos.taxId ?? previo.taxId ?? '').trim()),
     email: String(datos.email ?? previo.email ?? '').trim(),
     phone: String(datos.telefono ?? datos.phone ?? previo.phone ?? '').trim(),
     address: String(datos.direccion ?? datos.address ?? previo.address ?? '').trim(),
     category: String(datos.categoria ?? datos.category ?? previo.category ?? '').trim(),
+    rubro: String(datos.rubro ?? previo.rubro ?? datos.categoria ?? previo.category ?? '').trim(),
     description: String(datos.giro ?? datos.description ?? previo.description ?? '').trim(),
     paymentTerms: `neto ${Number(datos.condicion_pago_dias ?? previo.condicion_pago_dias ?? 0)}`,
     tipo_persona: String(datos.tipo_persona ?? previo.tipo_persona ?? '').trim(),
@@ -125,6 +170,12 @@ function payloadDesdeDatos(datos, previo = {}) {
     estado_proveedor: String(
       datos.estado_proveedor ?? previo.estado_proveedor ?? 'potencial'
     ).trim(),
+    estado:
+      ETIQUETA_ESTADO[
+        String(datos.estado_proveedor ?? previo.estado_proveedor ?? 'potencial').trim()
+      ] || String(datos.estado ?? previo.estado ?? '').trim(),
+    calificacion_promedio:
+      Number(datos.calificacion_promedio ?? previo.calificacion_promedio ?? 0) || 0,
     condicion_pago_dias: Number(datos.condicion_pago_dias ?? previo.condicion_pago_dias ?? 0),
     acuerdo_plazo_mayor: String(
       datos.acuerdo_plazo_mayor ?? previo.acuerdo_plazo_mayor ?? ''
@@ -196,15 +247,15 @@ export function actualizarDatosBancarios(id, datos, usuario) {
   const idx = lista.findIndex((p) => p.id === id || p.entity_id === id);
   if (idx === -1) throw new Error('Proveedor no encontrado');
   const previo = lista[idx];
-  const banco = String(datos.banco ?? previo.banco ?? '').trim();
-  const tipoCuenta = String(datos.tipo_cuenta ?? previo.tipo_cuenta ?? '').trim();
+  const banco = normalizarBanco(datos.banco ?? previo.banco ?? '');
+  const tipoCuenta = normalizarTipoCuenta(datos.tipo_cuenta ?? previo.tipo_cuenta ?? '');
   const numeroCuenta = String(datos.numero_cuenta ?? previo.numero_cuenta ?? '').trim();
   const fusionado = { ...previo, banco, tipo_cuenta: tipoCuenta, numero_cuenta: numeroCuenta };
   const { valid, errors } = validarProveedor(fusionado, { idExcluir: previo.id });
   if (!valid) throw new Error(Object.values(errors)[0]);
   const bancoCambio =
-    banco !== String(previo.banco ?? '').trim() ||
-    tipoCuenta !== String(previo.tipo_cuenta ?? '').trim() ||
+    banco !== normalizarBanco(previo.banco ?? '') ||
+    tipoCuenta !== normalizarTipoCuenta(previo.tipo_cuenta ?? '') ||
     numeroCuenta !== String(previo.numero_cuenta ?? '').trim();
   lista[idx] = {
     ...previo,
@@ -232,6 +283,7 @@ export function cambiarEstadoProveedor(id, nuevoEstado, usuario) {
   lista[idx] = {
     ...lista[idx],
     estado_proveedor: nuevoEstado,
+    estado: ETIQUETA_ESTADO[nuevoEstado],
     updatedAt: new Date().toISOString()
   };
   saveEntities(lista);
@@ -248,6 +300,7 @@ export function desbloquearProveedor(id, usuario) {
   lista[idx] = {
     ...lista[idx],
     estado_proveedor: 'aprobado',
+    estado: ETIQUETA_ESTADO.aprobado,
     updatedAt: new Date().toISOString()
   };
   saveEntities(lista);
@@ -283,25 +336,51 @@ export function proveedorAprobado(id) {
   return Boolean(p && p.estado_proveedor === 'aprobado');
 }
 
-export function vistaProveedor(proveedor, rol) {
-  const natural = String(proveedor.tipo_persona || '')
-    .toLowerCase()
-    .startsWith('natural');
+/** Campos que nunca pueden copiarse en crudo desde el registro original. */
+const CAMPOS_SENSIBLES = new Set([
+  'rut',
+  'taxId',
+  'banco',
+  'tipo_cuenta',
+  'numero_cuenta',
+  'fecha_cambio_cuenta',
+  'rut_visible',
+  'cuenta_visible',
+  'rut_completo_visible',
+  'datos_bancarios_visibles',
+  'puede_editar_banco'
+]);
+
+export function vistaProveedor(proveedor, rol, contexto = 'general') {
   const puedeVerBanco = puedeVerDatosBancarios(rol);
-  const puedeVerRut = puedeVerDatosBancarios(rol);
-  const rutVisible = natural ? enmascararRut(proveedor.taxId, rol) : formatearRut(proveedor.taxId);
-  const cuentaVisible = proveedor.numero_cuenta
-    ? enmascararCuenta(proveedor.numero_cuenta, rol)
+  const puedeVerRut = puedeVerRutProveedor(rol, contexto);
+  const rutVisible = proveedor?.taxId
+    ? enmascararRutProveedor(proveedor.taxId, rol, contexto)
+    : '';
+  const cuentaVisible = proveedor?.numero_cuenta
+    ? enmascararCuentaPorRol(proveedor.numero_cuenta, rol) || CUENTA_NO_DISPONIBLE
     : 'No registrado';
-  const vista = {
-    ...proveedor,
-    rut_visible: rutVisible,
-    cuenta_visible: cuentaVisible,
-    datos_bancarios_visibles: puedeVerBanco,
-    puede_editar_banco: puedeEditarDatosBancarios(rol)
-  };
-  if (natural && !puedeVerRut) vista.taxId = rutVisible;
-  if (!puedeVerBanco) vista.numero_cuenta = cuentaVisible;
+
+  // Se copian solo campos no sensibles: ningún dato bancario ni RUT crudo se
+  // filtra por el spread antes de pasar por la matriz del rol activo.
+  const vista = Object.fromEntries(
+    Object.entries(proveedor ?? {}).filter(([clave]) => !CAMPOS_SENSIBLES.has(clave))
+  );
+  vista.rut_visible = rutVisible;
+  vista.cuenta_visible = cuentaVisible;
+  vista.rut_completo_visible = puedeVerRut;
+  vista.datos_bancarios_visibles = puedeVerBanco;
+  vista.puede_editar_banco = puedeEditarDatosBancarios(rol);
+
+  if (puedeVerRut) vista.taxId = rutVisible;
+  if (puedeVerBanco) {
+    vista.banco = proveedor?.banco;
+    vista.tipo_cuenta = proveedor?.tipo_cuenta;
+    vista.numero_cuenta = proveedor?.numero_cuenta;
+    vista.fecha_cambio_cuenta = proveedor?.fecha_cambio_cuenta;
+  } else if (rol === 'comprador') {
+    vista.numero_cuenta = cuentaVisible;
+  }
   return vista;
 }
 

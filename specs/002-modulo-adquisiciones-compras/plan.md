@@ -65,7 +65,7 @@ Cada colección nueva implementa las mismas operaciones del contrato del templat
 | EVALUACION_PROVEEDOR                      | `erp_compras:evaluaciones`                                                                                                                    |
 | CONTACTO_PROVEEDOR                        | No implementado en el MVP (modelado en `data-model.md`, fuera de alcance en `spec.md`)                                                       |
 | USUARIO, CENTRO_COSTO, PRODUCTO           | `erp_compras:usuarios`, `erp_compras:centros_costo`, `erp_compras:productos` (datos semilla hasta conectar RR.HH., Contabilidad e Inventario) |
-| HISTORIAL_TRAZABILIDAD                    | `erp_compras:trazabilidad` (eventos inmutables: quién, cuándo, qué acción; cambios bancarios con valor enmascarado)                           |
+| HISTORIAL_TRAZABILIDAD                    | `erp_compras:trazabilidad` (eventos inmutables: quién, cuándo, qué acción; cambios bancarios con la representación autorizada por `visibilidad.js`) |
 
 ## Estructura del Proyecto
 
@@ -93,16 +93,16 @@ src/
 ├── module-config.js        (configuración base sin activar: COMPRAS_PARAMETROS y COMPRAS_CONFIG de referencia)
 ├── ...                     (archivos del módulo base, sin cambios salvo lo justificado)
 └── compras/
-    ├── reglas.js           (cálculos de montos, validación de RUT, transiciones, conciliación, nota de plazo)
-    ├── almacenamiento.js   (colecciones erp_compras:* con el contrato del template y PERMISOS por rol)
-    ├── visibilidad.js      (matriz VISIBILIDAD, GRUPOS, nivelVista() y vistasVisibles(), FR-033/FR-034)
+    ├── reglas.js           (cálculos de montos, validación de RUT, transiciones, conciliación, nota de plazo; re-exporta enmascararRut/enmascararCuenta desde visibilidad.js)
+    ├── almacenamiento.js   (colecciones erp_compras:* con el contrato del template, PERMISOS por rol y datosUsuario() con rut_visible)
+    ├── visibilidad.js      (matriz VISIBILIDAD, GRUPOS, nivelVista(), vistasVisibles() y matriz sensible de RUT/cuentas, FR-004/FR-025/FR-033/FR-034)
     ├── solicitudes.js      (pantalla y flujo de solicitudes)
     ├── cotizaciones.js     (registro y comparación)
     ├── ordenes-compra.js   (emisión, compra directa y anulación de OC)
     ├── recepciones.js
     ├── facturas.js
     ├── devoluciones.js     (devoluciones y notas de crédito)
-    ├── proveedores.js      (alta/edición, visibilidad de datos sensibles, cambio bancario auditado)
+    ├── proveedores.js      (alta/edición, vistaProveedor() con rut_visible/cuenta_visible, cambio bancario auditado)
     ├── autenticacion.js    (pantalla de ingreso simulada: selector de rol, nombre condicional, clave genérica; fija el rol de la sesión)
     ├── asistente.js        (asistente local restringido, sin API keys ni backend)
     ├── vista.js            (pantallas de compras, navegación agrupada por rol y cadena documental)
@@ -148,7 +148,7 @@ Cada historia se asigna a un responsable en un Issue de GitHub con la etiqueta d
 
 ## Deuda conocida
 
-Las siguientes tareas se documentan también en `tasks.md`: T101, T104, T109, T110 y T118 siguen abiertas; T107, T108, T117, T119, T120, T142, T143 y T146–T154 están cerradas; T127, T137, T139, T144 y T155 conservan la deuda indicada en el estado canónico. `format:check` cubre todo el código y las pruebas según el alcance ampliado de `.prettierignore`.
+Las siguientes tareas se documentan también en `tasks.md`: T101, T104, T109, T110 y T118 siguen abiertas; T107, T108, T117, T119, T120, T142, T143 y T146–T154 están cerradas; T127, T137, T139, T144 y T155 conservan la deuda indicada en el estado canónico. Las tareas T156–T160 de la Fase 21 (matriz sensible unificada) están cerradas. `format:check` cubre todo el código y las pruebas según el alcance ampliado de `.prettierignore`.
 
 | Tarea | Estado  | Justificación                                                                                                                                                                                                                                                                                                                                       | Referencia                          |
 | ----- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
@@ -167,7 +167,7 @@ Las siguientes tareas se documentan también en `tasks.md`: T101, T104, T109, T1
 
 ## Plan de Pruebas
 
-- **Unitarias** (`tests/unit/compras/`): cálculo de neto, IVA y total con redondeo; validación de RUT; transiciones permitidas y prohibidas de cada estado; regla de 3 cotizaciones; tope de recepción por línea; conciliación con y sin discrepancia; nota de plazo según días de atraso; plazo de pago máximo sin acuerdo.
+- **Unitarias** (`tests/unit/compras/`): cálculo de neto, IVA y total con redondeo; validación de RUT; transiciones permitidas y prohibidas de cada estado; regla de 3 cotizaciones; tope de recepción por línea; conciliación con y sin discrepancia; nota de plazo según días de atraso; plazo de pago máximo sin acuerdo; matriz sensible de RUT de empleados, RUT tributario de proveedores y cuentas para los cinco roles (`visibilidad-sensible.test.js`, SC-009).
 - **Integración** (`tests/integration/compras/`): un flujo por historia P1 y P2 siguiendo sus escenarios de aceptación de `spec.md`, y una prueba de auditoría de punta a punta (SC-012) en `trazabilidad.test.js`.
 - **Auditoría SC-003** (`tests/integration/compras/flujo-compras.test.js`): cobertura del 100 % de las OC sobre el umbral con tres cotizaciones vigentes o justificación de proveedor único.
 - **Accesibilidad** (`tests/integration/compras/vista.test.js`): etiquetas asociadas en las diez vistas, foco y operación por teclado, errores junto al campo con `role="alert"` y revisión automatizada de contraste (WCAG 2.1 AA).
@@ -216,3 +216,14 @@ Todos ficticios: 4 centros de costo, **7 usuarios** (`u-solicitante-1`, `u-solic
 | Colecciones adicionales fuera de Entidad/Documento       | El ciclo de compras tiene 6 documentos encadenados; el template solo modela uno                                            | Forzar todo como Documento con un campo "tipo" mezclaría estados y reglas incompatibles |
 | Bloquear la eliminación en cascada de proveedores con OC | El template borra los documentos de una entidad eliminada; en compras eso destruiría la trazabilidad de órdenes y facturas | Advertir y borrar igual: inaceptable para auditoría                                     |
 | Líneas de detalle dentro de la OC                        | El template no tiene partidas; su propio data-model las señala como punto de extensión                                     | Una OC por producto: no refleja cómo compra una empresa                                 |
+## Arquitectura actual y restricciones (MVP)
+
+- Interfaz: GitHub Dark (#0D1117, #161B22, #2F81F7), barra lateral con íconos SVG lineales, Asistente IA local con guardrails RBAC y dominio ERP.
+- Login: conmutador único Modo Demo / Modo Real sin saltos de layout; Modo Demo carga 12 colecciones de semilla.json y directorio de acceso rápido con 7 usuarios; Modo Real exige correo+contraseña y colecciones transaccionales vacías con catálogos base.
+- RBAC estricto por rol (solicitante, comprador, jefe_compras, bodega, admin_ti) según matriz FR-033.
+- No modificar src/storage.js ni eslint.config.mjs.
+- Prohibido renderizar vistas o botones genéricos del template base (Documentos, Entidades, Búsqueda, Panel genérico).
+
+## Funciones puras de visibilidad sensible
+
+src/compras/visibilidad.js expone la matriz `VISIBILIDAD`/`GRUPOS`, `nivelVista()`, `vistasVisibles()` y las funciones puras de la matriz sensible: `puedeVerRutEmpleado`, `enmascararRut`, `rutEmpleadoVisible`, `puedeVerRutProveedor`, `enmascararRutProveedor`, `formatearRutVisible`, `puedeVerDatosBancarios`, `enmascararCuentaPorRol`, `sanitizarRutsEnTexto` y `enmascararDatosEnTexto`, además de `RUT_OCULTO` y `CUENTA_NO_DISPONIBLE`. Juntas implementan la matriz RBAC de la sección de privacidad del spec en tablas, modales, búsquedas, trazabilidad, CSV y asistente. `reglas.js` y `module-config.js` delegan en este módulo, sin criterios duplicados. Reproducción desde cero: implementar estas funciones sin tocar src/storage.js ni eslint.config.mjs, y verificar con tests/unit/compras/visibilidad-sensible.test.js.

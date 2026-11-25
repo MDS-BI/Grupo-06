@@ -20,20 +20,23 @@
 // }
 export const userConfig = null;
 
+import { puedeVerDatosBancarios as puedeVerDatosBancariosVisible } from './compras/visibilidad.js';
+
 // Parámetros definitivos del módulo de Adquisiciones y Compras.
 export const COMPRAS_PARAMETROS = Object.freeze({
   iva: 0.19,
   umbralCotizaciones: 1000000,
   toleranciaConciliacion: 0.01,
-  // FR-004 / FR-025: regla única de visibilidad de datos sensibles de proveedores.
+  // Referencia histórica de edición. La visibilidad la define `visibilidad.js`.
   datosBancarios: Object.freeze({
     rolesVisibles: Object.freeze(['admin_ti', 'jefe_compras']),
     rolesEdicion: Object.freeze(['admin_ti'])
   })
 });
 
+/** Delegación a la matriz canónica: no existe una segunda regla de visibilidad. */
 export function puedeVerDatosBancarios(rol) {
-  return COMPRAS_PARAMETROS.datosBancarios.rolesVisibles.includes(rol);
+  return puedeVerDatosBancariosVisible(rol);
 }
 
 export function puedeEditarDatosBancarios(rol) {
