@@ -9,7 +9,8 @@ import {
 } from '../../../src/compras/catalogo.js';
 import { alertasVencimiento } from '../../../src/compras/facturas.js';
 import { compararCotizaciones } from '../../../src/compras/cotizaciones.js';
-import { construirPanel, contarPendientes } from '../../../src/compras/panel.js';
+import { construirPanel } from '../../../src/compras/panel.js';
+import { crearSolicitud } from '../../../src/compras/solicitudes.js';
 import { cargarDatos, USUARIOS } from './helpers.js';
 
 const HOY = '2026-11-03';
@@ -110,40 +111,125 @@ describe('catálogo de proveedores', () => {
   });
 });
 
-describe('panel por rol y alertas', () => {
+describe('panel por rol y alertas (FR-035)', () => {
+  const ROLES = {
+    solicitante: USUARIOS.solicitante,
+    comprador: USUARIOS.comprador,
+    jefe_compras: USUARIOS.jefe,
+    bodega: USUARIOS.bodega,
+    admin_ti: USUARIOS.admin
+  };
+
+  const ESPERADO = {
+    solicitante: {
+      pendientes: ['mis_solicitudes'],
+      indicadores: ['mes'],
+      alertas: 0,
+      seguimiento: 0
+    },
+    comprador: {
+      pendientes: [
+        'mis_solicitudes',
+        'oc_sin_recepcion',
+        'solicitudes_aprobadas_sin_cotizar',
+        'facturas_con_discrepancia'
+      ],
+      indicadores: ['mes', 'facturas_con_discrepancia'],
+      alertas: 1,
+      seguimiento: 2
+    },
+    jefe_compras: {
+      pendientes: [
+        'mis_solicitudes',
+        'solicitudes_por_aprobar',
+        'oc_sin_recepcion',
+        'facturas_conciliadas_por_aprobar',
+        'devoluciones_pendientes'
+      ],
+      indicadores: ['mes', 'gasto_del_periodo', 'facturas_en_riesgo'],
+      alertas: 1,
+      seguimiento: 0
+    },
+    bodega: {
+      pendientes: ['mis_solicitudes', 'oc_esperando_entrega', 'recepciones_parciales'],
+      indicadores: ['mes', 'tasa_rechazo'],
+      alertas: 0,
+      seguimiento: 2
+    },
+    admin_ti: {
+      pendientes: ['mis_solicitudes', 'alertas_fraude'],
+      indicadores: ['mes'],
+      alertas: 1,
+      seguimiento: 0
+    }
+  };
+
   beforeEach(() => {
     cargarDatos();
+    for (const usuario of Object.values(ROLES)) {
+      crearSolicitud(
+        {
+          justificacion: `Solicitud de prueba de ${usuario.rol}`,
+          centro_costo_id: 'cc-001',
+          fecha_requerida: '2026-11-30',
+          lineas: [{ producto_id: 'prod-001', cantidad: 1, precio_estimado: 1000 }]
+        },
+        usuario
+      );
+    }
   });
 
-  it('muestra pendientes de aprobación, recepción y conciliación al jefe', () => {
-    const panel = construirPanel(USUARIOS.jefe, HOY);
-    const claves = panel.pendientes.map((p) => p.clave);
-    expect(claves).toContain('solicitudes_por_aprobar');
-    expect(claves).toContain('oc_sin_recepcion');
-    expect(claves).toContain('facturas_por_conciliar');
-    expect(panel.indicadores.ordenes_abiertas).toBeGreaterThan(0);
-
-    const panelComprador = construirPanel(USUARIOS.comprador, HOY);
-    expect(panelComprador.seguimiento.some((o) => o.id === 'oc-001')).toBe(true);
-    expect(contarPendientes(USUARIOS.jefe, HOY)).toBeGreaterThan(0);
+  it('muestra exactamente los pendientes e indicadores de cada rol', () => {
+    for (const [rol, usuario] of Object.entries(ROLES)) {
+      const panel = construirPanel(usuario, HOY);
+      const esperado = ESPERADO[rol];
+      expect(panel.pendientes.map((p) => p.clave).sort(), rol).toEqual(
+        [...esperado.pendientes].sort()
+      );
+      expect(Object.keys(panel.indicadores).sort(), rol).toEqual(
+        [...esperado.indicadores].sort()
+      );
+      expect(panel.alertas.length, rol).toBe(esperado.alertas);
+      expect(panel.seguimiento.length, rol).toBe(esperado.seguimiento);
+    }
   });
 
-  it('limita al solicitante a sus propias solicitudes', () => {
-    const panel = construirPanel(USUARIOS.solicitante, HOY);
-    expect(panel.pendientes.map((p) => p.clave)).toEqual(['mis_solicitudes']);
-    const items = panel.pendientes[0].items;
-    expect(
-      items.every((item) =>
-        ['sol-001', 'sol-002', 'sol-005', 'sol-008', 'sol-010'].includes(item.id)
-      )
-    ).toBe(true);
+  it('limita Mis solicitudes a las propias y muestra su estado', () => {
+    const porRol = new Map();
+    for (const [rol, usuario] of Object.entries(ROLES)) {
+      const pendiente = construirPanel(usuario, HOY).pendientes.find(
+        (p) => p.clave === 'mis_solicitudes'
+      );
+      expect(pendiente, rol).toBeTruthy();
+      expect(pendiente.items.every((i) => i.estado), rol).toBe(true);
+      porRol.set(rol, new Set(pendiente.items.map((i) => i.id)));
+    }
+    for (const [rol, ids] of porRol) {
+      for (const [otro, otrosIds] of porRol) {
+        if (otro === rol) continue;
+        expect([...ids].some((id) => otrosIds.has(id)), `${rol} vs ${otro}`).toBe(false);
+      }
+    }
   });
 
-  it('muestra recepciones al rol bodega sin facturas por conciliar', () => {
-    const panel = construirPanel(USUARIOS.bodega, HOY);
-    const claves = panel.pendientes.map((p) => p.clave);
-    expect(claves).toContain('recepciones_por_registrar');
-    expect(claves).not.toContain('facturas_por_conciliar');
+  it('calcula los indicadores según data-model §8', () => {
+    const comprador = construirPanel(ROLES.comprador, HOY);
+    expect(comprador.indicadores.facturas_con_discrepancia).toBeGreaterThan(0);
+    expect(comprador.indicadores.facturas_con_discrepancia).toBeLessThanOrEqual(1);
+
+    const jefe = construirPanel(ROLES.jefe_compras, HOY);
+    expect(typeof jefe.indicadores.gasto_del_periodo).toBe('number');
+    expect(jefe.indicadores.facturas_en_riesgo).toBe(jefe.alertas.length);
+
+    expect(typeof construirPanel(ROLES.bodega, HOY).indicadores.tasa_rechazo).toBe('number');
+  });
+
+  it('mantiene alertas y seguimiento solo en los roles que ven Facturas y OC', () => {
+    expect(construirPanel(ROLES.solicitante, HOY).alertas).toHaveLength(0);
+    expect(construirPanel(ROLES.bodega, HOY).alertas).toHaveLength(0);
+    expect(construirPanel(ROLES.admin_ti, HOY).alertas.length).toBeGreaterThan(0);
+    expect(construirPanel(ROLES.solicitante, HOY).seguimiento).toHaveLength(0);
+    expect(construirPanel(ROLES.jefe_compras, HOY).seguimiento).toHaveLength(0);
   });
 
   it('alerta facturas próximas a vencer dentro de cinco días', () => {
@@ -153,27 +239,17 @@ describe('panel por rol y alertas', () => {
     expect(alertas.map((f) => f.id)).not.toContain('fac-004');
   });
 
-  it('cubre los seis escenarios de US5 y SC-005', () => {
-    const jefe = construirPanel(USUARIOS.jefe, HOY);
-    const claves = jefe.pendientes.map((p) => p.clave);
-    expect(claves).toContain('solicitudes_por_aprobar');
-    expect(claves).toContain('oc_sin_recepcion');
-    expect(claves).toContain('facturas_por_conciliar');
-    expect(jefe.alertas.find((f) => f.id === 'fac-003').dias_restantes).toBe(3);
-
-    const solicitante = construirPanel(USUARIOS.solicitante, HOY);
-    expect(solicitante.pendientes.map((p) => p.clave)).toEqual(['mis_solicitudes']);
-    expect(solicitante.alertas).toHaveLength(0);
-
-    const comprador = construirPanel(USUARIOS.comprador, HOY);
-    expect(comprador.seguimiento.some((o) => o.id === 'oc-001')).toBe(true);
-    expect(typeof comprador.indicadores.monto_comprometido).toBe('number');
-    expect(comprador.indicadores.ordenes_abiertas).toBeGreaterThan(0);
-    expect(typeof comprador.indicadores.facturas_aprobadas_pago).toBe('number');
-
-    const vacio = construirPanel({ id: 'u-sin-pendientes', rol: 'solicitante' }, HOY);
-    expect(vacio.vacio).toBe(true);
-    expect(contarPendientes(USUARIOS.jefe, HOY)).toBeGreaterThan(0);
+  it('muestra acciones rápidas legibles sin claves internas y estado vacío', () => {
+    for (const usuario of Object.values(ROLES)) {
+      const panel = construirPanel(usuario, HOY);
+      expect(panel.acciones.length).toBeGreaterThan(0);
+      for (const accion of panel.acciones) {
+        expect(accion.etiqueta).toBeTruthy();
+        expect(accion.descripcion).toBeTruthy();
+        expect(accion.etiqueta).not.toContain('_');
+      }
+    }
+    expect(construirPanel({ id: 'u-sin-pendientes', rol: 'solicitante' }, HOY).vacio).toBe(true);
   });
 
   it('respeta la matriz RBAC en el panel y en la comparativa', () => {

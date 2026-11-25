@@ -75,7 +75,7 @@ Para volver al estado inicial:
 |---|---|
 | `npm run dev` | Servidor Vite activo; portal de acceso y módulo de Adquisiciones y Compras. |
 | `npm run lint` | 0 errores y 0 advertencias. |
-| `npm test -- --run` | 317 pruebas aprobadas en 27 archivos y 56 omitidas en 10 archivos (los omitidos pertenecen al template base). |
+| `npm test -- --run` | 320 pruebas aprobadas en 27 archivos y 56 omitidas en 10 archivos (los omitidos pertenecen al template base). |
 | `npm run build` | Build de producción sin errores. |
 | `npm run preview` | Build servido en `http://localhost:4173`. |
 | `npm run format:check` | Sin diferencias en el alcance de `.prettierignore`. |
@@ -228,7 +228,7 @@ El trabajo siguió *Spec-Driven Development*: la especificación se escribió y 
 | D13 | Interfaz con navegación agrupada, acciones rápidas legibles, modo oscuro, foco visible y respeto a `prefers-reduced-motion`. | Accesibilidad y claridad para roles no técnicos. | Controles con claves internas y textos crípticos. | `src/styles.css`, `spec.md` FR-036, SC-013 |
 | D14 | Registrar deuda abierta en lugar de ocultarla. | El curso exige trazabilidad del proceso, no solo del producto final. | Marcar todo como terminado. | `plan.md`, `tasks.md`, `quickstart.md` §Coberturapendiente |
 
-**Estado metodológico**: Fase 16 cerrada; Fase 17 con navegación agrupada, solo lectura y encabezado implementados, con T127 abierta en servicios; Fase 18 con permisos por historia verificados, con T137/T139 abiertas por FR-035; Fase 19 con semilla, contratos y documentación sincronizados y suite automatizada en verde; Fase 20 cerrada. T101, T104, T109, T110 y T118 están cerrados en código y documentación; queda documentado el recorrido manual de los escenarios de `quickstart.md`. El estado canónico se replica en `spec.md`, `plan.md`, `tasks.md` y `quickstart.md`.
+**Estado metodológico**: Fase 16 cerrada; Fase 17 con navegación agrupada, solo lectura, encabezado y filtro del `solicitante` en servicios, UI y CSV implementados (T127 cerrada); Fase 18 con panel por los cinco roles según FR-035 verificado (T137/T139 cerradas); Fase 19 con semilla, contratos y documentación sincronizados y suite automatizada en verde; Fase 20 cerrada. T101, T104, T109, T110 y T118 están cerrados en código y documentación; queda documentado el recorrido manual de los escenarios de `quickstart.md`. El estado canónico se replica en `spec.md`, `plan.md`, `tasks.md` y `quickstart.md`.
 
 ---
 
@@ -268,7 +268,7 @@ El patrón recomendado es un **outbox de eventos** (`recepcion.registrada`, `fac
 ### 4.4 Desarrollo futuro priorizado
 
 1. Cerrar navegación agrupada por visibilidad, filtros y modo solo lectura por vista (FR-033 a FR-036).
-2. Cerrar T127, T137 y T139: filtro del `solicitante` en los servicios y cobertura completa del panel FR-035.
+2. Completar el recorrido manual de los escenarios 1 a 8 con los cinco roles y registrar las mediciones de SC-001 y SC-002 en `quickstart.md`.
 3. Ampliación de paneles de alertas y reportes por centro de costo, proveedor y categoría; exportación CSV con los permisos vigentes.
 4. Notificaciones de vencimiento y cambios bancarios recientes.
 5. Flujos de aprobación multinivel y reemplazo de la clave genérica por autenticación real.

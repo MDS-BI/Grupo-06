@@ -203,21 +203,11 @@ function esPropia(registro, usuario) {
 }
 
 function ordenesVisibles(usuario) {
-  const ordenes = listarOrdenes();
-  if (usuario?.rol !== 'solicitante') return ordenes;
-  const propias = new Set(
-    listarSolicitudes(usuario)
-      .filter((s) => esPropia(s, usuario))
-      .map((s) => s.id)
-  );
-  return ordenes.filter((o) => propias.has(o.solicitud_id));
+  return listarOrdenes({ usuario });
 }
 
 function recepcionesVisibles(usuario) {
-  const recepciones = listarRecepciones();
-  if (usuario?.rol !== 'solicitante') return recepciones;
-  const ordenIds = new Set(ordenesVisibles(usuario).map((o) => o.id));
-  return recepciones.filter((r) => ordenIds.has(r.orden_id));
+  return listarRecepciones({ usuario });
 }
 
 let tab = 'panel';

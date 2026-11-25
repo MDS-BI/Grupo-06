@@ -16,13 +16,21 @@ import {
   hoyISO,
   sumarDias
 } from './reglas.js';
-import { obtenerSolicitud, moverSolicitud } from './solicitudes.js';
+import { obtenerSolicitud, moverSolicitud, listarSolicitudes } from './solicitudes.js';
 import { obtenerCotizacion } from './cotizaciones.js';
 import { obtenerProveedor, proveedorAprobado } from './proveedores.js';
 import { registrarEvento } from './trazabilidad.js';
 
-export function listarOrdenes({ estado, proveedor_id, solicitud_id } = {}) {
+/** Ids de solicitudes propias del solicitante; null para otros roles o sin usuario. */
+export function solicitudesIdsDe(usuario) {
+  if (usuario?.rol !== 'solicitante') return null;
+  return new Set(listarSolicitudes(usuario).map((s) => s.id));
+}
+
+export function listarOrdenes({ estado, proveedor_id, solicitud_id, usuario } = {}) {
+  const propias = solicitudesIdsDe(usuario);
   return leer('ordenes')
+    .filter((o) => !propias || propias.has(o.solicitud_id))
     .filter((o) => !estado || o.estado === estado)
     .filter((o) => !proveedor_id || o.proveedor_id === proveedor_id)
     .filter((o) => !solicitud_id || o.solicitud_id === solicitud_id)

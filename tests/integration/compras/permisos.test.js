@@ -3,6 +3,8 @@ import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { JSDOM } from 'jsdom';
 import { USUARIOS } from './helpers.js';
+import { listarOrdenes } from '../../../src/compras/ordenes-compra.js';
+import { listarRecepciones } from '../../../src/compras/recepciones.js';
 
 const html = fs.readFileSync(
   fileURLToPath(new URL('../../../index.html', import.meta.url)),
@@ -71,10 +73,10 @@ async function preparar(rol) {
   const almacenamiento = await import('../../../src/compras/almacenamiento.js');
   almacenamiento.cargarSemilla({ forzar: true });
   const helpers = await import('./helpers.js');
-  helpers.iniciarSesionPorRol(rol, NOMBRES_POR_ROL[rol]);
+  const usuario = helpers.iniciarSesionPorRol(rol, NOMBRES_POR_ROL[rol]);
   const { boot } = await import('../../../src/app.js');
   await boot();
-  return { almacenamiento, helpers };
+  return { almacenamiento, helpers, usuario };
 }
 
 afterEach(() => {
@@ -247,5 +249,28 @@ describe('permisos y visibilidad por rol', () => {
       'Compras › Solicitudes'
     );
     expect(qs('compras-root').textContent).not.toContain('Sesión activa');
+  });
+});
+
+describe('filtro de servicios para el solicitante (T127)', () => {
+  it('reduce OC y recepciones a las solicitudes propias', async () => {
+    const { usuario } = await preparar('solicitante');
+    const { listarSolicitudes } = await import('../../../src/compras/solicitudes.js');
+    const propias = new Set(listarSolicitudes(usuario).map((s) => s.id));
+    const ordenes = listarOrdenes({ usuario });
+    expect(ordenes.length).toBeGreaterThan(0);
+    expect(ordenes.length).toBeLessThan(listarOrdenes().length);
+    expect(ordenes.every((o) => propias.has(o.solicitud_id))).toBe(true);
+    const ordenIds = new Set(ordenes.map((o) => o.id));
+    expect(listarRecepciones({ usuario }).every((r) => ordenIds.has(r.orden_id))).toBe(true);
+    expect(listarRecepciones({ usuario }).length).toBeLessThan(listarRecepciones().length);
+  });
+
+  it('no filtra a los otros roles ni las llamadas sin usuario', async () => {
+    for (const rol of ['comprador', 'jefe_compras', 'bodega', 'admin_ti']) {
+      const { usuario } = await preparar(rol);
+      expect(listarOrdenes({ usuario })).toHaveLength(listarOrdenes().length);
+      expect(listarRecepciones({ usuario })).toHaveLength(listarRecepciones().length);
+    }
   });
 });

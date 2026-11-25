@@ -8,12 +8,21 @@ import {
   datosUsuario
 } from './almacenamiento.js';
 import { generarNumero, siguienteSecuencia, hoyISO, puedeTransicionar } from './reglas.js';
-import { obtenerOrden, lineasPendientes, recepcionesDeOrden } from './ordenes-compra.js';
+import {
+  obtenerOrden,
+  lineasPendientes,
+  recepcionesDeOrden,
+  listarOrdenes,
+  solicitudesIdsDe
+} from './ordenes-compra.js';
 import { obtenerProveedor, vistaProveedor } from './proveedores.js';
 import { registrarEvento } from './trazabilidad.js';
 
-export function listarRecepciones({ orden_id } = {}) {
+export function listarRecepciones({ orden_id, usuario } = {}) {
+  const propias = solicitudesIdsDe(usuario);
+  const permitidas = propias ? new Set(listarOrdenes({ usuario }).map((o) => o.id)) : null;
   return leer('recepciones')
+    .filter((r) => !permitidas || permitidas.has(r.orden_id))
     .filter((r) => !orden_id || r.orden_id === orden_id)
     .sort((a, b) => String(b.fecha_recepcion).localeCompare(String(a.fecha_recepcion)));
 }

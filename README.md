@@ -87,13 +87,13 @@ Las colecciones del módulo se guardan en `localStorage` con el prefijo `erp_com
 
 Estado real verificado el 2026-11-25 sobre la rama `main`:
 
-- `npx vitest run`: **317 pruebas aprobadas y 56 omitidas**, en **27 archivos aprobados y 10 omitidos** (los omitidos pertenecen al template base).
+- `npx vitest run`: **320 pruebas aprobadas y 56 omitidas**, en **27 archivos aprobados y 10 omitidos** (los omitidos pertenecen al template base).
 - `npm run lint`: **OK, sin errores ni advertencias**.
 - `npm run format:check`: **sin diferencias** en el alcance de `.prettierignore` (núcleo base `src/storage.js` y `tests/unit/storage.test.js`).
 - `npm run build`: **build de producción sin errores** (Vite 8.2.1).
 - Accesibilidad WCAG 2.1 AA revisada: etiquetas asociadas, navegación por teclado en pestañas, errores junto al campo con `role="alert"`/`aria-describedby`, contraste mínimo 4,5:1 y respeto a `prefers-reduced-motion`.
 
-Deuda declarada en [`tasks.md`](specs/002-modulo-adquisiciones-compras/tasks.md), no bloqueante para la entrega: T127 y T137/T139 (filtros en servicios y panel FR-035) y T144/T155 (recorrido manual en navegador de los escenarios 1 a 8). T101, T104, T109, T110 y T118 están cerradas. Las fases 1 a 23, incluidas T043-T050, T100, T102-T106, T107, T108, T120 y T161-T168, están cerradas.
+Deuda declarada en [`tasks.md`](specs/002-modulo-adquisiciones-compras/tasks.md), no bloqueante para la entrega: T144/T155 (recorrido manual en navegador de los escenarios 1 a 8). T101, T104, T109, T110, T118, T127, T137 y T139 están cerradas. Las fases 1 a 23, incluidas T043-T050, T100, T102-T106, T107, T108, T120 y T161-T168, están cerradas.
 
 ## Problema y solución (Resumen)
 

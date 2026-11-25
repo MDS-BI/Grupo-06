@@ -1,8 +1,19 @@
 import { getUsuarioActivo, puede } from './almacenamiento.js';
-import { DIAS_ALERTA_VENCIMIENTO, DIAS_SEGUIMIENTO_OC, diasEntre, hoyISO } from './reglas.js';
+import {
+  DIAS_ALERTA_VENCIMIENTO,
+  DIAS_SEGUIMIENTO_OC,
+  diasEntre,
+  hoyISO,
+  sumarDias
+} from './reglas.js';
 import { listarSolicitudes, puedeVerSolicitud } from './solicitudes.js';
 import { listarOrdenes, recepcionesDeOrden } from './ordenes-compra.js';
-import { alertasVencimiento, facturasPorConciliar, facturasAprobadasParaPago } from './facturas.js';
+import { listarRecepciones } from './recepciones.js';
+import { listarFacturas, alertasVencimiento } from './facturas.js';
+import { listarCotizaciones } from './cotizaciones.js';
+import { listarDevoluciones } from './devoluciones.js';
+import { listarEventos } from './trazabilidad.js';
+import { listarProveedores, cuentaCambiadaRecientemente } from './proveedores.js';
 
 function mesDe(fecha) {
   return String(fecha ?? '').slice(0, 7);
@@ -36,15 +47,34 @@ function itemFactura(f) {
   };
 }
 
+function tasaRechazo() {
+  const recepciones = listarRecepciones();
+  const suma = (campo) =>
+    recepciones.reduce(
+      (total, r) =>
+        total + (r.lineas || []).reduce((n, l) => n + Number(l[campo] || 0), 0),
+      0
+    );
+  const total = suma('cantidad_aceptada') + suma('cantidad_rechazada');
+  return total === 0 ? 0 : suma('cantidad_rechazada') / total;
+}
+
 export function construirPanel(usuario = getUsuarioActivo(), hoy = hoyISO()) {
   const rol = usuario?.rol || 'solicitante';
   const pendientes = [];
   const solicitudes = listarSolicitudes(usuario).filter((s) => puedeVerSolicitud(s, usuario));
-  const ordenes = listarOrdenes();
-  const alertas = rol === 'solicitante' ? [] : alertasVencimiento(hoy, DIAS_ALERTA_VENCIMIENTO);
-  const porConciliar = facturasPorConciliar();
+  const ordenes = listarOrdenes({ usuario });
+  const recepciones = listarRecepciones({ usuario });
+  const facturas = listarFacturas();
+  const discrepantes = listarFacturas({
+    estado: 'con_discrepancia',
+    tipo_documento: 'factura'
+  });
+  const alertas = ['comprador', 'jefe_compras', 'admin_ti'].includes(rol)
+    ? alertasVencimiento(hoy, DIAS_ALERTA_VENCIMIENTO)
+    : [];
 
-  if (['jefe_compras', 'admin_ti'].includes(rol)) {
+  if (rol === 'jefe_compras') {
     const porAprobar = solicitudes.filter(
       (s) => s.estado === 'enviada' && s.solicitante_id !== usuario.id
     );
@@ -60,7 +90,7 @@ export function construirPanel(usuario = getUsuarioActivo(), hoy = hoyISO()) {
     }
   }
 
-  if (['comprador', 'jefe_compras', 'admin_ti'].includes(rol)) {
+  if (['comprador', 'jefe_compras'].includes(rol)) {
     const sinRecepcion = ordenes.filter(
       (o) => o.estado === 'emitida' && recepcionesDeOrden(o.id).length === 0
     );
@@ -76,44 +106,142 @@ export function construirPanel(usuario = getUsuarioActivo(), hoy = hoyISO()) {
     }
   }
 
-  if (['bodega', 'admin_ti'].includes(rol)) {
-    const porRecepcionar = ordenes.filter((o) =>
-      ['emitida', 'recibida_parcial'].includes(o.estado)
+  if (rol === 'bodega') {
+    const esperando = ordenes.filter(
+      (o) => o.estado === 'emitida' && recepcionesDeOrden(o.id).length === 0
     );
-    if (porRecepcionar.length > 0) {
+    if (esperando.length > 0) {
       pendientes.push({
-        clave: 'recepciones_por_registrar',
-        titulo: 'Recepciones por registrar',
-        detalle: 'OC pendientes de recepción total o parcial',
-        cantidad: porRecepcionar.length,
-        items: porRecepcionar.map(itemOrden),
+        clave: 'oc_esperando_entrega',
+        titulo: 'OC esperando entrega',
+        detalle: 'Órdenes emitidas sin recepción registrada',
+        cantidad: esperando.length,
+        items: esperando.map(itemOrden),
+        vista: 'recepciones'
+      });
+    }
+    const parciales = recepciones.filter((r) => r.estado === 'parcial');
+    if (parciales.length > 0) {
+      pendientes.push({
+        clave: 'recepciones_parciales',
+        titulo: 'Recepciones parciales',
+        detalle: 'Recepciones con unidades aún pendientes',
+        cantidad: parciales.length,
+        items: parciales.map((r) => ({
+          id: r.id,
+          etiqueta: r.numero || r.orden_id,
+          estado: r.estado
+        })),
         vista: 'recepciones'
       });
     }
   }
 
-  if (['comprador', 'jefe_compras', 'admin_ti'].includes(rol)) {
-    if (porConciliar.length > 0) {
+  if (rol === 'comprador') {
+    const sinCotizar = solicitudes.filter(
+      (s) => s.estado === 'aprobada' && listarCotizaciones({ solicitud_id: s.id }).length === 0
+    );
+    if (sinCotizar.length > 0) {
       pendientes.push({
-        clave: 'facturas_por_conciliar',
-        titulo: 'Facturas por conciliar',
-        detalle: 'Facturas registradas o con discrepancia pendientes de revisión',
-        cantidad: porConciliar.length,
-        items: porConciliar.map(itemFactura),
+        clave: 'solicitudes_aprobadas_sin_cotizar',
+        titulo: 'Solicitudes aprobadas sin cotizar',
+        detalle: 'Solicitudes listas para registrar cotizaciones',
+        cantidad: sinCotizar.length,
+        items: sinCotizar.map(itemSolicitud),
+        vista: 'cotizaciones'
+      });
+    }
+    if (discrepantes.length > 0) {
+      pendientes.push({
+        clave: 'facturas_con_discrepancia',
+        titulo: 'Facturas con discrepancia',
+        detalle: 'Facturas con diferencia sobre lo recibido',
+        cantidad: discrepantes.length,
+        items: discrepantes.map(itemFactura),
         vista: 'facturas'
       });
     }
   }
 
-  if (rol === 'solicitante') {
-    const propias = solicitudes.filter(
-      (s) => s.estado !== 'adjudicada' && s.estado !== 'anulada' && s.estado !== 'rechazada'
+  if (rol === 'jefe_compras') {
+    const porAprobarPago = facturas.filter(
+      (f) => f.tipo_documento === 'factura' && f.estado === 'conciliada'
     );
+    if (porAprobarPago.length > 0) {
+      pendientes.push({
+        clave: 'facturas_conciliadas_por_aprobar',
+        titulo: 'Facturas conciliadas por aprobar pago',
+        detalle: 'Facturas listas para la aprobación de pago',
+        cantidad: porAprobarPago.length,
+        items: porAprobarPago.map(itemFactura),
+        vista: 'facturas'
+      });
+    }
+    const devoluciones = listarDevoluciones({ estado: 'pendiente_aprobacion' });
+    if (devoluciones.length > 0) {
+      pendientes.push({
+        clave: 'devoluciones_pendientes',
+        titulo: 'Devoluciones por aprobar',
+        detalle: 'Devoluciones que esperan aprobación de jefatura',
+        cantidad: devoluciones.length,
+        items: devoluciones.map((d) => ({
+          id: d.id,
+          etiqueta: d.numero || d.orden_id,
+          estado: d.estado
+        })),
+        vista: 'devoluciones'
+      });
+    }
+  }
+
+  if (rol === 'admin_ti') {
+    const desde = sumarDias(hoy, -30);
+    const cambios = listarEventos({
+      entidad: 'proveedor',
+      accion: 'cambio_datos_bancarios'
+    }).filter((e) => String(e.fecha) >= desde);
+    if (cambios.length > 0) {
+      pendientes.push({
+        clave: 'cambios_bancarios_30_dias',
+        titulo: 'Cambios bancarios recientes',
+        detalle: 'Proveedores con datos bancarios modificados en los últimos 30 días',
+        cantidad: cambios.length,
+        items: cambios.map((e) => ({
+          id: e.id,
+          etiqueta: `${e.entidad_id} · ${e.fecha}`,
+          estado: e.accion
+        })),
+        vista: 'proveedores'
+      });
+    }
+    const fraude = facturas.filter(
+      (f) =>
+        f.tipo_documento === 'factura' &&
+        !['aprobada_pago', 'rechazada', 'anulada'].includes(f.estado) &&
+        cuentaCambiadaRecientemente(
+          listarProveedores().find((p) => p.id === f.proveedor_id),
+          hoy
+        )
+    );
+    if (fraude.length > 0) {
+      pendientes.push({
+        clave: 'alertas_fraude',
+        titulo: 'Alertas de fraude',
+        detalle: 'Facturas no aprobadas de proveedores con cuenta cambiada hace menos de 30 días',
+        cantidad: fraude.length,
+        items: fraude.map(itemFactura),
+        vista: 'facturas'
+      });
+    }
+  }
+
+  {
+    const propias = solicitudes.filter((s) => s.solicitante_id === usuario.id);
     if (propias.length > 0) {
       pendientes.push({
         clave: 'mis_solicitudes',
-        titulo: 'Mis solicitudes en curso',
-        detalle: 'Solicitudes propias que siguen activas',
+        titulo: 'Mis solicitudes',
+        detalle: 'Solicitudes creadas por ti y su estado actual',
         cantidad: propias.length,
         items: propias.map(itemSolicitud),
         vista: 'solicitudes'
@@ -121,7 +249,7 @@ export function construirPanel(usuario = getUsuarioActivo(), hoy = hoyISO()) {
     }
   }
 
-  const seguimiento = ['bodega', 'comprador', 'admin_ti'].includes(rol)
+  const seguimiento = ['bodega', 'comprador'].includes(rol)
     ? ordenes
         .filter((o) => o.estado === 'emitida' && recepcionesDeOrden(o.id).length === 0)
         .map((o) => ({ ...o, dias_esperando: diasEntre(o.fecha_emision, hoy) }))
@@ -132,15 +260,21 @@ export function construirPanel(usuario = getUsuarioActivo(), hoy = hoyISO()) {
   const ordenesMes = ordenes.filter(
     (o) => o.estado !== 'anulada' && mesDe(o.fecha_emision) === mes
   );
-  const aprobadasMes = facturasAprobadasParaPago().filter((f) => mesDe(f.fecha_aprobacion) === mes);
-  const indicadores = {
-    mes,
-    monto_comprometido: ordenesMes.reduce((sum, o) => sum + Number(o.total || 0), 0),
-    ordenes_abiertas: ordenes.filter((o) => ['emitida', 'recibida_parcial'].includes(o.estado))
-      .length,
-    facturas_aprobadas_pago: aprobadasMes.length,
-    monto_aprobado_pago: aprobadasMes.reduce((sum, f) => sum + Number(f.total || 0), 0)
-  };
+  const indicadores = { mes };
+  if (rol === 'comprador') {
+    const registradas = facturas.filter((f) => f.tipo_documento === 'factura').length;
+    indicadores.facturas_con_discrepancia = registradas
+      ? discrepantes.length / registradas
+      : 0;
+  }
+  if (rol === 'jefe_compras') {
+    indicadores.gasto_del_periodo = ordenesMes.reduce(
+      (sum, o) => sum + Number(o.neto || 0),
+      0
+    );
+    indicadores.facturas_en_riesgo = alertas.length;
+  }
+  if (rol === 'bodega') indicadores.tasa_rechazo = tasaRechazo();
 
   const acciones = [];
   if (puede('crear_solicitud', usuario))

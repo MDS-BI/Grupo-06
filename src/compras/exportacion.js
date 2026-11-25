@@ -14,20 +14,13 @@ function filtrarSolicitudesPropias(usuario) {
 }
 
 function filtrarOrdenesPorSolicitante(lista, usuario) {
-  if (usuario?.rol !== 'solicitante') return lista;
-  const ids = new Set(filtrarSolicitudesPropias(usuario).map((s) => s.id));
-  return lista.filter((o) => ids.has(o.solicitud_id));
+  const visibles = new Set(listarOrdenes({ usuario }).map((o) => o.id));
+  return (lista || listarOrdenes({ usuario })).filter((o) => visibles.has(o.id));
 }
 
 function filtrarRecepcionesPorSolicitante(lista, usuario) {
-  if (usuario?.rol !== 'solicitante') return lista;
-  const ids = new Set(filtrarSolicitudesPropias(usuario).map((s) => s.id));
-  const ordenIds = new Set(
-    listarOrdenes()
-      .filter((o) => ids.has(o.solicitud_id))
-      .map((o) => o.id)
-  );
-  return lista.filter((r) => ordenIds.has(r.orden_id));
+  const visibles = new Set(listarRecepciones({ usuario }).map((r) => r.id));
+  return (lista || listarRecepciones({ usuario })).filter((r) => visibles.has(r.id));
 }
 
 function filtrarSolicitudesPorRol(lista, usuario) {
@@ -224,7 +217,7 @@ export function exportarOrdenes({
   usuario = getUsuarioActivo()
 } = {}) {
   const q = String(filtro ?? '').toLowerCase();
-  const lista = filtrarOrdenesPorSolicitante(filas || listarOrdenes(), usuario).filter(
+  const lista = filtrarOrdenesPorSolicitante(filas, usuario).filter(
     (o) =>
       !q ||
       [o.numero, o.estado, o.proveedor_id].some((v) =>
@@ -243,7 +236,7 @@ export function exportarRecepciones({
   usuario = getUsuarioActivo()
 } = {}) {
   const q = String(filtro ?? '').toLowerCase();
-  const lista = filtrarRecepcionesPorSolicitante(filas || listarRecepciones(), usuario)
+  const lista = filtrarRecepcionesPorSolicitante(filas, usuario)
     .filter(
       (r) =>
         !q ||
