@@ -146,8 +146,6 @@ Los flujos de cada historia están en `tests/integration/compras/`: `proveedores
 
 ## Cobertura aún pendiente
 
-- T101 y T110: cierre de OC con saldo pendiente y cálculo y visualización de `credito_a_favor` cuando una devolución `defectuosa` descuenta una factura ya aprobada.
-- T104, T109 y T118: anulación con `motivo_anulacion` en facturas, devoluciones, cotizaciones y recepciones, con su registro en trazabilidad.
 - T127: el filtro de OC y recepciones del `solicitante` está en la UI y en el CSV, pero falta en los servicios `ordenes-compra.js` y `recepciones.js`.
 - T137 y T139: **Mis solicitudes** aparece solo para `solicitante`; falta extenderlo a los cinco roles que exige FR-035 y ampliar las pruebas del panel.
 - Recorrido manual en navegador (T144/T155/T168): ejecutar los escenarios 1 a 8 con los cinco roles, cerrando sesión entre cada uno. La verificación automatizada ya está completada (317 pruebas aprobadas).

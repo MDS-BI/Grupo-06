@@ -255,8 +255,8 @@
 - [x] T083 [US11] Agregar pruebas de devoluciones, notas de crédito, topes, duplicidad, cierre de OC y segregación en `tests/integration/compras/flujo-compras.test.js` y `tests/integration/compras/casos-limite.test.js`. [FR-031]
 - [x] T084 [US11] Agregar prueba de integración del flujo completo de US11 en `tests/integration/compras/flujo-compras.test.js`. [FR-031]
 - [x] T100 [US11] [FR-026] Registrar devoluciones con motivo `defectuoso` cuando el daño se detecta después de aceptar, descontando el saldo recibido y facturado, en `src/compras/devoluciones.js`; agregar pruebas en `tests/integration/compras/flujo-compras.test.js`. Verificado en `tests/integration/compras/casos-limite.test.js` (cierre de OC con saldo pendiente y motivo `defectuoso`).
-- [ ] T101 [US11] [SC-011] Cubrir el daño detectado con la factura ya aprobada para pago y el cierre de la OC con saldo pendiente cuando el proveedor no repone, en `tests/integration/compras/casos-limite.test.js`. **Pendiente**: falta la transición `recibida_parcial → cerrada` en `src/compras/reglas.js` (ver `data-model.md`, sección 10, pendiente 3).
-- [~] T110 [US11] [FR-026] [SC-011] 2026-11-24: solo UI completada (columna `credito_a_favor` en facturas y cadena); cálculo en `devoluciones.js`/`facturas.js` pendiente. Calcular `credito_a_favor` cuando una devolución con motivo `defectuoso` descuenta una factura ya `aprobada_pago`, y mostrarlo en la factura y en la cadena documental, en `src/compras/devoluciones.js`, `src/compras/facturas.js` y `src/compras/vista.js`; agregar la prueba en `tests/integration/compras/casos-limite.test.js`.
+- [x] T101 [US11] [SC-011] Cubrir el daño detectado con la factura ya aprobada para pago y el cierre de la OC con saldo pendiente cuando el proveedor no repone, en `tests/integration/compras/casos-limite.test.js`. Resuelto: `recibida_parcial → cerrada` declarada en `TRANSICIONES` (`reglas.js:68`), con prueba unitaria en `reglas.test.js` y de integración en `casos-limite.test.js:670`.
+- [x] T110 [US11] [FR-026] [SC-011] Calcular `credito_a_favor` cuando una devolución con motivo `defectuoso` descuenta una factura ya `aprobada_pago`, y mostrarlo en la factura y en la cadena documental, en `src/compras/devoluciones.js`, `src/compras/facturas.js` y `src/compras/vista.js`. Resuelto: cálculo implementado en `devoluciones.js` y `facturas.js`, representación en `vista.js` y `trazabilidad.js`, con pruebas en `tests/integration/compras/casos-limite.test.js` y `trazabilidad.test.js`.
 
 **Punto de control**: devoluciones y notas de crédito funcionales; ciclo de P2 cerrado.
 
@@ -270,10 +270,10 @@
 
 - [x] T102 [FR-027] Implementar en `src/compras/trazabilidad.js` el registro de quién, cuándo y qué acción para cada cambio de estado de solicitud, cotización, OC, recepción, factura y devolución, integrándolo en `src/compras/solicitudes.js`, `src/compras/cotizaciones.js`, `src/compras/ordenes-compra.js`, `src/compras/recepciones.js`, `src/compras/facturas.js` y `src/compras/devoluciones.js`.
 - [x] T103 [FR-028] Implementar en `src/compras/trazabilidad.js` y `src/compras/vista.js` la navegación desde cualquier documento a la cadena completa solicitud, cotización, OC, recepción, factura y devolución.
-- [ ] T104 [FR-029] Impedir la eliminación de documentos con historial y permitir solo su anulación con motivo en `src/compras/almacenamiento.js`, `src/compras/ordenes-compra.js`, `src/compras/facturas.js` y `src/compras/devoluciones.js`. **Deuda conocida**: el bloqueo de eliminación y la anulación de OC están probados; falta extender `motivo_anulacion` a facturas y devoluciones (ver T118).
+- [x] T104 [FR-029] Impedir la eliminación de documentos con historial y permitir solo su anulación con motivo en `src/compras/almacenamiento.js`, `src/compras/ordenes-compra.js`, `src/compras/facturas.js` y `src/compras/devoluciones.js`. Resuelto: bloqueo de eliminación verificado y `motivo_anulacion` extendido a facturas y devoluciones (T118), con pruebas en `tests/integration/compras/trazabilidad.test.js`.
 - [x] T105 [FR-030] Registrar cada cambio de datos bancarios con la representación autorizada por `visibilidad.js` para el rol que consulta, nunca con el número completo, en `src/compras/proveedores.js`, `src/compras/trazabilidad.js` y `src/compras/exportacion.js`.
 - [x] T106 [SC-012] Agregar pruebas de auditoría de punta a punta en `tests/integration/compras/trazabilidad.test.js` que verifiquen quién, cuándo y qué acción en cada cambio de estado, la navegación de la cadena completa y la conservación de documentos anulados.
-- [ ] T109 [FR-029] Implementar la anulación con `motivo_anulacion` obligatorio de solicitudes, cotizaciones y recepciones en `src/compras/solicitudes.js` (ya guarda `motivo_anulacion`: verificar y completar), `src/compras/cotizaciones.js` y `src/compras/recepciones.js`, registrando el evento en `src/compras/trazabilidad.js`; una recepción anulada no cuenta para las cantidades recibidas ni para el valor recibido (`data-model.md`, reglas 5, 6 y 11). Agregar pruebas en `tests/integration/compras/trazabilidad.test.js` y `tests/unit/compras/reglas.test.js`. **Deuda conocida**: solo la solicitud guarda hoy `motivo_anulacion`; cotizaciones usan `motivo_descarte` y recepciones no tienen anulación. Se completa con T118 para cerrar FR-029 y el pendiente 2 de `data-model.md` §10.
+- [x] T109 [FR-029] Implementar la anulación con `motivo_anulacion` obligatorio de solicitudes, cotizaciones y recepciones en `src/compras/solicitudes.js`, `src/compras/cotizaciones.js` y `src/compras/recepciones.js`, registrando el evento en `src/compras/trazabilidad.js`; una recepción anulada no cuenta para las cantidades recibidas ni para el valor recibido. Resuelto junto con T118: `motivo_anulacion` en los seis documentos y pruebas en `tests/integration/compras/trazabilidad.test.js:268-299`.
 
 **Punto de control**: trazabilidad completa y documentos no eliminables.
 
@@ -304,14 +304,14 @@
 
 ## Fase 15: Cierre de pendientes del modelo de datos
 
-**Objetivo**: resolver las cuatro diferencias registradas en `data-model.md`, sección 10, y cerrar la cobertura de FR-029 con tareas explícitas y trazabilidad. Las decisiones 1 y 4 (T117 y T119) quedan cerradas en esta iteración; continúan abiertas las decisiones 2 y 3 (T101 y T118).
+**Objetivo**: resolver las cuatro diferencias registradas en `data-model.md`, sección 10, y cerrar la cobertura de FR-029 con tareas explícitas y trazabilidad. Las cuatro decisiones (T117, T119, T109/T118 y T101) quedan cerradas en esta iteración.
 
 - [x] T117 [FR-015] Unificar el estado inicial de la factura entre código y modelo según `data-model.md` §10, pendiente 1. Decisión aplicada: `registrada` en código y modelo. `src/compras/reglas.js`, `src/compras/facturas.js` y las pruebas ya usaban ese valor; se actualizan `data-model.md` §3.11/regla 6 y §10.
-- [ ] T118 [FR-029] Alinear los estados de devolución con `data-model.md` §10, pendiente 2: incorporar `anulada` con `motivo_anulacion` y registrarlo en `src/compras/trazabilidad.js`. Extender la anulación con motivo a facturas y devoluciones, además de solicitudes, cotizaciones y recepciones, para cerrar T104 y T109. **Deuda conocida**: hoy solo OC y solicitudes guardan `motivo_anulacion`; el resto usa `descartar`/`rechazar`.
+- [x] T118 [FR-029] Alinear los estados de devolución con `data-model.md` §10, pendiente 2: incorporar `anulada` con `motivo_anulacion` y registrarlo en `src/compras/trazabilidad.js`. Extender la anulación con motivo a facturas y devoluciones, además de solicitudes, cotizaciones y recepciones, para cerrar T104 y T109. Resuelto: `pendiente_aprobacion` se conserva para la segregación de US11 y `anulada` con motivo queda registrada en `trazabilidad.test.js:243`.
 - [x] T119 [FR-010] Resolver `data-model.md` §10, pendiente 4. Decisión aplicada: eliminar `borrador` del modelo de OC y mantener `emitida` como estado inicial, en línea con la spec US3, `src/compras/reglas.js` y `src/module-config.js`. Sincronizados `plan.md` y `data-model.md` §3.9/regla 4 y §10.
 - [x] T120 [SC-003] Auditoría en `tests/integration/compras/flujo-compras.test.js`: se generan casos sobre el umbral con tres cotizaciones vigentes y con `justificacion_proveedor_unico`, se recorren todas las OC no anuladas y se comprueba que el 100 % de las que superan `UMBRAL_COTIZACIONES` cumple alguna de las dos vías. Trazabilidad SC-003 actualizada.
 
-**Punto de control**: las decisiones 1 y 4 de `data-model.md` §10 quedan cerradas; las decisiones 2 y 3 siguen registradas como deuda conocida y FR-029 mantiene cobertura explícita mediante T118. SC-003 queda cubierta por la auditoría de T120.
+**Punto de control**: las cuatro decisiones de `data-model.md` §10 quedan cerradas; FR-029 mantiene cobertura explícita mediante T104, T109 y T118. SC-003 queda cubierta por la auditoría de T120.
 
 ---
 
@@ -452,7 +452,7 @@
 
 ## Estado de las Fases 17–23 (2026-11-25)
 
-> Estado global: **parcial**. Las fases listadas como «cerradas» conviven con las tareas abiertas T101, T104, T109, T110, T118, T127, T137 y T139; el cierre definitivo está supeditado a la puerta de cierre de `plan.md` (Constitución II).
+> Estado global: **parcial**. Las fases listadas como «cerradas» conviven con las tareas abiertas T127, T137 y T139; el cierre definitivo está supeditado a la puerta de cierre de `plan.md` (Constitución II).
 
 - **Fase 16**: cerrada (`visibilidad.js`, `PERMISOS` y pruebas de matriz).
 - **Fase 17**: navegación agrupada, solo lectura, bloqueo de accesos, historial/exportación y encabezado implementados y verificados en la interfaz; queda **T127** abierta: el filtro de OC y recepciones del `solicitante` está en la UI y en el CSV, pero no en los servicios `ordenes-compra.js` ni `recepciones.js`.
@@ -465,18 +465,18 @@
 
 ## Deuda conocida
 
-El estado de estas tareas se registra aquí y se replica en `plan.md` para que el congelamiento no esconda trabajo pendiente. T107, T108, T117, T119 y T120 figuran como cerradas; T121-T144 y T146-T155 están en curso; T156–T160 están cerradas; el resto permanece abierto.
+El estado de estas tareas se registra aquí y se replica en `plan.md` para que el congelamiento no esconda trabajo pendiente. T101, T104, T107, T108, T109, T110, T117, T118, T119 y T120 figuran como cerradas; T121-T144 y T146-T155 están en curso; T156–T160 están cerradas; T127, T137 y T139 permanecen abiertas.
 
 | Tarea | Estado  | Justificación de la deuda                                                                                                                                                                                                                    | Referencia                          |
 | ----- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| T101  | Abierta | La prueba de cierre con saldo pendiente pasa, pero `cerrarSiSaldada()` muta el estado directamente; falta declarar `recibida_parcial → cerrada` en `TRANSICIONES`.                                                                           | `data-model.md` §10, pendiente 3    |
-| T104  | Abierta | Bloqueo de eliminación y anulación de OC verificados; falta `motivo_anulacion` en facturas y devoluciones.                                                                                                                                   | FR-029, T118                        |
+| T101  | Cerrada | `recibida_parcial → cerrada` declarada en `TRANSICIONES` y verificada en `reglas.test.js` y `casos-limite.test.js`. | `data-model.md` §10, pendiente 3    |
+| T104  | Cerrada | Bloqueo de eliminación verificado y `motivo_anulacion` extendido a facturas y devoluciones (T118), con pruebas en `trazabilidad.test.js`. | FR-029, T118                        |
 | T107  | Cerrada | Se amplió `.prettierignore` para cubrir todo el código y las pruebas; `format:check` y `lint` pasan sin errores ni advertencias con ese alcance. | Constitución, Estándares de Calidad |
 | T108  | Cerrada | Accesibilidad revisada: encabezado del panel asociado, pestañas navegables con teclado, etiquetas y tablas accesibles, errores de validación junto al campo con `role="alert"`/`aria-describedby` y banner para errores globales, y contraste 4,5:1; cubierto por `vista.test.js`. | SC-013 |
-| T109  | Abierta | Solo la solicitud guarda `motivo_anulacion`; faltan cotizaciones y recepciones.                                                                                                                                                              | FR-029, T118                        |
-| T110  | Abierta | `credito_a_favor` no está implementado ni mostrado en factura/cadena documental.                                                                                                                                                             | FR-026, SC-011                      |
+| T109  | Cerrada | Anulación con `motivo_anulacion` en solicitudes, cotizaciones y recepciones, con registro en trazabilidad (`trazabilidad.test.js:268-299`). | FR-029, T118                        |
+| T110  | Cerrada | `credito_a_favor` calculado en `devoluciones.js`/`facturas.js`, mostrado en factura y cadena, con pruebas en `casos-limite.test.js` y `trazabilidad.test.js`. | FR-026, SC-011                      |
 | T117  | Cerrada | Decisión aplicada: `registrada` como estado inicial de factura en código y modelo; `data-model.md` sincronizado en §3.11/regla 6 y §10.                                                                                                    | FR-015                              |
-| T118  | Abierta | Pendiente 2 de `data-model.md` §10: estados de devolución y anulación con motivo incompletos.                                                                                                                                                | FR-029                              |
+| T118  | Cerrada | Pendiente 2 de `data-model.md` §10 resuelto: `anulada` con `motivo_anulacion` en devoluciones y resto de documentos, con registro forense. | FR-029                              |
 | T119  | Cerrada | Decisión aplicada: se elimina `borrador` del modelo de OC y se conserva `emitida` como estado inicial; `data-model.md` y `plan.md` sincronizados.                                                                                          | FR-010                              |
 | T120  | Cerrada | Auditoría global de SC-003 en `flujo-compras.test.js`: se verifican las dos vías de cumplimiento (tres cotizaciones vigentes o justificación de proveedor único) sobre todas las OC no anuladas.                                            | SC-003                              |
 | T121-T144 | En curso | Fase 16 fundacional cerrada (T121-T124); Fases 17-19 con navegación, modo lectura, panel, pruebas y documentación pendientes. | FR-033 a FR-036, SC-015 a SC-017 |

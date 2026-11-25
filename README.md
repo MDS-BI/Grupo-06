@@ -93,7 +93,7 @@ Estado real verificado el 2026-11-25 sobre la rama `main`:
 - `npm run build`: **build de producción sin errores** (Vite 8.2.1).
 - Accesibilidad WCAG 2.1 AA revisada: etiquetas asociadas, navegación por teclado en pestañas, errores junto al campo con `role="alert"`/`aria-describedby`, contraste mínimo 4,5:1 y respeto a `prefers-reduced-motion`.
 
-Deuda declarada en [`tasks.md`](specs/002-modulo-adquisiciones-compras/tasks.md), no bloqueante para la entrega: T101, T104, T109, T110 y T118 (modelo, anulaciones y `credito_a_favor`), T127 y T137/T139 (filtros en servicios y panel FR-035) y T144/T155 (recorrido manual en navegador de los escenarios 1 a 8). Las fases 1 a 23, incluidas T043-T050, T100, T102-T106, T107, T108, T120 y T161-T168, están cerradas.
+Deuda declarada en [`tasks.md`](specs/002-modulo-adquisiciones-compras/tasks.md), no bloqueante para la entrega: T127 y T137/T139 (filtros en servicios y panel FR-035) y T144/T155 (recorrido manual en navegador de los escenarios 1 a 8). T101, T104, T109, T110 y T118 están cerradas. Las fases 1 a 23, incluidas T043-T050, T100, T102-T106, T107, T108, T120 y T161-T168, están cerradas.
 
 ## Problema y solución (Resumen)
 

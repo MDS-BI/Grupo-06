@@ -228,7 +228,7 @@ El trabajo siguió *Spec-Driven Development*: la especificación se escribió y 
 | D13 | Interfaz con navegación agrupada, acciones rápidas legibles, modo oscuro, foco visible y respeto a `prefers-reduced-motion`. | Accesibilidad y claridad para roles no técnicos. | Controles con claves internas y textos crípticos. | `src/styles.css`, `spec.md` FR-036, SC-013 |
 | D14 | Registrar deuda abierta en lugar de ocultarla. | El curso exige trazabilidad del proceso, no solo del producto final. | Marcar todo como terminado. | `plan.md`, `tasks.md`, `quickstart.md` §Coberturapendiente |
 
-**Estado metodológico**: Fase 16 cerrada; Fase 17 con navegación agrupada, solo lectura y encabezado implementados, con T127 abierta en servicios; Fase 18 con permisos por historia verificados, con T137/T139 abiertas por FR-035; Fase 19 con semilla, contratos y documentación sincronizados y suite automatizada en verde; Fase 20 cerrada. Siguen documentados además los ítems T101/T109/T110/T118 del modelo y el recorrido manual de los escenarios de `quickstart.md`. El estado canónico se replica en `spec.md`, `plan.md`, `tasks.md` y `quickstart.md`.
+**Estado metodológico**: Fase 16 cerrada; Fase 17 con navegación agrupada, solo lectura y encabezado implementados, con T127 abierta en servicios; Fase 18 con permisos por historia verificados, con T137/T139 abiertas por FR-035; Fase 19 con semilla, contratos y documentación sincronizados y suite automatizada en verde; Fase 20 cerrada. T101, T104, T109, T110 y T118 están cerrados en código y documentación; queda documentado el recorrido manual de los escenarios de `quickstart.md`. El estado canónico se replica en `spec.md`, `plan.md`, `tasks.md` y `quickstart.md`.
 
 ---
 
@@ -268,7 +268,7 @@ El patrón recomendado es un **outbox de eventos** (`recepcion.registrada`, `fac
 ### 4.4 Desarrollo futuro priorizado
 
 1. Cerrar navegación agrupada por visibilidad, filtros y modo solo lectura por vista (FR-033 a FR-036).
-2. Cerrar T101, T109, T110 y T118: cierre de OC con saldo pendiente, `credito_a_favor`, anulaciones con motivo y estados alineados de devolución.
+2. Cerrar T127, T137 y T139: filtro del `solicitante` en los servicios y cobertura completa del panel FR-035.
 3. Ampliación de paneles de alertas y reportes por centro de costo, proveedor y categoría; exportación CSV con los permisos vigentes.
 4. Notificaciones de vencimiento y cambios bancarios recientes.
 5. Flujos de aprobación multinivel y reemplazo de la clave genérica por autenticación real.
