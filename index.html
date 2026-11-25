@@ -45,27 +45,6 @@
               <p class="muted">Autentícate con tu correo institucional.</p>
             </div>
 
-            <div class="login-modo" role="group" aria-label="Modo de acceso">
-              <button
-                type="button"
-                id="login-modo-demo"
-                class="login-modo-opcion"
-                aria-pressed="false"
-                aria-controls="login-modo-rol login-directorio"
-              >
-                Modo Demo
-              </button>
-              <button
-                type="button"
-                id="login-modo-real"
-                class="login-modo-opcion activo"
-                aria-pressed="true"
-                aria-controls="login-email"
-              >
-                Modo Real
-              </button>
-            </div>
-
             <div class="campo">
               <label for="login-email">Correo corporativo</label>
               <input
@@ -93,7 +72,7 @@
                   type="password"
                   required
                   autocomplete="current-password"
-                  aria-describedby="login-clave-ayuda login-clave-error"
+                  aria-describedby="login-clave-error"
                 />
                 <button
                   type="button"
@@ -105,7 +84,6 @@
                   Mostrar
                 </button>
               </div>
-              <p id="login-clave-ayuda" class="campo-ayuda">Modo demostración: clave <strong>Compras2026</strong>.</p>
               <p id="login-clave-error" class="error campo-error" role="alert" hidden></p>
             </div>
 
@@ -123,46 +101,6 @@
                 Activar modo presentación
               </button>
             </div>
-
-            <details id="login-modo-rol" class="login-legacy">
-              <summary>Acceso por rol (modo demostración)</summary>
-              <p class="muted">Clave genérica: <strong>Compras2026</strong>.</p>
-              <div class="legacy-grid">
-                <div>
-                  <label for="login-rol">Rol</label>
-                  <select id="login-rol" name="rol" required>
-                    <option value="">-- Selecciona un rol --</option>
-                    <option value="solicitante">Solicitante</option>
-                    <option value="comprador">Comprador</option>
-                    <option value="jefe_compras">Jefe de Compras</option>
-                    <option value="bodega">Encargado de Bodega</option>
-                    <option value="admin_ti">Administrador TI</option>
-                  </select>
-                </div>
-
-                <div id="campo-nombre" hidden>
-                  <label for="login-nombre">Nombre</label>
-                  <input
-                    id="login-nombre"
-                    name="nombre"
-                    type="text"
-                    list="nombres-demo"
-                    autocomplete="name"
-                    aria-describedby="nombres-ayuda"
-                  />
-                  <datalist id="nombres-demo"></datalist>
-                  <p id="nombres-ayuda" class="campo-ayuda">Para solicitante, comprador y jefatura.</p>
-                </div>
-              </div>
-            </details>
-
-            <details class="login-hint">
-              <summary>¿Necesitas la clave de demostración?</summary>
-              <p>
-                Elige un rol y usa la clave genérica <strong>Compras2026</strong>. Solicitante,
-                Comprador y Jefe de Compras piden nombre; Bodega y Administrador TI ingresan sin él.
-              </p>
-            </details>
           </form>
 
           <aside

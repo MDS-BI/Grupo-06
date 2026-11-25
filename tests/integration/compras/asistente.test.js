@@ -18,7 +18,6 @@ function qs(id) {
 }
 
 function ingresar(email) {
-  qs('login-rol').value = '';
   qs('login-email').value = email;
   qs('login-clave').value = 'Compras2026';
   qs('login-form').dispatchEvent(

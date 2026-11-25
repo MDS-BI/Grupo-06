@@ -222,31 +222,6 @@ h3 {
 .login-form-head .muted { color: #9ca3af; font-size: 0.9rem; margin: 0 0 22px; }
 .login-form .campo { margin-bottom: 18px; }
 
-.login-modo {
-  display: inline-flex;
-  gap: 4px;
-  margin: 0 0 22px;
-  padding: 4px;
-  border: 1px solid #36393f;
-  border-radius: 999px;
-  background: #32353b;
-}
-
-.login-modo-opcion {
-  padding: 6px 16px;
-  border: none;
-  border-radius: 999px;
-  background: transparent;
-  color: #9ca3af;
-  font: inherit;
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.login-modo-opcion:hover { color: #f3f4f6; }
-.login-modo-opcion.activo { background: #2563eb; color: #ffffff; }
-
 .login-form label {
   display: block;
   margin-bottom: 8px;
@@ -347,38 +322,6 @@ h3 {
   outline-offset: 2px;
 }
 
-.login-legacy {
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid #36393f;
-}
-.login-legacy summary {
-  display: flex;
-  align-items: center;
-  min-height: 44px;
-  color: #cbd5e1;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.login-hint {
-  margin-top: 18px;
-  color: #9ca3af;
-  font-size: 0.82rem;
-}
-.login-hint summary {
-  cursor: pointer;
-  font-weight: 600;
-  color: #cbd5e1;
-}
-.login-hint p {
-  margin: 8px 0 0;
-}
-.login-legacy .muted { color: #9ca3af; font-size: 0.8rem; margin: 0 0 12px; }
-.legacy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.legacy-grid > div[hidden] { display: none; }
-
 .login-directory {
   padding: 18px;
   border: 1px solid #36393f;
@@ -459,7 +402,6 @@ h3 {
 @media (max-width: 520px) {
   .login-shell { padding: 20px 16px; }
   .login-brand { align-items: flex-start; }
-  .legacy-grid { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {

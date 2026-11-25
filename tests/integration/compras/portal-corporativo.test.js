@@ -31,7 +31,6 @@ function enviarLogin() {
 }
 
 function ingresar(email) {
-  qs('login-rol').value = '';
   qs('login-email').value = email;
   qs('login-clave').value = 'Compras2026';
   enviarLogin();

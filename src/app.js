@@ -4,10 +4,8 @@ import { getUsuarioActivo, estaAutenticado, leer } from './compras/almacenamient
 import {
   CLAVE_DEMO,
   cerrarSesion,
-  iniciarSesion,
   iniciarSesionConEmail,
-  listarDirectorioUsuarios,
-  listarUsuarios
+  listarDirectorioUsuarios
 } from './compras/autenticacion.js';
 import { requiereNombre } from './compras/reglas.js';
 import { etiquetaRol } from './compras/vista.js';
@@ -33,7 +31,6 @@ function escapar(valor) {
 let wired = false;
 let loginActivo = false;
 let modoPresentacion = false;
-let modoAcceso = 'real';
 
 function showModule() {
   // El único módulo de esta aplicación es Adquisiciones y Compras.
@@ -103,30 +100,6 @@ function alternarModoPresentacion() {
   else qs('btn-modo-presentacion')?.focus();
 }
 
-/** Alterna entre el acceso por correo (Real) y el acceso por rol/directorio (Demo). */
-function aplicarModoAcceso(modo) {
-  modoAcceso = modo === 'demo' ? 'demo' : 'real';
-  const demo = modoAcceso === 'demo';
-
-  for (const [id, activo] of [
-    ['login-modo-demo', demo],
-    ['login-modo-real', !demo]
-  ]) {
-    const boton = qs(id);
-    if (!boton) continue;
-    boton.classList.toggle('activo', activo);
-    boton.setAttribute('aria-pressed', String(activo));
-  }
-
-  const panelRol = qs('login-modo-rol');
-  if (panelRol) panelRol.open = demo;
-
-  if (modoPresentacion !== demo) {
-    modoPresentacion = demo;
-    sincronizarModoPresentacion();
-  }
-}
-
 function aplicarTema(config) {
   document.documentElement.style.setProperty('--accent', config.theme.accentColor);
 }
@@ -182,35 +155,6 @@ function sincronizarSesionUI() {
   sincronizarAsistente();
 }
 
-function poblarNombresLogin(rol) {
-  const datalist = qs('nombres-demo');
-  if (!datalist) return;
-  const nombres = requiereNombre(rol)
-    ? listarUsuarios()
-        .filter((usuario) => usuario.rol === rol)
-        .map((usuario) => usuario.nombre)
-        .filter(Boolean)
-    : [];
-  datalist.innerHTML = [...new Set(nombres)]
-    .map((nombre) => `<option value="${escapar(nombre)}"></option>`)
-    .join('');
-}
-
-/** El campo de nombre solo existe para Solicitante y Comprador. */
-function actualizarCampoNombre({ enfocar = false } = {}) {
-  const rol = qs('login-rol')?.value;
-  const campo = qs('campo-nombre');
-  const nombre = qs('login-nombre');
-  if (!campo || !nombre) return;
-
-  const visible = requiereNombre(rol);
-  campo.hidden = !visible;
-  nombre.required = visible;
-  if (!visible) nombre.value = '';
-  poblarNombresLogin(rol);
-  if (visible && enfocar) nombre.focus();
-}
-
 function ocultarErrorLogin() {
   const error = qs('login-error');
   if (error) {
@@ -246,9 +190,7 @@ function mostrarErrorLogin(resultado) {
   }
   const id = {
     email: 'login-email',
-    clave: 'login-clave',
-    rol: 'login-rol',
-    nombre: 'login-nombre'
+    clave: 'login-clave'
   }[resultado.campo];
   if (id && ['login-email', 'login-clave'].includes(id)) {
     const inline = qs(`${id}-error`);
@@ -288,8 +230,6 @@ function poblarDirectorioUsuarios() {
 
   lista.querySelectorAll('.directory-user').forEach((boton) =>
     boton.addEventListener('click', () => {
-      const rol = qs('login-rol');
-      if (rol) rol.value = '';
       qs('login-email').value = boton.dataset.email;
       qs('login-clave').value = CLAVE_DEMO;
       ocultarErrorLogin();
@@ -318,7 +258,6 @@ function bloquearInterfaz() {
   ocultarErrorLogin();
   modoPresentacion = false;
   sincronizarModoPresentacion();
-  aplicarModoAcceso('real');
 
   const workspace = document.querySelector('.workspace');
   if (workspace) {
@@ -331,12 +270,8 @@ function bloquearInterfaz() {
   reiniciarAsistente();
   sincronizarSesionUI();
 
-  const rol = qs('login-rol');
-  if (rol) rol.value = '';
   const email = qs('login-email');
   if (email) email.value = '';
-  const nombre = qs('login-nombre');
-  if (nombre) nombre.value = '';
   const clave = qs('login-clave');
   if (clave) {
     clave.value = '';
@@ -348,7 +283,6 @@ function bloquearInterfaz() {
     mostrar.setAttribute('aria-pressed', 'false');
   }
 
-  actualizarCampoNombre();
   email?.focus();
 }
 
@@ -379,11 +313,8 @@ function desbloquearInterfaz(renderizar = true) {
 function enviarLogin(evento) {
   evento.preventDefault();
   ocultarErrorLogin();
-  const rol = qs('login-rol')?.value;
   const clave = qs('login-clave')?.value;
-  const resultado = rol
-    ? iniciarSesion(rol, qs('login-nombre')?.value, clave)
-    : iniciarSesionConEmail(qs('login-email')?.value, clave);
+  const resultado = iniciarSesionConEmail(qs('login-email')?.value, clave);
   if (!resultado.ok) {
     mostrarErrorLogin(resultado);
     return;
@@ -445,10 +376,7 @@ function cablearEventos() {
   qs('login-form')?.addEventListener('submit', enviarLogin);
   qs('login-email')?.addEventListener('input', () => limpiarErrorCampo('login-email'));
   qs('login-clave')?.addEventListener('input', () => limpiarErrorCampo('login-clave'));
-  qs('login-rol')?.addEventListener('change', () => actualizarCampoNombre({ enfocar: true }));
   qs('login-mostrar-clave')?.addEventListener('click', alternarVisibilidadClave);
-  qs('login-modo-demo')?.addEventListener('click', () => aplicarModoAcceso('demo'));
-  qs('login-modo-real')?.addEventListener('click', () => aplicarModoAcceso('real'));
   qs('btn-modo-presentacion')?.addEventListener('click', alternarModoPresentacion);
   qs('btn-tema')?.addEventListener('click', alternarTema);
   qs('btn-logout')?.addEventListener('click', () => {

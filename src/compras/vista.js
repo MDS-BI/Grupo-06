@@ -105,6 +105,14 @@ export function etiquetaRol(rol) {
   );
 }
 
+/** Devuelve la etiqueta legible de un estado, sin guiones bajos. */
+export function etiquetaEstado(estado) {
+  return String(estado ?? '')
+    .split('_')
+    .filter(Boolean)
+    .join(' ');
+}
+
 const TABS = [
   { id: 'panel', label: 'Panel', grupo: 'Panel' },
   { id: 'proveedores', label: 'Proveedores', grupo: 'Adquisiciones' },
@@ -229,7 +237,7 @@ function textoPlazo(dias, conUnidad = false) {
   return conUnidad ? `${n} ${n === 1 ? 'día' : 'días'}` : String(n);
 }
 function badge(estado) {
-  return `<span class="badge badge-${esc(estado)}">${esc(estado)}</span>`;
+  return `<span class="badge badge-${esc(estado)}">${esc(etiquetaEstado(estado))}</span>`;
 }
 function nombreUsuario(id) {
   return etiquetaUsuario(id);
@@ -265,7 +273,8 @@ function opciones(items, seleccionado, vacio = '-- Selecciona --') {
   return `<option value="">${esc(vacio)}</option>${items
     .map((item) => {
       const value = typeof item === 'string' ? item : item.value;
-      const label = typeof item === 'string' ? item : item.label;
+      const label =
+        typeof item === 'string' ? etiquetaEstado(item) : item.label;
       return `<option value="${esc(value)}"${String(value) === String(seleccionado) ? ' selected' : ''}>${esc(label)}</option>`;
     })
     .join('')}`;
@@ -431,9 +440,6 @@ export function renderComprasView() {
           ${esAdminTI ? '<span class="admin-ti-badge" aria-label="Privilegios elevados: Administrador TI"><svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 1.5l1.8 3.6 4 .6-2.9 2.8.7 4L8 10.6 4.4 12.5l.7-4L2.2 5.7l4-.6L8 1.5z"></path></svg>Privilegios elevados</span>' : ''}
         </div>
         <p class="muted">${esc(subtitulo)}</p>
-      </div>
-      <div class="compras-header-acciones">
-        <button type="button" class="link" id="compras-exportar-csv">Exportar CSV de esta vista</button>
       </div>
     </div>
 
@@ -618,7 +624,7 @@ function renderTrazaCadena() {
       ${eventos
         .map(
           (e) =>
-            `<tr><td>${esc(fechaHora(e.fecha_hora))}</td><td>${esc(e.accion)}</td><td>${esc(e.estado_anterior)}</td><td>${esc(e.estado_nuevo)}</td><td>${esc(nombreUsuario(e.usuario_id))}</td><td>${esc(e.detalle)}</td></tr>`
+            `<tr><td>${esc(fechaHora(e.fecha_hora))}</td><td>${esc(e.accion)}</td><td>${esc(etiquetaEstado(e.estado_anterior))}</td><td>${esc(etiquetaEstado(e.estado_nuevo))}</td><td>${esc(nombreUsuario(e.usuario_id))}</td><td>${esc(e.detalle)}</td></tr>`
         )
         .join('')}
       </tbody></table>`

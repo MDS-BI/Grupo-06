@@ -22,9 +22,10 @@ function enviarLogin() {
   );
 }
 
-function elegirRol(rol) {
-  qs('login-rol').value = rol;
-  qs('login-rol').dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+function ingresar(email, claveValor = CLAVE_DEMO) {
+  qs('login-email').value = email;
+  qs('login-clave').value = claveValor;
+  enviarLogin();
 }
 
 beforeEach(async () => {
@@ -47,53 +48,30 @@ afterEach(() => {
 });
 
 describe('acceso a la interfaz de compras', () => {
-  it('muestra el acceso por rol y rechaza una clave incorrecta', () => {
+  it('no muestra acceso por rol y rechaza una clave incorrecta', () => {
     expect(qs('login-overlay').hidden).toBe(false);
     expect(qs('btn-logout').hidden).toBe(true);
-    expect(qs('login-rol').options.length).toBe(6);
-    expect(qs('campo-nombre').hidden).toBe(true);
+    expect(qs('login-rol')).toBeNull();
+    expect(qs('login-nombre')).toBeNull();
+    expect(qs('login-modo-rol')).toBeNull();
 
-    elegirRol('jefe_compras');
-    expect(qs('campo-nombre').hidden).toBe(false);
-    qs('login-nombre').value = 'Marcela Rojas';
-    qs('login-clave').value = 'clave-erronea';
-    enviarLogin();
+    ingresar('jefe.compras@example.com', 'clave-erronea');
 
     expect(qs('login-error').hidden).toBe(false);
     expect(qs('login-error').textContent).toContain('Clave incorrecta');
     expect(qs('login-overlay').hidden).toBe(false);
   });
 
-  it('pide nombre para solicitante, comprador y jefatura', () => {
-    elegirRol('solicitante');
-    expect(qs('campo-nombre').hidden).toBe(false);
-    expect([...qs('nombres-demo').options].map((opcion) => opcion.value)).toEqual([
-      'Ana Pérez',
-      'Luis Soto'
-    ]);
+  it('rechaza un correo que no corresponde a ningún usuario', () => {
+    ingresar('desconocido@example.com');
 
-    elegirRol('bodega');
-    expect(qs('campo-nombre').hidden).toBe(true);
-    expect(qs('login-nombre').value).toBe('');
-    expect(qs('nombres-demo').options.length).toBe(0);
-
-    elegirRol('comprador');
-    expect(qs('campo-nombre').hidden).toBe(false);
-    expect([...qs('nombres-demo').options].map((opcion) => opcion.value)).toEqual(['Carla Díaz']);
-
-    elegirRol('jefe_compras');
-    expect(qs('campo-nombre').hidden).toBe(false);
-    expect([...qs('nombres-demo').options].map((opcion) => opcion.value)).toEqual([
-      'Marcela Rojas',
-      'Jorge Muñoz'
-    ]);
+    expect(qs('login-error').hidden).toBe(false);
+    expect(qs('login-error').textContent).toContain('correo');
+    expect(qs('login-overlay').hidden).toBe(false);
   });
 
-  it('ingresa con nombre para comprador y muestra la sesión identificada', () => {
-    elegirRol('comprador');
-    qs('login-nombre').value = 'carla diaz';
-    qs('login-clave').value = CLAVE_DEMO;
-    enviarLogin();
+  it('ingresa con correo de comprador y muestra la sesión identificada', () => {
+    ingresar('carla.diaz@example.com');
 
     expect(qs('login-error').hidden).toBe(true);
     expect(qs('login-overlay').hidden).toBe(true);
@@ -105,33 +83,17 @@ describe('acceso a la interfaz de compras', () => {
     qs('btn-logout').click();
 
     expect(qs('login-overlay').hidden).toBe(false);
-    expect(qs('login-rol').value).toBe('');
-    expect(qs('campo-nombre').hidden).toBe(true);
+    expect(qs('login-email').value).toBe('');
     expect(localStorage.getItem(clave('sesion'))).toBeNull();
   });
 
-  it('ingresa con nombre para jefatura y muestra la sesión identificada', () => {
-    elegirRol('jefe_compras');
-    expect(qs('campo-nombre').hidden).toBe(false);
-    qs('login-nombre').value = 'Marcela Rojas';
-    qs('login-clave').value = CLAVE_DEMO;
-    enviarLogin();
+  it('ingresa con correo de jefatura y muestra la sesión identificada', () => {
+    ingresar('jefe.compras@example.com');
 
     expect(qs('login-overlay').hidden).toBe(true);
     expect(qs('rol-activo')).toBeNull();
     expect(qs('sesion-indicador').textContent).toContain('Marcela Rojas');
     expect(qs('sesion-indicador').textContent).toContain('Jefe de Compras');
-  });
-
-  it('rechaza un nombre que no corresponde al rol', () => {
-    elegirRol('solicitante');
-    qs('login-nombre').value = 'Persona Inexistente';
-    qs('login-clave').value = CLAVE_DEMO;
-    enviarLogin();
-
-    expect(qs('login-error').hidden).toBe(false);
-    expect(qs('login-error').textContent).toContain('no corresponde al rol');
-    expect(qs('login-overlay').hidden).toBe(false);
   });
 
   it('muestra el ingreso aunque exista una sesión guardada sin autenticación', async () => {
@@ -144,28 +106,8 @@ describe('acceso a la interfaz de compras', () => {
     expect(qs('sesion-indicador').hidden).toBe(true);
   });
 
-  it('alterna el selector entre Modo Real y Modo Demo', () => {
-    expect(qs('login-modo-real').getAttribute('aria-pressed')).toBe('true');
-
-    qs('login-modo-demo').click();
-
-    expect(qs('login-modo-demo').getAttribute('aria-pressed')).toBe('true');
-    expect(qs('login-modo-real').getAttribute('aria-pressed')).toBe('false');
-    expect(qs('login-modo-rol').open).toBe(true);
-    expect(qs('login-directorio').hidden).toBe(false);
-
-    qs('login-modo-real').click();
-
-    expect(qs('login-modo-real').getAttribute('aria-pressed')).toBe('true');
-    expect(qs('login-modo-rol').open).toBe(false);
-    expect(qs('login-directorio').hidden).toBe(true);
-  });
-
   it('mantiene accesibles encabezados, pestañas, etiquetas y tablas', () => {
-    elegirRol('solicitante');
-    qs('login-nombre').value = 'Ana Pérez';
-    qs('login-clave').value = CLAVE_DEMO;
-    enviarLogin();
+    ingresar('ana.perez@example.com');
 
     const raiz = qs('compras-root');
     expect(qs('view-compras').getAttribute('aria-labelledby')).toBe('compras-titulo');
