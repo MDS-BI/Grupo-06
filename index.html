@@ -45,6 +45,19 @@
               <p class="muted">Autentícate con tu correo institucional o tu RUT.</p>
             </div>
 
+            <fieldset class="login-modo-datos">
+              <legend>Modo de datos</legend>
+              <label>
+                <input type="radio" id="modo-demo" name="modo-datos" value="demo" checked />
+                Modo Demo
+              </label>
+              <label>
+                <input type="radio" id="modo-real" name="modo-datos" value="real" />
+                Modo Real
+              </label>
+              <p id="login-modo-estado" class="campo-ayuda">Modo Demo · datos de evaluación</p>
+            </fieldset>
+
             <div class="campo">
               <label for="login-email">Correo corporativo o RUT</label>
               <input

@@ -87,7 +87,7 @@ Las colecciones del módulo se guardan en `localStorage` con el prefijo `erp_com
 
 Estado real verificado el 2026-11-25 sobre la rama `main`:
 
-- `npx vitest run`: **315 pruebas aprobadas y 56 omitidas**, en **26 archivos aprobados y 10 omitidos** (los omitidos pertenecen al template base).
+- `npx vitest run`: **317 pruebas aprobadas y 56 omitidas**, en **27 archivos aprobados y 10 omitidos** (los omitidos pertenecen al template base).
 - `npm run lint`: **OK, sin errores ni advertencias**.
 - `npm run format:check`: **sin diferencias** en el alcance de `.prettierignore` (núcleo base `src/storage.js` y `tests/unit/storage.test.js`).
 - `npm run build`: **build de producción sin errores** (Vite 8.2.1).

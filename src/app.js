@@ -123,7 +123,39 @@ function sincronizarModoPresentacionUI() {
   sincronizarModoPresentacion();
 }
 
+const SNAPSHOTS_MODO = { demo: 'snapshot_modo_demo', real: 'snapshot_modo_real' };
 
+/** Sincroniza el conmutador, el estado visible y el directorio con el modo vigente. */
+function sincronizarModoDatosUI() {
+  for (const radio of document.querySelectorAll('input[name="modo-datos"]')) {
+    radio.checked = radio.value === modoDatos;
+  }
+  const estado = qs('login-modo-estado');
+  if (estado) {
+    estado.textContent =
+      modoDatos === 'demo'
+        ? 'Modo Demo · datos de evaluación'
+        : 'Modo Real · catálogos base y colecciones vacías';
+  }
+  poblarDirectorioUsuarios();
+  sincronizarModoPresentacionUI();
+}
+
+/** Cambia el modo de datos, guarda la instantánea anterior y cierra la sesión abierta. */
+function cambiarModoDatos(nuevoModo) {
+  if (!Object.hasOwn(SNAPSHOTS_MODO, nuevoModo) || nuevoModo === modoDatos) return;
+  const sesionAbierta = estaAutenticado();
+  if (sesionAbierta) cerrarSesion();
+  guardarDato(SNAPSHOTS_MODO[modoDatos], capturarDatosCompras());
+  modoDatos = guardarModo(nuevoModo);
+  const instantanea = leerDato(SNAPSHOTS_MODO[nuevoModo]);
+  if (instantanea) restaurarDatosCompras(instantanea);
+  else if (nuevoModo === 'real') inicializarModoReal();
+  else cargarSemilla({ forzar: true });
+  modoPresentacion = false;
+  if (sesionAbierta) bloquearInterfaz();
+  else sincronizarModoDatosUI();
+}
 
 function aplicarTema(config) {
   document.documentElement.style.setProperty('--accent', config.theme.accentColor);
@@ -290,7 +322,7 @@ function bloquearInterfaz() {
   cerrarAsistente();
   ocultarErrorLogin();
   modoPresentacion = false;
-  sincronizarModoPresentacionUI();
+  sincronizarModoDatosUI();
 
   const workspace = document.querySelector('.workspace');
   if (workspace) {
@@ -411,6 +443,9 @@ function cablearEventos() {
   qs('login-clave')?.addEventListener('input', () => limpiarErrorCampo('login-clave'));
   qs('login-mostrar-clave')?.addEventListener('click', alternarVisibilidadClave);
   qs('btn-modo-presentacion')?.addEventListener('click', alternarModoPresentacion);
+  document.querySelectorAll('input[name="modo-datos"]').forEach((radio) =>
+    radio.addEventListener('change', () => cambiarModoDatos(radio.value))
+  );
   qs('btn-tema')?.addEventListener('click', alternarTema);
   qs('btn-logout')?.addEventListener('click', () => {
     cerrarSesion();
@@ -426,9 +461,8 @@ export function initApp(resolved) {
   aplicarTema(resolved.config);
   renderLogo(qs('logo-mark'));
   renderLogo(qs('login-logo'));
-  poblarDirectorioUsuarios();
   aplicarEtiquetas(resolved.config);
-  sincronizarModoPresentacionUI();
+  sincronizarModoDatosUI();
   cablearEventos();
   inicializarCookiesUI();
 

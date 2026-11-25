@@ -150,9 +150,11 @@ describe('acceso a la interfaz de compras', () => {
     expect(qs('login-directorio-lista').querySelectorAll('.directory-user')).toHaveLength(7);
     expect(qs('login-directorio-lista').textContent).toContain(CLAVE_DEMO);
 
-    // Los radio buttons 'modo-datos' fueron eliminados del DOM; el conmutador
-    // único en la barra superior alterna el modo. Simulamos el cambio verficando
-    // que el directorio se oculta al cambiar a Modo Real.
+    const modoReal = qs('modo-real');
+    modoReal.checked = true;
+    modoReal.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+
+    expect(qs('modo-demo').checked).toBe(false);
     expect(qs('btn-modo-presentacion').hidden).toBe(true);
     expect(qs('login-directorio').hidden).toBe(true);
     expect(qs('login-directorio-lista').querySelectorAll('.directory-user')).toHaveLength(0);

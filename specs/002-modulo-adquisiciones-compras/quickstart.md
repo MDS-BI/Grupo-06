@@ -42,7 +42,7 @@ Después recargue la página para que se vuelva a cargar la semilla.
 | Comando                | Resultado esperado                                                                                              |
 | ---------------------- | --------------------------------------------------------------------------------------------------------------- |
 | `npm run dev`          | Servidor Vite activo; la interfaz pide acceso y luego muestra solo el módulo Adquisiciones y Compras.          |
-| `npm test -- --run`    | 315 pruebas aprobadas en 26 archivos y 56 omitidas en 10 archivos (los omitidos pertenecen al template base).   |
+| `npm test -- --run`    | 317 pruebas aprobadas en 27 archivos y 56 omitidas en 10 archivos (los omitidos pertenecen al template base).   |
 | `npm run lint`         | 0 errores y 0 advertencias.                                                                                      |
 | `npm run build`        | Build de producción sin errores.                                                                                |
 | `npm run preview`      | El build se sirve en `http://localhost:4173` con el mismo comportamiento.                                       |
@@ -150,6 +150,6 @@ Los flujos de cada historia están en `tests/integration/compras/`: `proveedores
 - T104, T109 y T118: anulación con `motivo_anulacion` en facturas, devoluciones, cotizaciones y recepciones, con su registro en trazabilidad.
 - T127: el filtro de OC y recepciones del `solicitante` está en la UI y en el CSV, pero falta en los servicios `ordenes-compra.js` y `recepciones.js`.
 - T137 y T139: **Mis solicitudes** aparece solo para `solicitante`; falta extenderlo a los cinco roles que exige FR-035 y ampliar las pruebas del panel.
-- Recorrido manual en navegador (T144/T155/T168): ejecutar los escenarios 1 a 8 con los cinco roles, cerrando sesión entre cada uno. La verificación automatizada ya está completada (315 pruebas aprobadas).
+- Recorrido manual en navegador (T144/T155/T168): ejecutar los escenarios 1 a 8 con los cinco roles, cerrando sesión entre cada uno. La verificación automatizada ya está completada (317 pruebas aprobadas).
 
 T107, T108, T120, T140, T142 y T143 están cerradas: `npm run format:check` pasa sin diferencias en todo el alcance de `.prettierignore`, la accesibilidad (SC-013) se verifica en `vista.test.js`, la auditoría de SC-003 en `flujo-compras.test.js`, `admin_ti` queda en solo lectura en `permisos.test.js` y la documentación comparte el estado canónico.

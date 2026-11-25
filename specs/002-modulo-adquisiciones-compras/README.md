@@ -75,7 +75,7 @@ Para volver al estado inicial:
 |---|---|
 | `npm run dev` | Servidor Vite activo; portal de acceso y módulo de Adquisiciones y Compras. |
 | `npm run lint` | 0 errores y 0 advertencias. |
-| `npm test -- --run` | 315 pruebas aprobadas en 26 archivos y 56 omitidas en 10 archivos (los omitidos pertenecen al template base). |
+| `npm test -- --run` | 317 pruebas aprobadas en 27 archivos y 56 omitidas en 10 archivos (los omitidos pertenecen al template base). |
 | `npm run build` | Build de producción sin errores. |
 | `npm run preview` | Build servido en `http://localhost:4173`. |
 | `npm run format:check` | Sin diferencias en el alcance de `.prettierignore`. |
