@@ -29,7 +29,7 @@ Solicitud de compra → Cotizaciones de proveedores → Orden de compra → Rece
 | Administrador | Mantener proveedores, datos bancarios, usuarios y centros de costo |
 | Otros módulos del ERP | Inventario lee lo recibido; Contabilidad lee las facturas aprobadas para pago |
 
-**Alcance del MVP**: 11 historias de usuario priorizadas (P1 a P3) en [`spec.md`](../specs/002-modulo-adquisiciones-compras/spec.md).
+**Alcance del MVP**: 13 historias de usuario priorizadas (P1 a P3) en [`spec.md`](../specs/002-modulo-adquisiciones-compras/spec.md).
 
 | Prioridad | Funcionalidad |
 |---|---|
@@ -100,7 +100,7 @@ Cada rol tiene un responsable, pero **todos revisan todo**: el presentador se el
 | Ítem de la rúbrica | Dónde se cumple |
 |---|---|
 | Formato general | README y archivos `.md` con estructura uniforme y referencias |
-| Historias de usuario y decisiones de bases de datos | `spec.md` (11 historias) + Issues `decision` + diccionario de datos en `data-model.md` |
+| Historias de usuario y decisiones de bases de datos | `spec.md` (13 historias) + Issues `decision` + diccionario de datos en `data-model.md` |
 | Claridad del problema y solución | Secciones Problema y Solución propuesta en `spec.md` |
 | MER consistente con la solución | `docs/mer.png`, generado automáticamente desde el diagrama de `data-model.md`; cada historia usa entidades del MER |
 | Usuarios y manejo de riesgos | Cliente y usuarios en `spec.md`; datos sensibles, riesgos y sesgos en `data-model.md`, sección 6 |

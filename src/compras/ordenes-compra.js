@@ -12,7 +12,7 @@ import {
   generarNumero,
   siguienteSecuencia,
   puedeTransicionar,
-  UMBRAL_COTIZACIONES,
+  umbralCotizaciones,
   hoyISO,
   sumarDias
 } from './reglas.js';
@@ -127,7 +127,7 @@ export function emitirOrdenCompra(datos, usuario = getUsuarioActivo()) {
     condicionPago = Number.isFinite(condicionPago) ? condicionPago : cotizacion.condicion_pago_dias;
     plazoEntrega = Number.isFinite(plazoEntrega) ? plazoEntrega : cotizacion.plazo_entrega_dias;
   } else {
-    if (Number(solicitud.monto_estimado) >= UMBRAL_COTIZACIONES) {
+    if (Number(solicitud.monto_estimado) >= umbralCotizaciones()) {
       throw new Error(
         'La compra supera el umbral de cotizaciones: debes seleccionar una cotización'
       );

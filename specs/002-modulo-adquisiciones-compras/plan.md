@@ -25,7 +25,7 @@ El trabajo se divide en iteraciones semanales; cada una termina con una versión
 **Objetivos de Rendimiento**: listas y búsquedas en menos de 2 segundos con hasta 500 registros por colección, medidos con `performance.now()` en `tests/integration/compras/rendimiento.test.js` (SC-006). Protocolo: cada caso replica 500 registros por colección, mide una ejecución con `performance.now()` alrededor de la operación y aprueba si el tiempo transcurrido es menor al umbral (2 000 ms para SC-006 y 1 000 ms para SC-008)
 
 **Restricciones**: Sin backend, sin autenticación real, sin conexión con el SII; no modificar el comportamiento del módulo base salvo donde se justifica en "Seguimiento de Complejidad"  
-**Escala/Alcance**: 19 entidades lógicas (ver `data-model.md`), 12 historias de usuario, 5 roles simulados
+**Escala/Alcance**: 19 entidades lógicas (ver `data-model.md`), 13 historias de usuario, 5 roles simulados
 
 ## Verificación de la Constitución
 
@@ -138,17 +138,19 @@ Cada historia se asigna a un responsable en un Issue de GitHub con la etiqueta d
 
 **Resuelta.** La carpeta `src/` (módulo base) se restauró desde el historial (`git checkout 501e9c6 -- src index.html`) y hoy está versionada en `HEAD` junto con `src/compras/`. Las pruebas del template (`tests/unit/storage.test.js`, entre otras) vuelven a encontrar sus dependencias.
 
-## Estado de las Fases 17–20 (2026-11-24)
+## Estado de las Fases 17–23 (2026-11-25)
 
 - **Fase 16**: cerrada (`visibilidad.js`, `PERMISOS` y pruebas de matriz).
 - **Fase 17**: navegación agrupada, solo lectura, bloqueo de accesos, historial/exportación y encabezado implementados y verificados en la interfaz; queda **T127** abierta: el filtro de OC y recepciones del `solicitante` está en la UI y en el CSV, pero no en los servicios `ordenes-compra.js` ni `recepciones.js`.
 - **Fase 18**: ajustes de permisos por historia implementados y verificados; quedan **T137** y **T139** abiertas: el pendiente **Mis solicitudes** aparece solo para `solicitante`, no para los cinco roles que exige FR-035, y las pruebas de panel cubren ese alcance parcial.
-- **Fase 19**: semilla, contratos y documentación sincronizados; verificación automatizada completada (18 archivos, 260 pruebas aprobadas, 56 omitidas; `npm run lint` y `npm run format:check` sin errores). El recorrido manual de los escenarios 1 a 4 de `quickstart.md` queda como procedimiento de validación en navegador.
+- **Fase 19**: semilla, contratos y documentación sincronizados; verificación automatizada completada (26 archivos, 315 pruebas aprobadas, 56 omitidas; `npm run lint`, `npm run format:check` y `npm run build` sin errores). El recorrido manual de los escenarios 1 a 4 de `quickstart.md` queda como procedimiento de validación en navegador.
 - **Fase 20**: cerrada; rol fijo, indicador de sesión, nombre de `jefe_compras`, creación de solicitudes por los cinco roles y pruebas de sesión implementados y verificados (T146–T155).
+- **Fase 21**: cerrada; matriz sensible unificada en `visibilidad.js` (T156–T160).
+- **Fase 23**: cerrada; Modo Demo / Modo Real con instantáneas separadas, ingreso por correo o RUT Módulo 11, padrón administrable con OTP, suspensión de cuentas, parámetros dinámicos, desbloqueo de excepciones y Log de Auditoría Forense (T161–T168).
 
 ## Deuda conocida
 
-Las siguientes tareas se documentan también en `tasks.md`: T101, T104, T109, T110 y T118 siguen abiertas; T107, T108, T117, T119, T120, T142, T143 y T146–T154 están cerradas; T127, T137, T139, T144 y T155 conservan la deuda indicada en el estado canónico. Las tareas T156–T160 de la Fase 21 (matriz sensible unificada) están cerradas. `format:check` cubre todo el código y las pruebas según el alcance ampliado de `.prettierignore`.
+Las siguientes tareas se documentan también en `tasks.md`: T101, T104, T109, T110 y T118 siguen abiertas; T107, T108, T117, T119, T120, T142, T143 y T146–T154 están cerradas; T127, T137, T139, T144 y T155 conservan la deuda indicada en el estado canónico. Las tareas T156–T160 de la Fase 21 (matriz sensible unificada) y T161–T168 de la Fase 23 (gobernanza) están cerradas. `format:check` cubre todo el código y las pruebas según el alcance ampliado de `.prettierignore`.
 
 | Tarea | Estado  | Justificación                                                                                                                                                                                                                                                                                                                                       | Referencia                          |
 | ----- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
@@ -177,14 +179,15 @@ Las siguientes tareas se documentan también en `tasks.md`: T101, T104, T109, T1
 
 ## Datos Semilla
 
-Todos ficticios: 4 centros de costo, **7 usuarios** (`u-solicitante-1`, `u-solicitante-2`, `u-comprador-1`, `u-jefe-1`, `u-jefe-2`, `u-bodega-1` y `u-admin-1`; el segundo `jefe_compras` aprueba las solicitudes que crea el primero y ambos tienen nombre ficticio porque ese rol lo pide al ingresar), 8 proveedores (al menos uno de cada tamaño, uno bloqueado y uno con cuenta bancaria cambiada hace menos de 30 días), 20 productos, y solicitudes, cotizaciones, OC, recepciones y facturas en todos los estados para que cada pantalla y alerta tenga algo que mostrar.
+Todos ficticios: 4 centros de costo, **7 usuarios** (`u-solicitante-1`, `u-solicitante-2`, `u-comprador-1`, `u-jefe-1`, `u-jefe-2`, `u-bodega-1` y `u-admin-1`; el segundo `jefe_compras` aprueba las solicitudes que crea el primero), 12 proveedores (al menos uno de cada tamaño, uno bloqueado y uno con cuenta bancaria cambiada hace menos de 30 días), 20 productos, 10 solicitudes, 7 cotizaciones, 8 OC, 5 recepciones, 7 facturas, 2 devoluciones, 10 referencias de catálogo y 2 evaluaciones, con estados suficientes para que cada pantalla y alerta tenga algo que mostrar. Los siete usuarios tienen nombre propio chileno, correo único, `activo: true` y RUT válido con Módulo 11 (`validarRut()` en `reglas.js`); el RUT completo se exhibe en la columna **RUT** del padrón de `admin_ti`.
 
 ## Escalabilidad y Desarrollo Futuro
 
 - **Backend**: `localStorage` limita el almacenamiento a un navegador y a pocos MB. El MER está normalizado para migrarse sin cambios conceptuales a una base de datos relacional con una API.
 - **Autenticación**: los roles simulados deben pasar a usuarios reales con autenticación real y un rol fijo por usuario; hoy el rol es fijo por sesión, pero la clave genérica `Compras2026` permite ingresar con cualquier rol (data-model §6).
 - **Rol gerente**: un rol aprobador por sobre `jefe_compras` para aprobar sus solicitudes, en lugar de un segundo `jefe_compras` (ver `research.md`).
-- **Auditoría en servidor**: el historial de trazabilidad (FR-027 a FR-030) ya forma parte del MVP sobre `localStorage`; a futuro debe migrar a un registro en servidor que no pueda alterarse desde el navegador.
+- **Auditoría en servidor**: el historial de trazabilidad (FR-027 a FR-030) y el Log de Auditoría Forense (FR-045) ya forman parte del MVP sobre `localStorage`; a futuro deben migrar a un registro en servidor con firma criptográfica y retención que no pueda alterarse desde el navegador.
+- **OTP y notificaciones reales**: el código y la notificación interna son simulados y la ayuda visual solo existe en Modo Demo; en producción deben emitirse por correo/SMS con hashes irreversibles y expiración controlada por servidor.
 - **SII**: recibir automáticamente los documentos tributarios electrónicos en lugar de ingresar facturas a mano.
 - **Integración**: solicitudes automáticas de reposición desde Inventario y control de presupuesto por centro de costo desde Contabilidad.
 - **Multiempresa**: agregar un identificador de empresa a cada colección.
@@ -206,8 +209,17 @@ Todos ficticios: 4 centros de costo, **7 usuarios** (`u-solicitante-1`, `u-solic
 - **Accesibilidad/responsive**: mantener contraste 4.5:1, foco visible, teclado/ARIA, y evitar overflow horizontal de página.
 - **Sesión/rol**: `src/app.js` muestra indicador compacto de sesión; no existe control "Vista de rol"; `src/compras/almacenamiento.js` impide el cambio de rol en una sesión iniciada para los cinco roles.
 - **Permisos base**: `crear_solicitud` incluye los cinco roles; la semilla actualiza los nombres de los dos `jefe_compras`.
-- **Verificación**: `npm run lint` y `npm run format:check` OK con el alcance ampliado de `.prettierignore`; `npm test -- --run` 18 archivos / 260 pruebas aprobadas y 56 omitidas. El recorrido manual por rol de los escenarios 1 a 4 de `quickstart.md` queda como procedimiento de validación en navegador; la deuda funcional abierta es T127 y T137/T139.
+- **Verificación**: `npm run lint`, `npm run format:check` y `npm run build` OK con el alcance ampliado de `.prettierignore`; `npm test -- --run` 26 archivos / 315 pruebas aprobadas y 56 omitidas. El recorrido manual por rol de los escenarios 1 a 4 de `quickstart.md` queda como procedimiento de validación en navegador; la deuda funcional abierta es T127 y T137/T139.
 - **Pendiente**: completar navegación agrupada, modo lectura, filtros por rol, encabezado por sección, panel FR-035 y pruebas SC-015/SC-016/SC-017 antes de declarar cumplimiento de la matriz de visibilidad.
+
+## Gobernanza de identidades y datos (Fase 23, 2026-11-25)
+
+- **Alcance**: `index.html`, `src/app.js`, `src/styles.css` y los módulos `gobernanza.js`, `auditoria.js` y `administracion.js` bajo `src/compras/`. Sin cambios en `src/storage.js`, `tests/unit/storage.test.js` ni `eslint.config.mjs`.
+- **Arquitectura**: `gobernanza.js` es la única fuente del modo de datos, los parámetros dinámicos, las solicitudes OTP y las notificaciones internas; usa el prefijo `erp_compras:` y respaldo en memoria. `auditoria.js` mantiene un log append-only con hash encadenado, separado de `trazabilidad.js`. `administracion.js` concentra las operaciones sensibles y exige token OTP vigente antes de escribir.
+- **Modo Demo / Modo Real**: `almacenamiento.js` captura y restaura una instantánea por modo; el cambio cierra la sesión y evita mezclar datos transaccionales. El directorio solo se materializa en Modo Demo y revela correo, clave de simulación, rol y centro de costo.
+- **Identidad y permisos**: `autenticacion.js` acepta correo corporativo o RUT con Módulo 11 y filtra cuentas `activo === false`. `PERMISOS` incorpora `gestionar_usuarios`, `suspender_usuario`, `consultar_auditoria_forense`, `configurar_parametros` y `desbloquear_excepciones`, todos restringidos a `admin_ti`.
+- **Parámetros**: `COMPRAS_PARAMETROS` y `UMBRAL_COTIZACIONES` conservan sus valores iniciales para compatibilidad; las reglas y sus consumidores invocan `umbralCotizaciones()` / `toleranciaConciliacion()` para resolver los valores vigentes.
+- **Verificación**: 26 archivos, 315 pruebas aprobadas y 56 omitidas; `lint`, `format:check` y `build` sin errores. Cobertura específica en `usuarios.test.js` (unitario e integración), `otp.test.js`, `auditoria-forense.test.js` y `autenticacion.test.js`.
 
 ## Seguimiento de Complejidad
 

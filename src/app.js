@@ -1,12 +1,23 @@
 import { loadModuleConfig, normalizeConfig, setActiveConfig } from './module-config.js';
 import { renderLogo, monogramFor, applyShellLabels, setActiveModule } from './components/shell.js';
-import { getUsuarioActivo, estaAutenticado, leer } from './compras/almacenamiento.js';
+import {
+  cargarSemilla,
+  capturarDatosCompras,
+  estaAutenticado,
+  getSesion,
+  getUsuarioActivo,
+  inicializarModoReal,
+  leer,
+  restaurarDatosCompras
+} from './compras/almacenamiento.js';
 import {
   CLAVE_DEMO,
   cerrarSesion,
-  iniciarSesionConEmail,
+  iniciarSesionConIdentificador,
   listarDirectorioUsuarios
 } from './compras/autenticacion.js';
+import { usuarioSuspendido } from './compras/administracion.js';
+import { guardarDato, guardarModo, leerDato, obtenerModo } from './compras/gobernanza.js';
 import { requiereNombre } from './compras/reglas.js';
 import { etiquetaRol } from './compras/vista.js';
 import { reiniciarVistaCompras, renderComprasView } from './compras/vista.js';
@@ -32,6 +43,7 @@ function escapar(valor) {
 let wired = false;
 let loginActivo = false;
 let modoPresentacion = false;
+let modoDatos = obtenerModo();
 
 function showModule() {
   // El único módulo de esta aplicación es Adquisiciones y Compras.
@@ -80,9 +92,13 @@ function sincronizarModoPresentacion() {
   const panel = qs('login-directorio');
   const boton = qs('btn-modo-presentacion');
   const grilla = document.querySelector('.login-grid');
-  if (panel) panel.hidden = !modoPresentacion;
-  if (grilla) grilla.classList.toggle('login-grid--presentacion', modoPresentacion);
+  // El directorio solo puede revelarse en Modo Demo; en Modo Real permanece oculto.
+  const permitido = modoDatos === 'demo';
+  const visible = permitido && modoPresentacion;
+  if (panel) panel.hidden = !visible;
+  if (grilla) grilla.classList.toggle('login-grid--presentacion', visible);
   if (boton) {
+    boton.hidden = !permitido;
     boton.textContent = modoPresentacion
       ? 'Desactivar modo presentación'
       : 'Activar modo presentación';
@@ -95,11 +111,19 @@ function sincronizarModoPresentacion() {
 }
 
 function alternarModoPresentacion() {
+  if (modoDatos !== 'demo') return;
   modoPresentacion = !modoPresentacion;
   sincronizarModoPresentacion();
   if (modoPresentacion) qs('login-directorio-lista')?.querySelector('.directory-user')?.focus();
   else qs('btn-modo-presentacion')?.focus();
 }
+
+/** Sincroniza la UI del modo presentación con el estado persistido. */
+function sincronizarModoPresentacionUI() {
+  sincronizarModoPresentacion();
+}
+
+
 
 function aplicarTema(config) {
   document.documentElement.style.setProperty('--accent', config.theme.accentColor);
@@ -206,10 +230,17 @@ function mostrarErrorLogin(resultado) {
   }
 }
 
-/** Genera el directorio visible desde los usuarios y centros de costo semilla. */
+/**
+ * Genera el directorio visible desde los usuarios y centros de costo semilla.
+ * En Modo Real no se materializan las credenciales ni siquiera en el DOM.
+ */
 function poblarDirectorioUsuarios() {
   const lista = qs('login-directorio-lista');
   if (!lista) return;
+  if (modoDatos !== 'demo') {
+    lista.innerHTML = '';
+    return;
+  }
   const usuarios = listarDirectorioUsuarios();
   lista.innerHTML = usuarios
     .map(
@@ -221,6 +252,7 @@ function poblarDirectorioUsuarios() {
           <span class="directory-info">
             <strong>${escapar(usuario.nombre)}</strong>
             <span class="directory-email">${escapar(usuario.email)}</span>
+            <span class="directory-clave">Clave: ${escapar(CLAVE_DEMO)}</span>
             <span class="directory-meta">${escapar(usuario.rol_etiqueta)} · ${escapar(usuario.centro_etiqueta)}</span>
           </span>
           <svg class="directory-arrow" viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h9"></path><path d="M8.5 4.5L12 8l-3.5 3.5"></path></svg>
@@ -258,7 +290,7 @@ function bloquearInterfaz() {
   cerrarAsistente();
   ocultarErrorLogin();
   modoPresentacion = false;
-  sincronizarModoPresentacion();
+  sincronizarModoPresentacionUI();
 
   const workspace = document.querySelector('.workspace');
   if (workspace) {
@@ -315,7 +347,7 @@ function enviarLogin(evento) {
   evento.preventDefault();
   ocultarErrorLogin();
   const clave = qs('login-clave')?.value;
-  const resultado = iniciarSesionConEmail(qs('login-email')?.value, clave);
+  const resultado = iniciarSesionConIdentificador(qs('login-email')?.value, clave);
   if (!resultado.ok) {
     mostrarErrorLogin(resultado);
     return;
@@ -396,8 +428,12 @@ export function initApp(resolved) {
   renderLogo(qs('login-logo'));
   poblarDirectorioUsuarios();
   aplicarEtiquetas(resolved.config);
+  sincronizarModoPresentacionUI();
   cablearEventos();
   inicializarCookiesUI();
+
+  // Una cuenta suspendida no conserva una sesión abierta tras recargar.
+  if (estaAutenticado() && usuarioSuspendido(getSesion().usuario_id)) cerrarSesion();
 
   if (estaAutenticado()) {
     showModule();

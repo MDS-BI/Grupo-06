@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { JSDOM } from 'jsdom';
+import { USUARIOS } from './helpers.js';
 
 const html = fs.readFileSync(
   fileURLToPath(new URL('../../../index.html', import.meta.url)),
@@ -30,9 +31,9 @@ const VISIBLES_POR_ROL = {
 };
 
 const NOMBRES_POR_ROL = {
-  solicitante: 'Ana Pérez',
-  comprador: 'Carla Díaz',
-  jefe_compras: 'Andrés Contreras Pérez',
+  solicitante: USUARIOS.solicitante.nombre,
+  comprador: USUARIOS.comprador.nombre,
+  jefe_compras: USUARIOS.jefe.nombre,
   bodega: '',
   admin_ti: ''
 };
@@ -111,7 +112,7 @@ describe('permisos y visibilidad por rol', () => {
     const filas = [...qs('compras-content').querySelectorAll('tbody tr')];
     expect(filas.length).toBe(1);
     expect(filas[0].textContent).toContain('SC-PROPIA-BODEGA');
-    expect(qs('compras-content').textContent).not.toContain('Ana Pérez');
+    expect(qs('compras-content').textContent).not.toContain(USUARIOS.solicitante.nombre);
   });
 
   it('admin_ti edita solo datos bancarios y no gestiona proveedores', async () => {

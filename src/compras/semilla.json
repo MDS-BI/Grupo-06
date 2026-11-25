@@ -1,4 +1,5 @@
 {
+  "version": 2,
   "usuarios": [
     {
       "id": "u-solicitante-1",
@@ -6,7 +7,8 @@
       "rol": "solicitante",
       "rut": "18.123.456-3",
       "centro_costo_id": "cc-001",
-      "email": "camila.rojas@pyme.cl"
+      "email": "camila.rojas@pyme.cl",
+      "activo": true
     },
     {
       "id": "u-solicitante-2",
@@ -14,7 +16,8 @@
       "rol": "solicitante",
       "rut": "17.234.567-0",
       "centro_costo_id": "cc-002",
-      "email": "diego.munoz@pyme.cl"
+      "email": "diego.munoz@pyme.cl",
+      "activo": true
     },
     {
       "id": "u-comprador-1",
@@ -22,7 +25,8 @@
       "rol": "comprador",
       "rut": "16.345.678-8",
       "centro_costo_id": "cc-003",
-      "email": "francisca.herrera@pyme.cl"
+      "email": "francisca.herrera@pyme.cl",
+      "activo": true
     },
     {
       "id": "u-jefe-1",
@@ -30,23 +34,26 @@
       "rut": "18.100.001-5",
       "centro_costo_id": "cc-003",
       "email": "andres.contreras@pyme.cl",
-      "nombre": "Andrés Contreras Pérez"
+      "nombre": "Andrés Contreras Pérez",
+      "activo": true
     },
     {
       "id": "u-bodega-1",
-      "nombre": "Encargado de Bodega",
+      "nombre": "Rodrigo Araya Mena",
       "rol": "bodega",
       "rut": "14.678.901-3",
       "centro_costo_id": "cc-004",
-      "email": "bodega@pyme.cl"
+      "email": "bodega@pyme.cl",
+      "activo": true
     },
     {
       "id": "u-admin-1",
-      "nombre": "Administrador TI",
+      "nombre": "Tomás Villarroel Sepúlveda",
       "rol": "admin_ti",
       "rut": "13.789.012-7",
       "centro_costo_id": "cc-003",
-      "email": "admin.ti@pyme.cl"
+      "email": "admin.ti@pyme.cl",
+      "activo": true
     },
     {
       "id": "u-jefe-2",
@@ -54,7 +61,8 @@
       "rol": "jefe_compras",
       "rut": "15.567.890-9",
       "centro_costo_id": "cc-003",
-      "email": "valentina.lagos@pyme.cl"
+      "email": "valentina.lagos@pyme.cl",
+      "activo": true
     }
   ],
   "centros_costo": [
@@ -332,7 +340,7 @@
       "comuna": "Viña del Mar",
       "direccion": "Pasaje Los Aromos 789",
       "telefono": "+56 9 8765 4321",
-      "email": "jpmorales@example.com",
+      "email": "jpmorales@pyme.cl",
       "categoria": "Servicios",
       "tamano_empresa": "micro",
       "estado": "Activo",
@@ -566,7 +574,7 @@
       "comuna": "San Bernardo",
       "direccion": "Calle Arturo Prat 954",
       "telefono": "+56 9 5566 7788",
-      "email": "talleresmc@example.com",
+      "email": "talleresmc@pyme.cl",
       "categoria": "Servicios",
       "tamano_empresa": "micro",
       "estado": "Suspendido",

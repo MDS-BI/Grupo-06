@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { JSDOM } from 'jsdom';
+import { usuarioSemilla } from './helpers.js';
 
 const html = fs.readFileSync(
   fileURLToPath(new URL('../../../index.html', import.meta.url)),
@@ -83,12 +84,13 @@ describe('asistente IA de compras', () => {
   });
 
   it('abre un drawer fuera del root con identidad, modo restringido y 3 chips del rol', () => {
-    ingresar('andres.contreras@pyme.cl');
+    const jefe = usuarioSemilla('u-jefe-1');
+    ingresar(jefe.email);
     const overlay = abrirAsistenteDesdeTarjeta();
 
     expect(overlay.hidden).toBe(false);
     expect(qs('compras-root').contains(overlay)).toBe(false);
-    expect(qs('asistente-sesion').textContent).toContain('Andrés Contreras Pérez');
+    expect(qs('asistente-sesion').textContent).toContain(jefe.nombre);
     expect(qs('asistente-sesion').textContent).toContain('Jefe de Compras');
     expect(qs('asistente-sesion').textContent).toContain('CC-COM · Compras');
     expect(qs('asistente-overlay').textContent).toContain(

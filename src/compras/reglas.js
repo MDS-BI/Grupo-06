@@ -1,4 +1,5 @@
 import { COMPRAS_PARAMETROS, puedeEditarDatosBancarios } from '../module-config.js';
+import { obtenerToleranciaConciliacion, obtenerUmbralCotizaciones } from './gobernanza.js';
 import {
   enmascararCuentaPorRol,
   enmascararRut,
@@ -13,8 +14,17 @@ export {
 };
 
 export const IVA = COMPRAS_PARAMETROS.iva;
+/** Valores iniciales; las reglas usan las funciones vigentes parametrizables por `admin_ti`. */
 export const UMBRAL_COTIZACIONES = COMPRAS_PARAMETROS.umbralCotizaciones;
 export const TOLERANCIA_CONCILIACION = COMPRAS_PARAMETROS.toleranciaConciliacion;
+
+export function umbralCotizaciones() {
+  return obtenerUmbralCotizaciones();
+}
+
+export function toleranciaConciliacion() {
+  return obtenerToleranciaConciliacion();
+}
 export const DIAS_ALERTA_VENCIMIENTO = 5;
 export const DIAS_SEGUIMIENTO_OC = 7;
 export const DIAS_CUENTA_RECIENTE = 30;
@@ -234,7 +244,7 @@ export function conciliarFactura({
   facturasPreviasNeto = 0,
   notasCreditoNeto = 0,
   devolucionesNeto = 0,
-  tolerancia = TOLERANCIA_CONCILIACION
+  tolerancia = toleranciaConciliacion()
 }) {
   const neto = redondearCLP(netoFactura);
   const pendiente = redondearCLP(

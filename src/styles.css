@@ -388,6 +388,7 @@ h3 {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.directory-clave { color: #93c5fd; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 0.72rem; line-height: 1.3; }
 .directory-meta { color: #9ca3af; font-size: 0.72rem; line-height: 1.3; }
 .directory-arrow { color: #64748b; flex-shrink: 0; }
 .directory-user:hover .directory-arrow { color: #3b82f6; }
@@ -1769,3 +1770,42 @@ button.danger:hover {
 .cookies-btn { padding:8px 14px; border:1px solid #30363d; border-radius:6px; background:#21262d; color:#c9d1d9; cursor:pointer; }
 .cookies-btn.primario { background:#2f81f7; border-color:#2f81f7; color:#fff; }
 .cookies-btn:hover { filter:brightness(1.1); }
+
+/* Gobernanza: Modo Demo / Modo Real, padrón, OTP y auditoría forense */
+.login-modo-datos { margin:0 0 16px; padding:10px 12px; border:1px solid #30363d; border-radius:8px; background:#161b22; display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+.login-modo-datos legend { padding:0 6px; color:#8b949e; font-size:12px; text-transform:uppercase; letter-spacing:.06em; }
+.login-modo-datos label { display:inline-flex; align-items:center; gap:6px; color:#c9d1d9; font-size:13px; cursor:pointer; }
+.login-modo-datos input[type="radio"] { accent-color:#2f81f7; }
+.login-modo-datos .campo-ayuda { flex-basis:100%; margin:0; color:#8b949e; font-size:12px; }
+
+#padron-usuarios .usuario-link { color:#2f81f7; text-decoration:none; font-weight:600; }
+#padron-usuarios .usuario-link:hover, #padron-usuarios .usuario-link:focus-visible { color:#58a6ff; text-decoration:underline; }
+#admin-notificaciones table { font-size:13px; }
+#admin-auditoria table { font-size:12px; }
+
+input:disabled, select:disabled, textarea:disabled { background:#21262d; border-color:#30363d; color:#8b949e; cursor:not-allowed; opacity:1; }
+.form-control-static { margin:0; padding:8px 0; color:#c9d1d9; }
+
+.modal-admin-overlay { position:fixed; inset:0; z-index:1100; display:flex; align-items:center; justify-content:center; padding:24px; overflow:auto; background:rgba(13,17,23,.85); }
+.modal-admin-overlay[hidden] { display:none; }
+.modal-admin-card { width:min(760px,100%); max-height:calc(100vh - 48px); overflow:auto; padding:20px; border:1px solid #30363d; border-radius:10px; background:#161b22; color:#c9d1d9; box-shadow:0 8px 30px rgba(0,0,0,.45); }
+.modal-admin-card h2 { margin:0; color:#f0f6fc; font-size:18px; }
+.modal-admin-card .toolbar { margin-bottom:16px; }
+.modal-admin-card label { display:block; margin-bottom:6px; color:#c9d1d9; font-weight:600; font-size:13px; }
+.modal-admin-card input, .modal-admin-card select { width:100%; padding:8px 10px; border:1px solid #30363d; border-radius:6px; background:#0d1117; color:#f0f6fc; font:inherit; }
+.modal-admin-card input:focus, .modal-admin-card select:focus { outline:2px solid #2f81f7; outline-offset:1px; }
+.modal-admin-card .field-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; margin-bottom:14px; }
+.modal-admin-card .form-actions { display:flex; flex-wrap:wrap; gap:8px; }
+.modal-admin-acciones { margin-top:18px; }
+.modal-admin-card button.primary { background:#2f81f7; border-color:#2f81f7; color:#fff; }
+.modal-admin-card button.secondary { background:#21262d; border-color:#30363d; color:#c9d1d9; }
+.modal-admin-card button.danger { background:#da3633; border-color:#da3633; color:#fff; }
+.modal-admin-card button:disabled { background:#21262d; border-color:#30363d; color:#8b949e; cursor:not-allowed; }
+
+.otp-panel { margin-top:16px; padding:14px; border:1px solid #30363d; border-radius:8px; background:#21262d; }
+.otp-fila { display:flex; flex-wrap:wrap; gap:8px; }
+.otp-fila input { max-width:180px; letter-spacing:.3em; font-family:'IBM Plex Mono',monospace; }
+.otp-panel .campo-ayuda { margin:8px 0 0; color:#8b949e; font-size:12px; }
+.otp-demo-help { margin:10px 0 0; padding:8px 10px; border-left:3px solid #2f81f7; background:#0d1117; color:#c9d1d9; font-size:13px; }
+.otp-demo-help strong { color:#58a6ff; font-family:'IBM Plex Mono',monospace; letter-spacing:.2em; }
+.otp-aviso { margin:14px 0 0; padding:8px 10px; border-left:3px solid #3fb950; background:#0d1117; color:#c9d1d9; font-size:13px; }

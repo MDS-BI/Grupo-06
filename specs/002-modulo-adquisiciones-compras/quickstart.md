@@ -8,7 +8,7 @@
 
 - Node.js y npm compatibles con las versiones de Vite y Vitest declaradas en `package.json`.
 - Un navegador de escritorio moderno con `localStorage` disponible.
-- No se necesita backend, base de datos ni conexión a internet después de instalar dependencias. El acceso es simulado: `Modo Real` usa el correo corporativo y `Modo Demo` habilita el directorio de acceso rápido y el selector de rol con la clave genérica `Compras2026`. Solicitante, Comprador y Jefe de Compras piden nombre. El rol queda fijo hasta cerrar sesión; para usar otro rol, cierre sesión e ingrese de nuevo.
+- No se necesita backend, base de datos ni conexión a internet después de instalar dependencias. El acceso es simulado con la clave genérica `Compras2026`: el campo de identificación acepta correo corporativo o RUT válido con Módulo 11. El conmutador **Modo Demo / Modo Real** persiste su selección; **Modo Demo** habilita el directorio con el botón **Activar modo presentación**, mientras que en **Modo Real** el directorio no se revela. El rol queda fijo hasta cerrar sesión; para usar otro rol, cierre sesión e ingrese de nuevo.
 
 ## Configuración
 
@@ -25,9 +25,9 @@
    ```
 
 3. Abra la URL local que muestra Vite (por defecto `http://localhost:5173`).
-4. En la pantalla de acceso escriba `carla.diaz@example.com` en `Modo Real`, o cambie a `Modo Demo` y pulse su entrada en el directorio, e ingrese la clave genérica `Compras2026`. Por el acceso alternativo por rol, elija **Comprador**, escriba `Carla Díaz` y use la misma clave. **Jefe de Compras** también pide nombre: la semilla tiene dos usuarios de ese rol, `Marcela Rojas` y `Jorge Muñoz`. Si ingresa como **Encargado de Bodega** o **Administrador TI**, el campo de nombre se oculta y la sesión muestra el rol con su centro de costo. El botón **Mostrar** permite verificar la clave y **Cerrar sesión** devuelve a esta pantalla sin borrar los datos. Con la sesión iniciada no es posible cambiar de rol: en los escenarios, "como `<rol>`" significa cerrar sesión e ingresar con ese rol.
+4. En la pantalla de acceso escriba un correo de la semilla (por ejemplo `francisca.herrera@pyme.cl`) o su RUT (por ejemplo `16.345.678-8`) y la clave genérica `Compras2026`. En **Modo Demo** puede pulsar **Activar modo presentación** y elegir una de las siete entradas del directorio para completar correo y clave con un clic; cada entrada revela la clave para exhibirla. El botón **Mostrar** permite verificar la clave y **Cerrar sesión** devuelve a esta pantalla sin borrar los datos. Con la sesión iniciada no es posible cambiar de rol: en los escenarios, "como `<rol>`" significa cerrar sesión e ingresar con el correo o RUT de ese rol (los dos `jefe_compras` son `andres.contreras@pyme.cl` y `valentina.lagos@pyme.cl`).
 
-La primera visita carga automáticamente `src/compras/semilla.json`: 7 usuarios (dos de ellos `jefe_compras`), 4 centros de costo, 20 productos, 8 proveedores, 10 solicitudes, 7 cotizaciones, 8 órdenes de compra, 5 recepciones, 7 documentos de facturación, 2 devoluciones, 10 referencias de catálogo y 2 evaluaciones. Todos los datos son ficticios y las fechas se ajustan al día actual.
+La primera visita carga automáticamente `src/compras/semilla.json`: 7 usuarios (dos de ellos `jefe_compras`), 4 centros de costo, 20 productos, 12 proveedores, 10 solicitudes, 7 cotizaciones, 8 órdenes de compra, 5 recepciones, 7 documentos de facturación, 2 devoluciones, 10 referencias de catálogo y 2 evaluaciones. Todos los datos son ficticios y las fechas se ajustan al día actual.
 
 Si quiere volver al estado inicial, limpie las claves `erp_compras:*` y `erp_base_module:entities` desde las herramientas de desarrollo del navegador y recargue. Con el servidor de Vite abierto también puede ejecutar en la consola:
 
@@ -42,7 +42,7 @@ Después recargue la página para que se vuelva a cargar la semilla.
 | Comando                | Resultado esperado                                                                                              |
 | ---------------------- | --------------------------------------------------------------------------------------------------------------- |
 | `npm run dev`          | Servidor Vite activo; la interfaz pide acceso y luego muestra solo el módulo Adquisiciones y Compras.          |
-| `npm test -- --run`    | 260 pruebas aprobadas en 18 archivos y 56 omitidas (las omitidas pertenecen al template base).                  |
+| `npm test -- --run`    | 315 pruebas aprobadas en 26 archivos y 56 omitidas en 10 archivos (los omitidos pertenecen al template base).   |
 | `npm run lint`         | 0 errores y 0 advertencias.                                                                                      |
 | `npm run build`        | Build de producción sin errores.                                                                                |
 | `npm run preview`      | El build se sirve en `http://localhost:4173` con el mismo comportamiento.                                       |
@@ -80,7 +80,7 @@ Después recargue la página para que se vuelva a cargar la semilla.
 Con los datos semilla ya hay documentos en todos los estados. Para repetir el ciclo desde cero (cada "como `<rol>`" implica cerrar sesión e ingresar con ese rol):
 
 1. Como `solicitante`, cree una solicitud con al menos tres líneas, envíela y verifique el correlativo `SC-AAAA-NNNN`.
-2. Como `jefe_compras` (`Marcela Rojas`), apruébela. Cree y envíe una solicitud propia e intente aprobarla: el sistema lo bloquea (FR-006). Cierre sesión, ingrese como `jefe_compras` con `Jorge Muñoz` y apruebe esa solicitud: el aprobador registrado es `Jorge Muñoz`.
+2. Como `jefe_compras` (`Andrés Contreras Pérez`), apruébela. Cree y envíe una solicitud propia e intente aprobarla: el sistema lo bloquea (FR-006). Cierre sesión, ingrese como `jefe_compras` con `Valentina Lagos Fuentes` y apruebe esa solicitud: el aprobador registrado es `Valentina Lagos Fuentes`.
 3. Como `bodega`, cree y envíe una solicitud y confirme que en **Solicitudes** solo ve las propias; como `comprador`, confirme que puede crear una solicitud propia y que las ajenas se ven en solo lectura (FR-005).
 4. Como `comprador`, registre tres cotizaciones para una solicitud sobre el umbral, descarte una con motivo y seleccione otra (FR-008 y FR-009).
 5. Emita la orden de compra desde la cotización seleccionada: líneas y precios se copian, el neto, el IVA de 19 % y el total se calculan en CLP enteros y la solicitud pasa a `adjudicada`.
@@ -122,6 +122,17 @@ Con los datos semilla ya hay documentos en todos los estados. Para repetir el ci
 
 **Resultado esperado**: las colecciones `erp_compras:*` y la Entidad base conservan los cambios entre recargas, y el reinicio devuelve la semilla original. Las claves y operaciones están descritas en [contracts/almacenamiento-compras.md](contracts/almacenamiento-compras.md).
 
+### 8. Gobernanza: modos, padrón, OTP y auditoría forense (FR-042–FR-046, SC-020–SC-023)
+
+1. En la pantalla de acceso seleccione **Modo Demo**, pulse **Activar modo presentación** y confirme que las siete entradas muestran nombre, correo, clave, rol y centro de costo. Cambie a **Modo Real**, recargue y confirme que el directorio no aparece ni existe en el DOM; ingrese con `13.789.012-7` y `Compras2026`.
+2. Como `admin_ti`, abra el **Padrón de Usuarios · Administración TI**: debe tener siete filas con nombre propio, RUT completo, correo, centro de costo, estado y acciones. El nombre `Tomás Villarroel Sepúlveda` y los demás son enlaces; pulse `Camila Rojas Soto`.
+3. En la ficha confirme que Nombre, Correo corporativo, RUT, Rol y Centro de costo están bloqueados. Pulse **Solicitar autorización del titular (Código OTP)**; en Modo Demo aparece la ayuda visual con el código y se crea una notificación interna al titular. Escriba un código erróneo y compruebe el rechazo; luego escriba el código mostrado y confirme que los campos se habilitan. Modifique el nombre, guarde y verifique que el RUT inválido o el correo mal formado se rechazan, pero el cambio válido se aplica.
+4. Vuelva al padrón, abra la ficha de `Diego Muñoz Vera`, solicite autorización para cambiar estado, valide el OTP y pulse **Suspender cuenta**. Intente ingresar con `diego.munoz@pyme.cl` o `17.234.567-0`: el sistema lo rechaza. Confirme que no puede suspenderse a sí mismo ni dejar al sistema sin `admin_ti` activo.
+5. En **Parámetros de compras** solicite OTP y cambie el umbral de cotizaciones a `900000` y la tolerancia a `0,02`. Confirme que el nuevo umbral se aplica de inmediato en Cotizaciones y Órdenes de compra y persiste tras recargar.
+6. Abra **Log de Auditoría Forense**: cada edición, suspensión, reactivación, cambio de parámetros y desbloqueo de excepciones debe mostrar actor, usuario afectado, tipo de evento, campos anterior → nuevo, resultado OTP y timestamp, con **Integridad verificada**. Exporte el CSV; un código reutilizado o expirado debe rechazarse y no generar evento.
+
+**Resultado esperado**: los datos de cada modo permanecen separados, ningún campo personal cambia sin OTP vigente, las cuentas suspendidas no ingresan y toda operación sensible queda registrada de forma íntegra y consultable solo por `admin_ti`.
+
 ## Verificación automatizada de las reglas
 
 Las reglas de cálculo, validación, transiciones y conciliación de la sección 5 de `data-model.md` se comprueban con:
@@ -131,7 +142,7 @@ npx vitest run tests/unit/compras/reglas.test.js
 npx vitest run tests/integration/compras
 ```
 
-Los flujos de cada historia están en `tests/integration/compras/`: `proveedores.test.js`, `flujo-compras.test.js`, `catalogo-panel.test.js`, `casos-limite.test.js`, `vista.test.js`, `autenticacion.test.js`, `portal-corporativo.test.js`, `permisos.test.js`, `asistente.test.js`, `almacenamiento.test.js`, `trazabilidad.test.js` y `rendimiento.test.js`.
+Los flujos de cada historia están en `tests/integration/compras/`: `proveedores.test.js`, `flujo-compras.test.js`, `catalogo-panel.test.js`, `casos-limite.test.js`, `vista.test.js`, `autenticacion.test.js`, `portal-corporativo.test.js`, `permisos.test.js`, `asistente.test.js`, `almacenamiento.test.js`, `trazabilidad.test.js`, `rendimiento.test.js`, `usuarios.test.js` y `auditoria-forense.test.js`. La lógica pura de OTP y padrón está en `tests/unit/compras/otp.test.js` y `tests/unit/compras/usuarios.test.js`.
 
 ## Cobertura aún pendiente
 
@@ -139,6 +150,6 @@ Los flujos de cada historia están en `tests/integration/compras/`: `proveedores
 - T104, T109 y T118: anulación con `motivo_anulacion` en facturas, devoluciones, cotizaciones y recepciones, con su registro en trazabilidad.
 - T127: el filtro de OC y recepciones del `solicitante` está en la UI y en el CSV, pero falta en los servicios `ordenes-compra.js` y `recepciones.js`.
 - T137 y T139: **Mis solicitudes** aparece solo para `solicitante`; falta extenderlo a los cinco roles que exige FR-035 y ampliar las pruebas del panel.
-- Recorrido manual en navegador (T144/T155): ejecutar los escenarios 1 a 4 con los cinco roles, cerrando sesión entre cada uno. La verificación automatizada ya está completada.
+- Recorrido manual en navegador (T144/T155/T168): ejecutar los escenarios 1 a 8 con los cinco roles, cerrando sesión entre cada uno. La verificación automatizada ya está completada (315 pruebas aprobadas).
 
 T107, T108, T120, T140, T142 y T143 están cerradas: `npm run format:check` pasa sin diferencias en todo el alcance de `.prettierignore`, la accesibilidad (SC-013) se verifica en `vista.test.js`, la auditoría de SC-003 en `flujo-compras.test.js`, `admin_ti` queda en solo lectura en `permisos.test.js` y la documentación comparte el estado canónico.

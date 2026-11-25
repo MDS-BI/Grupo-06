@@ -49,7 +49,7 @@ import {
 } from './proveedores.js';
 import { listarEventos, registrarEvento } from './trazabilidad.js';
 import {
-  UMBRAL_COTIZACIONES,
+  umbralCotizaciones,
   hoyISO,
   sumarDias,
   validarVisibilidadDatosBancarios
@@ -552,12 +552,13 @@ function responderConsulta(intencion, usuario, texto) {
       };
     }
     case 'umbral': {
+      const umbral = umbralCotizaciones();
       const solicitudes = leer('solicitudes').filter(
-        (solicitud) => Number(solicitud.monto_estimado) >= UMBRAL_COTIZACIONES
+        (solicitud) => Number(solicitud.monto_estimado) >= umbral
       );
       return {
         texto:
-          `Solicitudes que igualan o superan el umbral de ${clp(UMBRAL_COTIZACIONES)} (${solicitudes.length}):\n` +
+          `Solicitudes que igualan o superan el umbral de ${clp(umbral)} (${solicitudes.length}):\n` +
           listaTexto(
             solicitudes.map(
               (solicitud) =>
@@ -846,9 +847,10 @@ function prepararEmitirOrden(texto, usuario) {
   const cotizacion = listarCotizaciones({ solicitud_id: solicitud.id }).find(
     (item) => item.estado === 'seleccionada'
   );
-  if (!cotizacion && Number(solicitud.monto_estimado) >= UMBRAL_COTIZACIONES) {
+  const umbral = umbralCotizaciones();
+  if (!cotizacion && Number(solicitud.monto_estimado) >= umbral) {
     return {
-      texto: `La solicitud ${solicitud.numero} supera el umbral de ${clp(UMBRAL_COTIZACIONES)}: primero debe haber una cotización seleccionada.`
+      texto: `La solicitud ${solicitud.numero} supera el umbral de ${clp(umbral)}: primero debe haber una cotización seleccionada.`
     };
   }
   const proveedor = cotizacion ? null : proveedorPorTexto(texto);

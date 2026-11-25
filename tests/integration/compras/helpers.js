@@ -1,17 +1,31 @@
+import semilla from '../../../src/compras/semilla.json';
 import {
   cargarSemilla,
   marcarAutenticacion,
   setSesion
 } from '../../../src/compras/almacenamiento.js';
 
+/** Identidad tomada de `semilla.json`: los tests no declaran usuarios propios. */
+export function usuarioSemilla(id) {
+  const usuario = (semilla.usuarios || []).find((u) => u.id === id);
+  if (!usuario) throw new Error(`El usuario semilla ${id} no existe en semilla.json`);
+  return Object.freeze({ ...usuario });
+}
+
+/** Identidad mínima que consumen las reglas de negocio en los tests. */
+function identidad(id) {
+  const { id: idUsuario, nombre, rol } = usuarioSemilla(id);
+  return Object.freeze({ id: idUsuario, nombre, rol });
+}
+
 export const USUARIOS = Object.freeze({
-  solicitante: { id: 'u-solicitante-1', nombre: 'Ana Pérez', rol: 'solicitante' },
-  solicitante2: { id: 'u-solicitante-2', nombre: 'Diego Muñoz Vera', rol: 'solicitante' },
-  comprador: { id: 'u-comprador-1', nombre: 'Carla Díaz', rol: 'comprador' },
-  jefe: { id: 'u-jefe-1', nombre: 'Andrés Contreras Pérez', rol: 'jefe_compras' },
-  jefe2: { id: 'u-jefe-2', nombre: 'Jorge Muñoz', rol: 'jefe_compras' },
-  bodega: { id: 'u-bodega-1', nombre: 'Pedro Gil', rol: 'bodega' },
-  admin: { id: 'u-admin-1', nombre: 'Admin TI', rol: 'admin_ti' }
+  solicitante: identidad('u-solicitante-1'),
+  solicitante2: identidad('u-solicitante-2'),
+  comprador: identidad('u-comprador-1'),
+  jefe: identidad('u-jefe-1'),
+  jefe2: identidad('u-jefe-2'),
+  bodega: identidad('u-bodega-1'),
+  admin: identidad('u-admin-1')
 });
 
 export function iniciarSesionPorRol(rol, nombre) {

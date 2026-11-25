@@ -1,4 +1,4 @@
-import { ROLES, requiereNombre } from './reglas.js';
+import { normalizarRut, ROLES, requiereNombre, validarRut } from './reglas.js';
 import { etiquetaRol } from './vista.js';
 import {
   asegurarSemilla,
@@ -42,7 +42,7 @@ export function validarCredenciales(rol, nombre, clave) {
     };
   }
 
-  const usuarios = listarUsuarios();
+  const usuarios = listarUsuarios().filter(usuarioHabilitado);
   if (requiereNombre(rol)) {
     const nombreNormalizado = normalizar(nombre);
     if (!nombreNormalizado) {
@@ -55,7 +55,7 @@ export function validarCredenciales(rol, nombre, clave) {
       return {
         ok: false,
         campo: 'nombre',
-        motivo: 'El nombre no corresponde al rol seleccionado.'
+        motivo: 'El nombre no corresponde al rol seleccionado o la cuenta está suspendida.'
       };
     }
     return { ok: true, usuario };
@@ -81,11 +81,34 @@ function normalizarCorreo(valor) {
     .toLocaleLowerCase('es');
 }
 
+/** Indica si la cuenta puede iniciar sesión (no está suspendida). */
+export function usuarioHabilitado(usuario) {
+  return Boolean(usuario && usuario.activo !== false);
+}
+
 /** Busca un usuario habilitado por su correo corporativo semilla. */
 export function usuarioPorEmail(email) {
   const correo = normalizarCorreo(email);
   if (!correo) return null;
-  return listarUsuarios().find((u) => normalizarCorreo(u.email) === correo) || null;
+  return (
+    listarUsuarios().find((u) => usuarioHabilitado(u) && normalizarCorreo(u.email) === correo) ||
+    null
+  );
+}
+
+/**
+ * Resuelve la identidad desde un correo corporativo o desde un RUT chileno
+ * válido con Módulo 11. Los usuarios suspendidos quedan fuera del directorio.
+ */
+export function usuarioPorIdentificador(identificador) {
+  const texto = String(identificador ?? '').trim();
+  if (!texto) return null;
+  const usuarios = listarUsuarios().filter(usuarioHabilitado);
+  const porCorreo = usuarios.find((u) => normalizarCorreo(u.email) === normalizarCorreo(texto));
+  if (porCorreo) return porCorreo;
+  if (!/^\d{6,9}-?[\dkK]$/.test(normalizarRut(texto)) || !validarRut(texto)) return null;
+  const objetivo = normalizarRut(texto);
+  return usuarios.find((u) => normalizarRut(u.rut) === objetivo) || null;
 }
 
 /** Valida correo y clave sin modificar la sesión; `campo` permite enfocar el error. */
@@ -122,10 +145,48 @@ export function iniciarSesionConEmail(email, clave) {
   return { ok: true, usuario: resultado.usuario };
 }
 
+/** Valida correo corporativo o RUT Módulo 11 y clave, sin modificar la sesión. */
+export function validarCredencialesIdentificador(identificador, clave) {
+  if (!String(identificador ?? '').trim()) {
+    return {
+      ok: false,
+      campo: 'email',
+      motivo: 'Ingresa tu correo corporativo o RUT para continuar.'
+    };
+  }
+  if (String(clave ?? '') !== CLAVE_DEMO) {
+    return {
+      ok: false,
+      campo: 'clave',
+      motivo: 'Clave incorrecta. Usa la clave de demostración o el acceso rápido.'
+    };
+  }
+  const usuario = usuarioPorIdentificador(identificador);
+  if (!usuario) {
+    return {
+      ok: false,
+      campo: 'email',
+      motivo: 'El correo o RUT no corresponde a ningún usuario habilitado en el ERP.'
+    };
+  }
+  return { ok: true, usuario };
+}
+
+/** Inicia sesión con correo corporativo o RUT válido y fija la identidad del titular. */
+export function iniciarSesionConIdentificador(identificador, clave) {
+  const resultado = validarCredencialesIdentificador(identificador, clave);
+  if (!resultado.ok) return resultado;
+
+  const { id, nombre, rol, centro_costo_id } = resultado.usuario;
+  setSesion({ usuario_id: id, nombre, rol, centro_costo_id });
+  marcarAutenticacion(true);
+  return { ok: true, usuario: resultado.usuario };
+}
+
 /** Directorio de acceso rápido construido desde `usuarios` y `centros_costo` de semilla. */
 export function listarDirectorioUsuarios() {
   // `listarUsuarios()` asegura la semilla antes de consultar los centros de costo.
-  const usuarios = listarUsuarios();
+  const usuarios = listarUsuarios().filter(usuarioHabilitado);
   const centros = leer('centros_costo');
   return usuarios.map((usuario) => {
     const centro = centros.find((c) => c.id === usuario.centro_costo_id);

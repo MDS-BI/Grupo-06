@@ -29,7 +29,7 @@ L.append('// MER - Módulo Adquisiciones y Compras (notación pata de gallo)')
 L.append('// Generado automáticamente desde el bloque Mermaid de specs/002-modulo-adquisiciones-compras/data-model.md')
 L.append('// Generar imagen: dot -Tpng -Gdpi=150 docs/mer.dot -o docs/mer.png')
 L.append('digraph MER {')
-L.append('  graph [rankdir=LR, splines=polyline, nodesep=0.5, ranksep=1.3, bgcolor="white", fontname="Helvetica", label="MER — Módulo Adquisiciones y Compras  (v1.0, 27-10-2026)", labelloc=t, fontsize=20];')
+L.append('  graph [rankdir=LR, splines=polyline, nodesep=0.5, ranksep=1.3, bgcolor="white", fontname="Helvetica", label="MER — Módulo Adquisiciones y Compras  (v1.5, 25-11-2026)", labelloc=t, fontsize=20];')
 L.append('  node  [shape=plain, fontname="Helvetica", fontsize=10];')
 L.append('  edge  [dir=both, color="#475569", fontname="Helvetica", fontsize=9, fontcolor="#334155"];')
 for name, attrs in ents.items():

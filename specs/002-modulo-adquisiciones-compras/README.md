@@ -31,11 +31,10 @@ Vite muestra la URL local; por defecto es:
 http://localhost:5173
 ```
 
-En la pantalla de acceso se pueden usar tres caminos:
+En la pantalla de acceso se pueden usar dos caminos:
 
-1. **Correo corporativo**: escribir uno de los correos de la tabla siguiente y la clave genérica `Compras2026`.
-2. **Directorio de acceso rápido**: pulsar la entrada del usuario deseado y usar la misma clave.
-3. **Acceso por rol** (legado, conservado para la demostración): elegir el rol, escribir el nombre cuando el formulario lo pide y usar `Compras2026`. Solicitante, Comprador y Jefe de Compras piden nombre; Bodega y Administrador TI ingresan solo con el rol.
+1. **Correo corporativo o RUT**: escribir uno de los correos o RUT válidos de la tabla siguiente y la clave genérica `Compras2026`. El RUT se valida con Módulo 11 y un dígito verificador incorrecto se rechaza junto al campo.
+2. **Directorio de acceso rápido**: solo en **Modo Demo**, pulsar **Activar modo presentación** y elegir una de las siete entradas; cada una completa correo y clave y revela la clave para exhibirla. En **Modo Real** el directorio no se materializa en el DOM.
 
 El botón **Mostrar** permite verificar la clave. **Cerrar sesión** vuelve al portal sin borrar los datos. El rol queda fijo durante toda la sesión: para probar otro rol hay que cerrar sesión e ingresar de nuevo. No existe un control para cambiar de rol en vivo.
 
@@ -43,21 +42,21 @@ El botón **Mostrar** permite verificar la clave. **Cerrar sesión** vuelve al p
 
 La clave es común para todos: **`Compras2026`**. Es una clave de demostración, no protege datos reales.
 
-| # | ID semilla | Nombre | Correo | Rol técnico | Centro de costo | ¿Pide nombre al ingresar? |
+| # | ID semilla | Nombre | RUT | Correo | Rol técnico | Centro de costo |
 |---|---|---|---|---|---|---|
-| 1 | `u-solicitante-1` | Ana Pérez | `ana.perez@example.com` | `solicitante` | `cc-001` · `CC-ADM` Administración | Sí |
-| 2 | `u-solicitante-2` | Luis Soto | `luis.soto@example.com` | `solicitante` | `cc-002` · `CC-OPE` Operaciones | Sí |
-| 3 | `u-comprador-1` | Carla Díaz | `carla.diaz@example.com` | `comprador` | `cc-003` · `CC-COM` Compras | Sí |
-| 4 | `u-jefe-1` | Marcela Rojas | `jefe.compras@example.com` | `jefe_compras` | `cc-003` · `CC-COM` Compras | Sí |
-| 5 | `u-bodega-1` | Encargado de Bodega | `bodega@example.com` | `bodega` | `cc-004` · `CC-BOD` Bodega | No |
-| 6 | `u-admin-1` | Administrador TI | `admin.ti@example.com` | `admin_ti` | `cc-003` · `CC-COM` Compras | No |
-| 7 | `u-jefe-2` | Jorge Muñoz | `jorge.munoz@example.com` | `jefe_compras` | `cc-003` · `CC-COM` Compras | Sí |
+| 1 | `u-solicitante-1` | Camila Rojas Soto | `18.123.456-3` | `camila.rojas@pyme.cl` | `solicitante` | `cc-001` · `CC-ADM` Administración |
+| 2 | `u-solicitante-2` | Diego Muñoz Vera | `17.234.567-0` | `diego.munoz@pyme.cl` | `solicitante` | `cc-002` · `CC-OPE` Operaciones |
+| 3 | `u-comprador-1` | Francisca Herrera Díaz | `16.345.678-8` | `francisca.herrera@pyme.cl` | `comprador` | `cc-003` · `CC-COM` Compras |
+| 4 | `u-jefe-1` | Andrés Contreras Pérez | `18.100.001-5` | `andres.contreras@pyme.cl` | `jefe_compras` | `cc-003` · `CC-COM` Compras |
+| 5 | `u-bodega-1` | Rodrigo Araya Mena | `14.678.901-3` | `bodega@pyme.cl` | `bodega` | `cc-004` · `CC-BOD` Bodega |
+| 6 | `u-admin-1` | Tomás Villarroel Sepúlveda | `13.789.012-7` | `admin.ti@pyme.cl` | `admin_ti` | `cc-003` · `CC-COM` Compras |
+| 7 | `u-jefe-2` | Valentina Lagos Fuentes | `15.567.890-9` | `valentina.lagos@pyme.cl` | `jefe_compras` | `cc-003` · `CC-COM` Compras |
 
 Los dos usuarios `jefe_compras` existen para demostrar la segregación de funciones: un jefe no puede aprobar su propia solicitud, por lo que debe aprobarla el otro jefe.
 
 ### 1.4 Primera visita y reinicio
 
-La primera visita carga automáticamente `src/compras/semilla.json`: 7 usuarios, 4 centros de costo, 20 productos, 8 proveedores, 10 solicitudes, 7 cotizaciones, 8 órdenes de compra, 5 recepciones, 7 documentos de facturación, 2 devoluciones, 10 referencias de catálogo y 2 evaluaciones. Las fechas se desplazan al día actual para mantener vigentes plazos y vencimientos.
+La primera visita carga automáticamente `src/compras/semilla.json`: 7 usuarios, 4 centros de costo, 20 productos, 12 proveedores, 10 solicitudes, 7 cotizaciones, 8 órdenes de compra, 5 recepciones, 7 documentos de facturación, 2 devoluciones, 10 referencias de catálogo y 2 evaluaciones. Las fechas se desplazan al día actual para mantener vigentes plazos y vencimientos.
 
 Para volver al estado inicial:
 
@@ -76,7 +75,7 @@ Para volver al estado inicial:
 |---|---|
 | `npm run dev` | Servidor Vite activo; portal de acceso y módulo de Adquisiciones y Compras. |
 | `npm run lint` | 0 errores y 0 advertencias. |
-| `npm test -- --run` | 260 pruebas aprobadas en 18 archivos y 56 omitidas (las omitidas pertenecen al template base). |
+| `npm test -- --run` | 315 pruebas aprobadas en 26 archivos y 56 omitidas en 10 archivos (los omitidos pertenecen al template base). |
 | `npm run build` | Build de producción sin errores. |
 | `npm run preview` | Build servido en `http://localhost:4173`. |
 | `npm run format:check` | Sin diferencias en el alcance de `.prettierignore`. |
@@ -85,13 +84,14 @@ El guion de validación paso a paso está en [`quickstart.md`](quickstart.md).
 
 ### 1.6 Recorrido mínimo de uso
 
-1. Ingresar como **Ana Pérez** y crear/enviar una solicitud de tres líneas.
-2. Cerrar sesión e ingresar como **Marcela Rojas**; aprobar la solicitud ajena.
-3. Cerrar sesión e ingresar como **Carla Díaz**; registrar cotizaciones, seleccionar una y emitir la orden de compra.
-4. Cerrar sesión e ingresar como **Encargado de Bodega**; registrar la recepción parcial, incluyendo una unidad dañada con motivo `danado`.
-5. Cerrar sesión e ingresar como **Carla Díaz**; registrar la factura y verificar la conciliación dentro del 1 %.
-6. Cerrar sesión e ingresar como **Jorge Muñoz**; aprobar el pago de la factura conciliada.
+1. Ingresar como **Camila Rojas Soto** y crear/enviar una solicitud de tres líneas.
+2. Cerrar sesión e ingresar como **Andrés Contreras Pérez**; aprobar la solicitud ajena.
+3. Cerrar sesión e ingresar como **Francisca Herrera Díaz**; registrar cotizaciones, seleccionar una y emitir la orden de compra.
+4. Cerrar sesión e ingresar como **Rodrigo Araya Mena**; registrar la recepción parcial, incluyendo una unidad dañada con motivo `danado`.
+5. Cerrar sesión e ingresar como **Francisca Herrera Díaz**; registrar la factura y verificar la conciliación dentro del 1 %.
+6. Cerrar sesión e ingresar como **Valentina Lagos Fuentes**; aprobar el pago de la factura conciliada.
 7. Abrir la tarjeta **Asistente IA de Compras** en el Panel para consultar estados o ejecutar acciones guiadas según el rol activo.
+8. Cerrar sesión e ingresar como **Tomás Villarroel Sepúlveda**; abrir el padrón, validar un OTP, suspender y reactivar una cuenta, cambiar el umbral y revisar el **Log de Auditoría Forense**.
 
 ---
 
@@ -120,6 +120,11 @@ La fuente de verdad es `PERMISOS` y `puede()` en `src/compras/almacenamiento.js`
 | `evaluar_proveedor` | `comprador`, `jefe_compras` |
 | `consultar_trazabilidad` | `jefe_compras`, `admin_ti` |
 | `exportar_trazabilidad` | `admin_ti` |
+| `gestionar_usuarios` | `admin_ti` |
+| `suspender_usuario` | `admin_ti` |
+| `consultar_auditoria_forense` | `admin_ti` |
+| `configurar_parametros` | `admin_ti` |
+| `desbloquear_excepciones` | `admin_ti` |
 | `exportar` | los cinco roles, solo sobre lo que cada uno puede ver |
 
 **Perfiles en lenguaje de negocio**:
@@ -128,7 +133,7 @@ La fuente de verdad es `PERMISOS` y `puede()` en `src/compras/almacenamiento.js`
 - **Comprador**: opera proveedores, cotizaciones, OC, recepciones ajenas en solo lectura, facturas, catálogo y evaluaciones; registra y concilia facturas. Ve el RUT tributario completo y la cuenta como `****XXXX`.
 - **Jefe de compras**: aprueba o rechaza solicitudes ajenas, aprueba pagos y devoluciones, evalúa proveedores y consulta trazabilidad. Ve datos bancarios completos, pero no los edita.
 - **Encargado de bodega**: registra recepciones y devoluciones; crea y ve solo sus propias solicitudes; ve OC en solo lectura.
-- **Administrador TI**: administra datos bancarios, desbloquea proveedores y consulta/exporta trazabilidad. Ve el resto en solo lectura, salvo sus propias solicitudes. **No** emite OC, registra recepciones ni aprueba solicitudes, pagos o devoluciones.
+- **Administrador TI**: administra datos bancarios, desbloquea proveedores y excepciones, consulta/exporta trazabilidad y el Log de Auditoría Forense, gestiona el padrón de usuarios y configura umbral y tolerancia con OTP del titular. Ve el resto en solo lectura, salvo sus propias solicitudes. **No** emite OC, registra recepciones ni aprueba solicitudes, pagos o devoluciones.
 
 La lista anterior de permisos es la implementada en código. Cuando una descripción histórica de `spec.md` mencione una facultad que no aparece en `PERMISOS`, prevalece la matriz de permisos vigente y se documenta la diferencia como deuda conocida.
 
@@ -210,7 +215,7 @@ El trabajo siguió *Spec-Driven Development*: la especificación se escribió y 
 |---|---|---|---|---|
 | D01 | MVP solo frontend con semilla JSON y `localStorage`. | Coincide con el template del curso; permite demostrar el ciclo sin infraestructura. | Backend y base de datos reales: fuera de alcance de la pauta. | `spec.md`, `data-model.md`, `contracts/almacenamiento-compras.md` |
 | D02 | Reemplazar el borrador de Ventas/CRM por Adquisiciones y Compras. | El módulo asignado era compras; el borrador se había subido por error. | Mantener el borrador de Ventas. | `data-model.md` §9 |
-| D03 | Normalizar las 11 historias de usuario al formato **Como / necesito / para**, con **Por qué esta prioridad**, **Prueba Independiente** y escenarios **Dado / Cuando / Entonces**. | Hace verificables las historias sin perder contenido previo. | Historias con formato mixto. | `spec.md`, clarificación 2026-11-17 |
+| D03 | Normalizar las 13 historias de usuario al formato **Como / necesito / para**, con **Por qué esta prioridad**, **Prueba Independiente** y escenarios **Dado / Cuando / Entonces**. | Hace verificables las historias sin perder contenido previo. | Historias con formato mixto. | `spec.md`, clarificación 2026-11-17 |
 | D04 | Centralizar permisos en `PERMISOS` y `puede()`; validar en interfaz **y** operación. | Evita que una restricción visual sea la única barrera. | Permisos dispersos por componente. | `src/compras/almacenamiento.js`, `src/compras/visibilidad.js`, `spec.md` FR-033 |
 | D05 | Rol fijo durante la sesión; `setRolActivo()` no cambia una sesión iniciada. | La trazabilidad debe saber con qué rol se actuó; evita cambiar de identidad a mitad de un flujo. | Selector de rol en vivo. | `spec.md` FR-037, clarificación 2026-11-23 |
 | D06 | Los cinco roles pueden crear solicitudes, pero solo `jefe_compras` distinto al solicitante aprueba. | Se eliminó el cuello de botella del solicitante sin romper la segregación. | Aprobar la propia solicitud o restringir creación a un rol. | `spec.md` FR-005/FR-006, `research.md` |

@@ -2,21 +2,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { JSDOM } from 'jsdom';
+import semilla from '../../../src/compras/semilla.json';
+import { USUARIOS } from './helpers.js';
 
 const html = fs.readFileSync(
   fileURLToPath(new URL('../../../index.html', import.meta.url)),
   'utf8'
 );
 
-const CORREOS = [
-  'camila.rojas@pyme.cl',
-  'diego.munoz@pyme.cl',
-  'francisca.herrera@pyme.cl',
-  'andres.contreras@pyme.cl',
-  'valentina.lagos@pyme.cl',
-  'bodega@pyme.cl',
-  'admin.ti@pyme.cl'
-];
+const CORREOS = semilla.usuarios.map((usuario) => usuario.email);
 
 let dom;
 
@@ -82,8 +76,8 @@ describe('portal corporativo de acceso', () => {
     }
 
     const usuarios = leer('usuarios');
-    expect(usuarios.find((u) => u.id === 'u-bodega-1').nombre).toBe('Encargado de Bodega');
-    expect(usuarios.find((u) => u.id === 'u-admin-1').nombre).toBe('Administrador TI');
+    expect(usuarios.find((u) => u.id === 'u-bodega-1').nombre).toBe(USUARIOS.bodega.nombre);
+    expect(usuarios.find((u) => u.id === 'u-admin-1').nombre).toBe(USUARIOS.admin.nombre);
   });
 
   it('oculta el directorio interno hasta activar el modo presentación', () => {
@@ -128,7 +122,7 @@ describe('portal corporativo de acceso', () => {
     expect(qs('login-overlay').hidden).toBe(true);
     expect(qs('btn-logout').hidden).toBe(false);
     expect(qs('admin-rol-control').hidden).toBe(true);
-    expect(qs('sesion-indicador').textContent).toContain('Francisca Herrera Díaz');
+    expect(qs('sesion-indicador').textContent).toContain(USUARIOS.comprador.nombre);
     expect(qs('sesion-indicador').textContent).toContain('Comprador');
     expect(qs('sesion-indicador').textContent).toContain('CC-COM · Compras');
   });

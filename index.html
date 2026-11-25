@@ -42,23 +42,23 @@
           <form id="login-form" class="login-form" novalidate>
             <div class="login-form-head">
               <h2>Ingreso corporativo</h2>
-              <p class="muted">Autentícate con tu correo institucional.</p>
+              <p class="muted">Autentícate con tu correo institucional o tu RUT.</p>
             </div>
 
             <div class="campo">
-              <label for="login-email">Correo corporativo</label>
+              <label for="login-email">Correo corporativo o RUT</label>
               <input
                 id="login-email"
                 name="email"
-                type="email"
-                inputmode="email"
+                type="text"
+                inputmode="text"
                 autocomplete="username"
-                placeholder="nombre.apellido@example.com"
+                placeholder="nombre.apellido@pyme.cl o 12.345.678-9"
                 aria-describedby="login-email-ayuda login-email-error"
                 required
               />
               <p id="login-email-ayuda" class="campo-ayuda">
-                Activa el modo presentación para consultar el directorio interno si no recuerdas tu correo.
+                En Modo Demo, activa el modo presentación para consultar el directorio interno.
               </p>
               <p id="login-email-error" class="error campo-error" role="alert" hidden></p>
             </div>

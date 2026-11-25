@@ -6,6 +6,9 @@ import { rutEmpleadoVisible } from './visibilidad.js';
 const PREFIX = 'erp_compras:';
 const memoria = new Map();
 
+/** Clave espejo de la versión de semilla para detectar datos antiguos en el navegador. */
+const SEED_VERSION_KEY = 'erp_compras:seed_version';
+
 export const COLECCIONES = Object.freeze([
   'usuarios',
   'centros_costo',
@@ -22,18 +25,32 @@ export const COLECCIONES = Object.freeze([
   'trazabilidad'
 ]);
 
-/** Nombres corporativos de los usuarios semilla que no traen el campo `nombre`. */
-const NOMBRES_USUARIO_SEMILLA = Object.freeze({
-  'u-bodega-1': 'Encargado de Bodega',
-  'u-admin-1': 'Administrador TI'
-});
+/**
+ * Versión del padrón semilla. Si cambia, los datos guardados en localStorage
+ * pertenecen a una versión antigua y deben recargarse desde `semilla.json`.
+ */
+export const SEMILLA_VERSION = Number(semilla.version) || 1;
 
-/** Completa el nombre de un usuario sin sobrescribir los nombres ya registrados. */
+/** Nombres propios de los usuarios semilla (fuente única: `semilla.json`). */
+const NOMBRES_USUARIO_SEMILLA = Object.freeze(
+  Object.fromEntries(
+    (Array.isArray(semilla.usuarios) ? semilla.usuarios : []).map((usuario) => [
+      usuario.id,
+      usuario.nombre
+    ])
+  )
+);
+
+/** Completa nombre y estado de un usuario sin sobrescribir los valores ya registrados. */
 function normalizarUsuario(usuario) {
   if (!usuario || typeof usuario !== 'object') return usuario;
-  if (String(usuario.nombre ?? '').trim()) return usuario;
-  const nombre = NOMBRES_USUARIO_SEMILLA[usuario.id];
-  return nombre ? { ...usuario, nombre } : usuario;
+  let salida = usuario;
+  if (!String(usuario.nombre ?? '').trim()) {
+    const nombre = NOMBRES_USUARIO_SEMILLA[usuario.id];
+    if (nombre) salida = { ...salida, nombre };
+  }
+  if (!Object.hasOwn(salida, 'activo')) salida = { ...salida, activo: true };
+  return salida;
 }
 
 function normalizarUsuarios(lista) {
@@ -164,20 +181,94 @@ export function limpiarColeccion(nombre) {
 
 export function reiniciarCompras() {
   for (const nombre of COLECCIONES) guardar(nombre, []);
-  escribirCrudo('meta', JSON.stringify({ semilla_cargada: false }));
+  escribirMeta({ semilla_cargada: false, version: SEMILLA_VERSION });
 }
 
-export function semillaCargada() {
+function leerMeta() {
   try {
     const raw = leerCrudo('meta');
-    return Boolean(raw && JSON.parse(raw).semilla_cargada);
+    return raw ? JSON.parse(raw) : {};
   } catch {
-    return false;
+    return {};
   }
 }
 
+function escribirMeta(datos) {
+  escribirCrudo('meta', JSON.stringify(datos));
+}
+
+/** Versión de la semilla actualmente guardada (0 si nunca se registró). */
+export function versionSemillaCargada() {
+  const version = Number(leerMeta().version);
+  return Number.isFinite(version) && version > 0 ? version : 0;
+}
+
+/**
+ * La semilla solo cuenta como cargada si además coincide la versión: así una
+ * versión antigua de localStorage se recarga desde `semilla.json`.
+ */
+export function semillaCargada() {
+  const meta = leerMeta();
+  return Boolean(meta.semilla_cargada) && Number(meta.version) === SEMILLA_VERSION;
+}
+
 export function marcarSemillaCargada(valor = true) {
-  escribirCrudo('meta', JSON.stringify({ semilla_cargada: valor }));
+  escribirMeta({ semilla_cargada: valor, version: SEMILLA_VERSION });
+  // Mantiene sincronizada la clave espejo usada por `asegurarSemilla()`.
+  const s = storage();
+  if (!s) return;
+  try {
+    s.setItem(SEED_VERSION_KEY, String(SEMILLA_VERSION));
+  } catch {
+    // sin acceso al almacenamiento local: el meta en memoria sigue siendo válido
+  }
+}
+
+/**
+ * Inicializa el Modo Real: identidades y catálogos base disponibles,
+ * colecciones transaccionales vacías y sin mezclar datos de la demostración.
+ */
+export function inicializarModoReal({ hoy = hoyISO() } = {}) {
+  const datos = desplazarFechas(clonar(semilla), diasEntre('2026-11-03', hoy));
+  // Una versión antigua del padrón se reemplaza completa para no conservar usuarios obsoletos.
+  const versionAntigua = versionSemillaCargada() !== SEMILLA_VERSION;
+  for (const nombre of ['usuarios', 'centros_costo', 'productos', 'catalogo']) {
+    if (versionAntigua || leer(nombre).length === 0) {
+      guardar(nombre, nombre === 'usuarios' ? normalizarUsuarios(datos[nombre]) : datos[nombre]);
+    }
+  }
+  for (const nombre of [
+    'solicitudes',
+    'cotizaciones',
+    'ordenes',
+    'recepciones',
+    'facturas',
+    'devoluciones',
+    'evaluaciones',
+    'trazabilidad'
+  ]) {
+    guardar(nombre, []);
+  }
+  completarProveedoresSemilla(datos, hoy);
+  marcarSemillaCargada(true);
+  return { cargada: true, motivo: 'modo_real' };
+}
+
+/** Captura el estado operativo para poder alternar entre Modo Demo y Modo Real. */
+export function capturarDatosCompras() {
+  const instantanea = { _semilla_cargada: semillaCargada() };
+  for (const nombre of COLECCIONES) instantanea[nombre] = leer(nombre);
+  return instantanea;
+}
+
+/** Restaura una instantánea del modo previamente capturada. */
+export function restaurarDatosCompras(instantanea) {
+  if (!instantanea || typeof instantanea !== 'object') return false;
+  for (const nombre of COLECCIONES) {
+    guardar(nombre, Array.isArray(instantanea[nombre]) ? instantanea[nombre] : []);
+  }
+  marcarSemillaCargada(Boolean(instantanea._semilla_cargada));
+  return true;
 }
 
 function clonar(valor) {
@@ -255,6 +346,8 @@ function coleccionesSinDatos() {
 }
 
 export function cargarSemilla({ forzar = false, hoy = hoyISO() } = {}) {
+  // Una versión antigua en localStorage no cuenta como semilla cargada y se reemplaza.
+  const versionAntigua = versionSemillaCargada() !== SEMILLA_VERSION;
   const yaCargada = semillaCargada();
   const faltantes = coleccionesSinDatos();
   if (!forzar && yaCargada && faltantes.length === 0) {
@@ -271,13 +364,23 @@ export function cargarSemilla({ forzar = false, hoy = hoyISO() } = {}) {
     }
     completarProveedoresSemilla(datos, hoy);
     marcarSemillaCargada(true);
-    return { cargada: true, motivo: 'ok' };
+    return { cargada: true, motivo: versionAntigua ? 'version_actualizada' : 'ok' };
   } catch (e) {
     return { cargada: false, motivo: e.message };
   }
 }
 
 export function asegurarSemilla() {
+  // Si la versión guardada en localStorage no coincide con la semilla actual,
+  // reiniciamos automáticamente las colecciones desde semilla.json para que
+  // ningún navegador cargue datos antiguos cacheados.
+  if (typeof localStorage !== 'undefined') {
+    const versionGuardada = Number(localStorage.getItem('erp_compras:seed_version'));
+    if (isNaN(versionGuardada) || versionGuardada !== SEMILLA_VERSION) {
+      localStorage.setItem('erp_compras:seed_version', SEMILLA_VERSION);
+      return cargarSemilla({ forzar: true });
+    }
+  }
   if (semillaCargada() && coleccionesSinDatos().length === 0) {
     return { cargada: false, motivo: 'ya_cargada' };
   }
@@ -450,6 +553,11 @@ export const PERMISOS = Object.freeze({
   evaluar_proveedor: ['comprador', 'jefe_compras'],
   consultar_trazabilidad: ['jefe_compras', 'admin_ti'],
   exportar_trazabilidad: ['admin_ti'],
+  gestionar_usuarios: ['admin_ti'],
+  suspender_usuario: ['admin_ti'],
+  consultar_auditoria_forense: ['admin_ti'],
+  configurar_parametros: ['admin_ti'],
+  desbloquear_excepciones: ['admin_ti'],
   exportar: ['solicitante', 'comprador', 'jefe_compras', 'bodega', 'admin_ti']
 });
 

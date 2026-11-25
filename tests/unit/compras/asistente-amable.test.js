@@ -1,17 +1,19 @@
 import { describe, expect, it } from 'vitest';
 
+import semilla from '../../../src/compras/semilla.json';
 import { mensajeNoPuedeAyudar, responder } from '../../../src/compras/asistente.js';
 
+const solicitante = semilla.usuarios.find((usuario) => usuario.id === 'u-solicitante-1');
 const usuario = {
-  id: 'u-solicitante-1',
-  nombre: 'Camila Rojas Soto',
-  rol: 'solicitante'
+  id: solicitante.id,
+  nombre: solicitante.nombre,
+  rol: solicitante.rol
 };
 
 describe('asistente amable', () => {
   it('responde un saludo con el nombre y rol del usuario', () => {
     const { texto } = responder('Hola', usuario);
-    expect(texto).toContain('Camila Rojas Soto');
+    expect(texto).toContain(usuario.nombre);
     expect(texto).toContain('Solicitante');
   });
 
@@ -22,7 +24,7 @@ describe('asistente amable', () => {
 
   it('da ayuda con sugerencias del rol', () => {
     const { texto } = responder('ayuda', usuario);
-    expect(texto).toContain('Camila Rojas Soto');
+    expect(texto).toContain(usuario.nombre);
     expect(texto).toContain('pendiente');
   });
 

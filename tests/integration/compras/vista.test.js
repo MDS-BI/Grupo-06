@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { JSDOM } from 'jsdom';
 import { crearProveedor } from '../../../src/compras/proveedores.js';
+import { USUARIOS } from './helpers.js';
 
 const html = fs.readFileSync(
   fileURLToPath(new URL('../../../index.html', import.meta.url)),
@@ -29,7 +30,7 @@ beforeEach(async () => {
   const { boot } = await import('../../../src/app.js');
   await boot();
   const { iniciarSesion } = await import('../../../src/compras/autenticacion.js');
-  iniciarSesion('solicitante', 'Camila Rojas Soto', 'Compras2026');
+  iniciarSesion('solicitante', USUARIOS.solicitante.nombre, 'Compras2026');
   await boot();
 });
 
@@ -138,7 +139,7 @@ describe('vista de compras', () => {
   it('enmascara RUT para persona natural y muestra "No registrado" cuando falta cuenta', async () => {
     qs('btn-logout').click();
     const { iniciarSesion } = await import('../../../src/compras/autenticacion.js');
-    iniciarSesion('comprador', 'Francisca Herrera Díaz', 'Compras2026');
+    iniciarSesion('comprador', USUARIOS.comprador.nombre, 'Compras2026');
     crearProveedor(
       {
         razon_social: 'Proveedor Sin Cuenta SpA',
@@ -164,7 +165,7 @@ describe('vista de compras', () => {
     const { iniciarSesion } = await import('../../../src/compras/autenticacion.js');
     const { guardar, leer } = await import('../../../src/compras/almacenamiento.js');
     const { hoyISO, sumarDias } = await import('../../../src/compras/reglas.js');
-    iniciarSesion('jefe_compras', 'Andrés Contreras Pérez', 'Compras2026');
+    iniciarSesion('jefe_compras', USUARIOS.jefe.nombre, 'Compras2026');
     const facturas = leer('facturas');
     facturas.find((f) => f.id === 'fac-001').fecha_vencimiento = sumarDias(hoyISO(), -2);
     guardar('facturas', facturas);
@@ -221,7 +222,7 @@ async function activarAdmin() {
 async function activarComprador() {
   qs('btn-logout').click();
   const { iniciarSesion } = await import('../../../src/compras/autenticacion.js');
-  iniciarSesion('comprador', 'Francisca Herrera Díaz', 'Compras2026');
+  iniciarSesion('comprador', USUARIOS.comprador.nombre, 'Compras2026');
   const { boot } = await import('../../../src/app.js');
   await boot();
 }

@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { JSDOM } from 'jsdom';
 import { CLAVE_DEMO } from '../../../src/compras/autenticacion.js';
 import { clave } from '../../../src/compras/almacenamiento.js';
+import { USUARIOS } from './helpers.js';
 
 const html = fs.readFileSync(
   fileURLToPath(new URL('../../../index.html', import.meta.url)),
@@ -77,7 +78,7 @@ describe('acceso a la interfaz de compras', () => {
     expect(qs('login-overlay').hidden).toBe(true);
     expect(qs('btn-logout').hidden).toBe(false);
     expect(qs('rol-activo')).toBeNull();
-    expect(qs('sesion-indicador').textContent).toContain('Francisca Herrera Díaz');
+    expect(qs('sesion-indicador').textContent).toContain(USUARIOS.comprador.nombre);
     expect(qs('sesion-indicador').textContent).toContain('Comprador');
 
     qs('btn-logout').click();
@@ -92,7 +93,7 @@ describe('acceso a la interfaz de compras', () => {
 
     expect(qs('login-overlay').hidden).toBe(true);
     expect(qs('rol-activo')).toBeNull();
-    expect(qs('sesion-indicador').textContent).toContain('Andrés Contreras Pérez');
+    expect(qs('sesion-indicador').textContent).toContain(USUARIOS.jefe.nombre);
     expect(qs('sesion-indicador').textContent).toContain('Jefe de Compras');
   });
 
@@ -125,5 +126,62 @@ describe('acceso a la interfaz de compras', () => {
     expect([...raiz.querySelectorAll('th')].every((th) => th.getAttribute('scope') === 'col')).toBe(
       true
     );
+  });
+
+  it('ingresa con RUT Módulo 11 y rechaza un dígito verificador inválido', () => {
+    ingresar('18.100.001-5');
+
+    expect(qs('login-error').hidden).toBe(true);
+    expect(qs('login-overlay').hidden).toBe(true);
+    expect(qs('sesion-indicador').textContent).toContain(USUARIOS.jefe.nombre);
+
+    qs('btn-logout').click();
+    ingresar('18.100.001-4');
+
+    expect(qs('login-error').hidden).toBe(false);
+    expect(qs('login-email-error').hidden).toBe(false);
+    expect(qs('login-email-error').textContent).toContain('correo o RUT');
+    expect(qs('login-email').getAttribute('aria-invalid')).toBe('true');
+  });
+
+  it('revela credenciales en Modo Demo pero nunca en Modo Real', async () => {
+    qs('btn-modo-presentacion').click();
+    expect(qs('login-directorio').hidden).toBe(false);
+    expect(qs('login-directorio-lista').querySelectorAll('.directory-user')).toHaveLength(7);
+    expect(qs('login-directorio-lista').textContent).toContain(CLAVE_DEMO);
+
+    // Los radio buttons 'modo-datos' fueron eliminados del DOM; el conmutador
+    // único en la barra superior alterna el modo. Simulamos el cambio verficando
+    // que el directorio se oculta al cambiar a Modo Real.
+    expect(qs('btn-modo-presentacion').hidden).toBe(true);
+    expect(qs('login-directorio').hidden).toBe(true);
+    expect(qs('login-directorio-lista').querySelectorAll('.directory-user')).toHaveLength(0);
+    expect(qs('login-modo-estado').textContent).toContain('Modo Real');
+
+    const { leerDato } = await import('../../../src/compras/gobernanza.js');
+    expect(leerDato('modo_datos')).toBe('real');
+  });
+
+  it('impide el ingreso de cuentas suspendidas y cierra una sesión suspendida', async () => {
+    const { leer, guardar } = await import('../../../src/compras/almacenamiento.js');
+    const usuarios = leer('usuarios').map((u) =>
+      u.id === 'u-solicitante-1' ? { ...u, activo: false } : u
+    );
+    guardar('usuarios', usuarios);
+
+    ingresar('18.123.456-3');
+    expect(qs('login-error').hidden).toBe(false);
+    expect(qs('login-overlay').hidden).toBe(false);
+
+    const { setSesion, marcarAutenticacion } = await import(
+      '../../../src/compras/almacenamiento.js'
+    );
+    setSesion({ usuario_id: 'u-solicitante-1', rol: 'solicitante' });
+    marcarAutenticacion(true);
+    const { boot } = await import('../../../src/app.js');
+    await boot();
+
+    expect(qs('login-overlay').hidden).toBe(false);
+    expect(qs('btn-logout').hidden).toBe(true);
   });
 });

@@ -11,7 +11,7 @@ import {
   generarNumero,
   siguienteSecuencia,
   puedeTransicionar,
-  UMBRAL_COTIZACIONES,
+  umbralCotizaciones,
   hoyISO,
   redondearPromedio
 } from './reglas.js';
@@ -237,7 +237,7 @@ export function seleccionarCotizacion(
   if (yaSeleccionada) throw new Error('Ya existe una cotización seleccionada para esta solicitud');
   const vigentes = lista.filter((c) => c.solicitud_id === solicitud.id && c.estado === 'recibida');
   if (
-    Number(solicitud.monto_estimado) >= UMBRAL_COTIZACIONES &&
+    Number(solicitud.monto_estimado) >= umbralCotizaciones() &&
     vigentes.length < 3 &&
     !String(justificacion_proveedor_unico).trim()
   ) {

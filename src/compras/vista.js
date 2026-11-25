@@ -6,7 +6,27 @@ import {
   leer,
   puede
 } from './almacenamiento.js';
-import { hoyISO, UMBRAL_COTIZACIONES, validarVisibilidadDatosBancarios } from './reglas.js';
+import { hoyISO, umbralCotizaciones, validarVisibilidadDatosBancarios } from './reglas.js';
+import {
+  cambiarEstadoUsuario,
+  cambiarParametros,
+  desbloquearExcepcion,
+  editarUsuario,
+  listarPadronUsuarios
+} from './administracion.js';
+import {
+  exportarAuditoriaForense,
+  listarEventosForenses,
+  verificarIntegridadAuditoria
+} from './auditoria.js';
+import {
+  listarNotificaciones,
+  marcarNotificacionLeida,
+  obtenerModo,
+  obtenerParametros,
+  solicitarOtp,
+  validarOtp
+} from './gobernanza.js';
 import {
   listarProveedores,
   buscarProveedores,
@@ -15,7 +35,6 @@ import {
   actualizarProveedor,
   actualizarDatosBancarios,
   cambiarEstadoProveedor,
-  desbloquearProveedor,
   eliminarProveedor,
   vistaProveedor
 } from './proveedores.js';
@@ -77,9 +96,7 @@ import { cadenaDocumental, historialDe } from './trazabilidad.js';
 import {
   GRUPOS,
   RUT_OCULTO,
-  enmascararRut,
   nivelVista,
-  puedeVerRutEmpleado,
   puedeVerRutProveedor,
   vistasVisibles
 } from './visibilidad.js';
@@ -221,10 +238,13 @@ let catProveedorId = '';
 let catFiltro = '';
 let evalOrdenId = '';
 let traza = null;
+let modalAdmin = null;
 
 export function reiniciarVistaCompras() {
   tab = 'panel';
   traza = null;
+  modalAdmin = null;
+  qs('modal-admin')?.remove();
 }
 
 function qs(id) {
@@ -485,8 +505,18 @@ export function renderComprasView() {
     })
   );
   root.onclick = (evento) => {
-    const boton = evento.target.closest?.('[data-ir], [data-traza-ir]');
+    const boton = evento.target.closest?.(
+      '[data-ir], [data-traza-ir], [data-usuario-id], [data-admin-accion]'
+    );
     if (!boton || !root.contains(boton)) return;
+    if (boton.dataset.usuarioId) {
+      abrirModalAdmin({ tipo: 'usuario', id: boton.dataset.usuarioId });
+      return;
+    }
+    if (boton.dataset.adminAccion) {
+      manejarAccionAdmin(boton.dataset.adminAccion, boton.dataset.id);
+      return;
+    }
     irA(boton.dataset.ir || boton.dataset.trazaIr);
   };
 }
@@ -672,22 +702,392 @@ function renderTrazaCadena() {
 }
 
 /** Padrón de usuarios de Administración TI con RUT resuelto por la matriz canónica. */
-function renderPadronUsuarios(usuario) {
-  const filas = leer('usuarios')
+function renderPadronUsuarios(usuario, usuarios = listarPadronUsuarios(usuario)) {
+  const filas = usuarios
     .map((empleado) => {
-      const esPropio = empleado.id === usuario?.id;
-      const permiso = puedeVerRutEmpleado(usuario?.rol, 'listado', esPropio);
-      const rut = permiso
-        ? enmascararRut(empleado.rut, usuario?.rol, 'listado', esPropio)
-        : RUT_OCULTO;
-      const nombre = datosUsuario(empleado.id, usuario).nombre;
-      return `<tr><td>${esc(nombre)}</td><td>${esc(ETIQUETAS_ROL[empleado.rol] || empleado.rol)}</td><td>${esc(rut)}</td></tr>`;
+      return `<tr>
+        <td><button type="button" class="link usuario-link" data-usuario-id="${esc(empleado.id)}" aria-label="Abrir ficha de ${esc(empleado.nombre)}">${esc(empleado.nombre)}</button></td>
+        <td>${esc(ETIQUETAS_ROL[empleado.rol] || empleado.rol)}</td>
+        <td>${esc(empleado.rut_visible)}</td>
+        <td>${esc(empleado.email)}</td>
+        <td>${esc(empleado.centro_codigo)} · ${esc(empleado.centro_nombre)}</td>
+        <td><span class="badge badge-${empleado.activo ? 'aprobado' : 'bloqueado'}">${esc(empleado.estado)}</span></td>
+        <td class="actions">${
+          empleado.id === usuario?.id
+            ? '—'
+            : `<button type="button" class="link" data-admin-accion="estado" data-id="${esc(empleado.id)}">${empleado.activo ? 'Suspender' : 'Reactivar'}</button>`
+        }</td>
+      </tr>`;
     })
     .join('');
   return `<div class="card" id="padron-usuarios">
-    <h2>Padrón de Usuarios · Administración TI</h2>
-    <table><thead><tr><th>Nombre</th><th>Rol</th><th>RUT</th></tr></thead><tbody>${filas}</tbody></table>
+    <div class="toolbar">
+      <h2>Padrón de Usuarios · Administración TI</h2>
+      <span class="muted">${usuarios.length} cuentas · RUT completo para este rol</span>
+    </div>
+    <table>
+      <thead><tr><th>Nombre</th><th>Rol</th><th>RUT</th><th>Correo corporativo</th><th>Centro de costo</th><th>Estado</th><th>Acciones</th></tr></thead>
+      <tbody>${filas}</tbody>
+    </table>
   </div>`;
+}
+
+/** Panel de gobernanza: padrón, notificaciones, parámetros y auditoría forense. */
+function renderPanelAdministracion(usuario) {
+  const usuarios = listarPadronUsuarios(usuario);
+  const notificaciones = listarNotificaciones(usuario.id);
+  const eventos = listarEventosForenses();
+  const parametros = obtenerParametros();
+  const ultimos = eventos.slice(-8).reverse();
+
+  const filasNotificaciones = notificaciones.length
+    ? `<table><thead><tr><th>Fecha</th><th>Destinatario</th><th>Asunto</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>${notificaciones
+        .map(
+          (n) => `<tr>
+            <td>${esc(fechaHora(n.fecha_creacion))}</td>
+            <td>${esc(leer('usuarios').find((u) => u.id === n.id_destinatario)?.nombre || n.id_destinatario)}</td>
+            <td>${esc(n.mensaje)}</td>
+            <td>${esc(n.estado)}</td>
+            <td>${n.leida ? '<span class="muted">Leída</span>' : `<button type="button" class="link" data-admin-accion="leer-notif" data-id="${esc(n.id)}">Marcar leída</button>`}</td>
+          </tr>`
+        )
+        .join('')}</tbody></table>`
+    : '<div class="empty">No hay notificaciones internas.</div>';
+
+  const filasAuditoria = ultimos.length
+    ? `<table><thead><tr><th>Timestamp</th><th>Actor</th><th>Afectado</th><th>Evento</th><th>Campos modificados</th><th>OTP</th></tr></thead><tbody>${ultimos
+        .map(
+          (e) => `<tr>
+            <td>${esc(fechaHora(e.timestamp))}</td>
+            <td>${esc(e.actor)}</td>
+            <td>${esc(e.usuario_afectado || '—')}</td>
+            <td>${esc(e.tipo_evento)}</td>
+            <td>${esc(e.campos_modificados)}</td>
+            <td>${e.otp_validado ? 'Sí' : 'No'}</td>
+          </tr>`
+        )
+        .join('')}</tbody></table>`
+    : '<div class="empty">Todavía no hay eventos forenses.</div>';
+
+  return `
+    ${renderPadronUsuarios(usuario, usuarios)}
+    <div class="card" id="admin-notificaciones">
+      <div class="toolbar"><h2>Notificaciones internas</h2><span class="muted">${notificaciones.length} registros</span></div>
+      ${filasNotificaciones}
+    </div>
+    <div class="card" id="admin-parametros">
+      <div class="toolbar"><h2>Parámetros de compras</h2><span class="muted">Requieren OTP del titular</span></div>
+      <form id="admin-parametros-form" class="card-inner">
+        <div class="field-row">
+          <div><label for="param-umbral">Umbral de cotizaciones (CLP neto)</label><input id="param-umbral" type="number" min="1" step="1" value="${esc(parametros.umbralCotizaciones)}" /></div>
+          <div><label for="param-tolerancia">Tolerancia de conciliación (0,01 = 1 %)</label><input id="param-tolerancia" type="number" min="0.0001" max="1" step="0.0001" value="${esc(parametros.toleranciaConciliacion)}" /></div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="primary" data-admin-accion="parametros">Solicitar OTP y guardar parámetros</button>
+        </div>
+      </form>
+    </div>
+    <div class="card" id="admin-auditoria">
+      <div class="toolbar">
+        <h2>Log de Auditoría Forense</h2>
+        <span class="badge badge-${verificarIntegridadAuditoria() ? 'aprobado' : 'bloqueado'}">${verificarIntegridadAuditoria() ? 'Integridad verificada' : 'Integridad alterada'}</span>
+        <button type="button" class="secondary" data-admin-accion="exportar-auditoria">Exportar CSV</button>
+      </div>
+      ${filasAuditoria}
+    </div>
+  `;
+}
+
+function manejarAccionAdmin(accion, id) {
+  if (accion === 'parametros') {
+    abrirModalAdmin({ tipo: 'parametros' });
+    return;
+  }
+  if (accion === 'estado') {
+    abrirModalAdmin({ tipo: 'usuario', id });
+    return;
+  }
+  if (accion === 'leer-notif') {
+    marcarNotificacionLeida(id);
+    renderComprasView();
+    return;
+  }
+  if (accion === 'exportar-auditoria') exportarAuditoriaForense();
+}
+
+function abrirModalAdmin(config) {
+  modalAdmin = {
+    solicitud: null,
+    token: '',
+    contexto: '',
+    codigoDemo: '',
+    aviso: '',
+    error: '',
+    ...config
+  };
+  renderModalAdmin();
+}
+
+function cerrarModalAdmin() {
+  modalAdmin = null;
+  qs('modal-admin')?.remove();
+}
+
+function nombreTitular(id) {
+  return leer('usuarios').find((u) => u.id === id)?.nombre || id;
+}
+
+/** Solicita el OTP del titular; la ayuda con el código solo aparece en Modo Demo. */
+function solicitarOtpModal(contexto) {
+  const titular =
+    modalAdmin.tipo === 'usuario' ? modalAdmin.id : getUsuarioActivo()?.id || 'u-admin-1';
+  const campos =
+    modalAdmin.tipo === 'usuario'
+      ? ['nombre', 'email', 'rut', 'rol', 'centro_costo_id']
+      : [];
+  const resultado = solicitarOtp({
+    usuario_id: titular,
+    actor_id: getUsuarioActivo()?.id || '',
+    campos,
+    contexto,
+    modo: obtenerModo()
+  });
+  modalAdmin.solicitud = resultado.solicitud;
+  modalAdmin.codigoDemo = resultado.ayudaDemo;
+  modalAdmin.token = '';
+  modalAdmin.aviso = `Notificación interna enviada a ${nombreTitular(titular)}.`;
+  modalAdmin.error = '';
+  renderModalAdmin();
+}
+
+/** Ejecuta una operación administrativa autorizada y refresca padrón y auditoría. */
+function ejecutarAdmin(operacion, mensaje = 'Cambio guardado y registrado en la auditoría forense.') {
+  try {
+    operacion();
+    modalAdmin.solicitud = null;
+    modalAdmin.token = '';
+    modalAdmin.contexto = '';
+    modalAdmin.codigoDemo = '';
+    modalAdmin.aviso = mensaje;
+    modalAdmin.error = '';
+    renderComprasView();
+    renderModalAdmin();
+  } catch (e) {
+    modalAdmin.error = e.message;
+    renderModalAdmin();
+  }
+}
+
+/** Modal de detalle/edición de usuarios, parámetros y desbloqueo de excepciones. */
+function renderModalAdmin() {
+  qs('modal-admin')?.remove();
+  if (!modalAdmin) return;
+  const usuario = getUsuarioActivo();
+  if (usuario?.rol !== 'admin_ti') {
+    modalAdmin = null;
+    return;
+  }
+
+  let titulo = '';
+  let cuerpo = '';
+  let acciones = '';
+
+  if (modalAdmin.tipo === 'usuario') {
+    const persona = listarPadronUsuarios(usuario).find((p) => p.id === modalAdmin.id);
+    if (!persona) {
+      modalAdmin = null;
+      return;
+    }
+    const editable = Boolean(modalAdmin.token && modalAdmin.contexto === 'edicion_usuario');
+    const estadoEditable = Boolean(modalAdmin.token && modalAdmin.contexto === 'suspension_usuario');
+    const centros = leer('centros_costo');
+    const deshabilitado = editable ? '' : 'disabled';
+    titulo = `Ficha de ${persona.nombre}`;
+    cuerpo = `
+      <p class="muted">Los datos personales están bloqueados hasta que el titular valide un código OTP de 6 dígitos.</p>
+      <div class="field-row">
+        <div><label for="usuario-nombre">Nombre</label><input id="usuario-nombre" value="${esc(persona.nombre)}" ${deshabilitado} /></div>
+        <div><label for="usuario-email">Correo corporativo</label><input id="usuario-email" value="${esc(persona.email)}" ${deshabilitado} /></div>
+      </div>
+      <div class="field-row">
+        <div><label for="usuario-rut">RUT</label><input id="usuario-rut" value="${esc(persona.rut)}" ${deshabilitado} /></div>
+        <div><label for="usuario-rol">Rol</label><select id="usuario-rol" ${deshabilitado}>${Object.entries(ETIQUETAS_ROL)
+          .map(
+            ([clave, etiqueta]) =>
+              `<option value="${esc(clave)}"${clave === persona.rol ? ' selected' : ''}>${esc(etiqueta)}</option>`
+          )
+          .join('')}</select></div>
+      </div>
+      <div class="field-row">
+        <div><label for="usuario-centro">Centro de costo</label><select id="usuario-centro" ${deshabilitado}>${centros
+          .map(
+            (c) =>
+              `<option value="${esc(c.id)}"${c.id === persona.centro_costo_id ? ' selected' : ''}>${esc(c.codigo)} · ${esc(c.nombre)}</option>`
+          )
+          .join('')}</select></div>
+        <div><label>Estado actual</label><p class="form-control-static">${esc(persona.estado)}</p></div>
+      </div>
+    `;
+    acciones = `
+      <button type="button" id="modal-admin-solicitar" class="secondary">Solicitar autorización del titular (Código OTP)</button>
+      ${
+        persona.id !== usuario.id
+          ? '<button type="button" id="modal-admin-solicitar-estado" class="secondary">Solicitar autorización para cambiar estado</button>'
+          : ''
+      }
+      <button type="button" id="modal-admin-guardar" class="primary" ${editable ? '' : 'disabled'}>Guardar cambios</button>
+      ${
+        persona.id !== usuario.id
+          ? `<button type="button" id="modal-admin-estado" class="${persona.activo ? 'danger' : 'primary'}" ${estadoEditable ? '' : 'disabled'}>${persona.activo ? 'Suspender cuenta' : 'Reactivar cuenta'}</button>`
+          : ''
+      }
+    `;
+  } else if (modalAdmin.tipo === 'parametros') {
+    const parametros = obtenerParametros();
+    const editable = Boolean(modalAdmin.token && modalAdmin.contexto === 'cambio_parametro');
+    const deshabilitado = editable ? '' : 'disabled';
+    titulo = 'Parametrización de compras';
+    cuerpo = `
+      <p class="muted">La titular de la solicitud (Administración TI) debe validar un código OTP antes de aplicar nuevos valores.</p>
+      <div class="field-row">
+        <div><label for="param-modal-umbral">Umbral de cotizaciones (CLP neto)</label><input id="param-modal-umbral" type="number" min="1" step="1" value="${esc(parametros.umbralCotizaciones)}" ${deshabilitado} /></div>
+        <div><label for="param-modal-tolerancia">Tolerancia de conciliación</label><input id="param-modal-tolerancia" type="number" min="0.0001" max="1" step="0.0001" value="${esc(parametros.toleranciaConciliacion)}" ${deshabilitado} /></div>
+      </div>
+    `;
+    acciones = `
+      <button type="button" id="modal-admin-solicitar" class="secondary">Solicitar autorización del titular (Código OTP)</button>
+      <button type="button" id="modal-admin-guardar-param" class="primary" ${editable ? '' : 'disabled'}>Guardar parámetros</button>
+    `;
+  } else if (modalAdmin.tipo === 'excepcion') {
+    const proveedor = obtenerProveedor(modalAdmin.id);
+    const habilitado = Boolean(modalAdmin.token && modalAdmin.contexto === 'desbloqueo_excepcion');
+    titulo = 'Desbloqueo de excepción';
+    cuerpo = `<p>Proveedor: <strong>${esc(proveedor?.name || modalAdmin.id)}</strong>. El desbloqueo requiere autorización OTP y queda registrado en la auditoría forense.</p>`;
+    acciones = `
+      <button type="button" id="modal-admin-solicitar" class="secondary">Solicitar autorización del titular (Código OTP)</button>
+      <button type="button" id="modal-admin-desbloquear" class="primary" ${habilitado ? '' : 'disabled'}>Desbloquear excepción</button>
+    `;
+  }
+
+  const otpPanel = modalAdmin.solicitud
+    ? `<div class="otp-panel">
+        <label for="modal-admin-otp">Código OTP de 6 dígitos</label>
+        <div class="otp-fila">
+          <input id="modal-admin-otp" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000" aria-describedby="modal-admin-otp-ayuda" />
+          <button type="button" id="modal-admin-validar" class="secondary">Validar código</button>
+        </div>
+        <p id="modal-admin-otp-ayuda" class="campo-ayuda">Vigencia de 5 minutos. Un código solo habilita una operación.</p>
+        ${
+          modalAdmin.codigoDemo
+            ? `<p class="otp-demo-help">Modo Demo · código de simulación: <strong>${esc(modalAdmin.codigoDemo)}</strong></p>`
+            : ''
+        }
+      </div>`
+    : '';
+
+  const overlay = document.createElement('div');
+  overlay.id = 'modal-admin';
+  overlay.className = 'modal-admin-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-labelledby', 'modal-admin-titulo');
+  overlay.innerHTML = `
+    <div class="modal-admin-card">
+      <div class="toolbar">
+        <h2 id="modal-admin-titulo">${esc(titulo)}</h2>
+        <button type="button" class="secondary" data-modal-cerrar aria-label="Cerrar ficha">Cerrar</button>
+      </div>
+      ${cuerpo}
+      ${otpPanel}
+      ${modalAdmin.aviso ? `<p class="otp-aviso" role="status">${esc(modalAdmin.aviso)}</p>` : ''}
+      ${modalAdmin.error ? `<p class="error" role="alert">${esc(modalAdmin.error)}</p>` : ''}
+      <div class="form-actions modal-admin-acciones">
+        ${acciones}
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  overlay.querySelectorAll('[data-modal-cerrar]').forEach((btn) =>
+    btn.addEventListener('click', cerrarModalAdmin)
+  );
+  overlay.addEventListener('click', (evento) => {
+    if (evento.target === overlay) cerrarModalAdmin();
+  });
+  qs('modal-admin-solicitar')?.addEventListener('click', () =>
+    solicitarOtpModal(
+      modalAdmin.tipo === 'usuario'
+        ? 'edicion_usuario'
+        : modalAdmin.tipo === 'parametros'
+          ? 'cambio_parametro'
+          : 'desbloqueo_excepcion'
+    )
+  );
+  qs('modal-admin-solicitar-estado')?.addEventListener('click', () =>
+    solicitarOtpModal('suspension_usuario')
+  );
+  qs('modal-admin-validar')?.addEventListener('click', () => {
+    const resultado = validarOtp(modalAdmin.solicitud.id, qs('modal-admin-otp')?.value);
+    if (!resultado.ok) {
+      modalAdmin.error = resultado.motivo;
+      modalAdmin.token = '';
+      modalAdmin.contexto = '';
+    } else {
+      modalAdmin.token = resultado.token;
+      modalAdmin.contexto = resultado.solicitud.contexto;
+      modalAdmin.codigoDemo = '';
+      modalAdmin.error = '';
+      modalAdmin.aviso = 'Autorización verificada. Ya puedes aplicar la operación.';
+    }
+    renderModalAdmin();
+  });
+  qs('modal-admin-guardar')?.addEventListener('click', () =>
+    ejecutarAdmin(() =>
+      editarUsuario({
+        id: modalAdmin.id,
+        cambios: {
+          nombre: qs('usuario-nombre').value,
+          email: qs('usuario-email').value,
+          rut: qs('usuario-rut').value,
+          rol: qs('usuario-rol').value,
+          centro_costo_id: qs('usuario-centro').value
+        },
+        token: modalAdmin.token,
+        actor: usuario
+      })
+    )
+  );
+  qs('modal-admin-estado')?.addEventListener('click', () => {
+    const persona = listarPadronUsuarios(usuario).find((p) => p.id === modalAdmin.id);
+    ejecutarAdmin(
+      () =>
+        cambiarEstadoUsuario({
+          id: modalAdmin.id,
+          suspendido: Boolean(persona?.activo),
+          token: modalAdmin.token,
+          actor: usuario
+        }),
+      'Estado de la cuenta actualizado y registrado en la auditoría forense.'
+    );
+  });
+  qs('modal-admin-guardar-param')?.addEventListener('click', () =>
+    ejecutarAdmin(() =>
+      cambiarParametros({
+        cambios: {
+          umbralCotizaciones: qs('param-modal-umbral').value,
+          toleranciaConciliacion: qs('param-modal-tolerancia').value
+        },
+        token: modalAdmin.token,
+        actor: usuario
+      })
+    )
+  );
+  qs('modal-admin-desbloquear')?.addEventListener('click', () =>
+    ejecutarAdmin(
+      () => desbloquearExcepcion({ id: modalAdmin.id, token: modalAdmin.token, actor: usuario }),
+      'Excepción desbloqueada y registrada en la auditoría forense.'
+    )
+  );
 }
 
 function renderPanel() {
@@ -757,7 +1157,7 @@ function renderPanel() {
       <h2>Resumen del ciclo de compras</h2>
       <div class="flow-summary">${resumenFlujo()}</div>
     </div>
-    ${usuario?.rol === 'admin_ti' ? renderPadronUsuarios(usuario) : ''}
+    ${usuario?.rol === 'admin_ti' ? renderPanelAdministracion(usuario) : ''}
     <div class="card">
       <h2>Pendientes por rol</h2>
       ${
@@ -1044,7 +1444,7 @@ function renderProveedores() {
           return;
         }
         if (btn.dataset.provAccion === 'desbloquear') {
-          desbloquearProveedor(id, usuario);
+          abrirModalAdmin({ tipo: 'excepcion', id });
           return;
         }
         if (btn.dataset.provAccion === 'eliminar') {
@@ -1259,7 +1659,7 @@ function renderCotizaciones() {
           cotSolicitudId
         )}</select>
       </div>
-      ${solicitud ? `<p class="muted">Umbral de cotizaciones: ${clp(UMBRAL_COTIZACIONES)} neto. ${Number(solicitud.monto_estimado) >= UMBRAL_COTIZACIONES ? 'Esta solicitud requiere 3 cotizaciones o justificación de proveedor único.' : ''}</p>` : '<div class="empty">No hay solicitudes aprobadas o en cotización.</div>'}
+      ${solicitud ? `<p class="muted">Umbral de cotizaciones: ${clp(umbralCotizaciones())} neto. ${Number(solicitud.monto_estimado) >= umbralCotizaciones() ? 'Esta solicitud requiere 3 cotizaciones o justificación de proveedor único.' : ''}</p>` : '<div class="empty">No hay solicitudes aprobadas o en cotización.</div>'}
     </div>
     ${
       solicitud && puedeOperar('cotizaciones', 'gestionar_cotizaciones', usuario)
@@ -1346,7 +1746,7 @@ function renderCotizaciones() {
         }
         if (btn.dataset.cotAccion === 'seleccionar') {
           const justificacion =
-            Number(solicitud?.monto_estimado) >= UMBRAL_COTIZACIONES
+            Number(solicitud?.monto_estimado) >= umbralCotizaciones()
               ? pedirTexto('Justificación de proveedor único (si no hay 3 cotizaciones):') || ''
               : '';
           return seleccionarCotizacion(id, usuario, {

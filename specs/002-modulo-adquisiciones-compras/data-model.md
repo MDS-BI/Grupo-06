@@ -317,14 +317,18 @@ Convenciones: **PK** = clave primaria, **FK** = clave foránea, **UK** = valor �
 
 Persona interna que opera el módulo. Su ficha maestra pertenece a RR.HH.
 
-| Atributo        | Tipo   | Restricción                                                      | Descripción                                                             |
-| --------------- | ------ | ---------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| id_usuario      | int    | PK                                                               |                                                                         |
-| nombre          | string | obligatorio                                                      | (S)                                                                     |
-| email           | string | UK, obligatorio                                                  | Correo corporativo                                                      |
-| rol             | enum   | `solicitante`, `comprador`, `jefe_compras`, `bodega`, `admin_ti` | Define qué acciones puede hacer (ver regla 8, segregación de funciones) |
-| id_centro_costo | int    | FK → CENTRO_COSTO                                                | Área a la que pertenece                                                 |
-| activo          | bool   | default `true`                                                   |                                                                         |
+| Atributo        | Tipo    | Restricción                                                                                    | Descripción                                                                                                            |
+| --------------- | ------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| id_usuario      | string  | PK                                                                                             | Identificador semilla (`u-solicitante-1`, etc.)                                                                        |
+| nombre          | string  | obligatorio                                                                                    | Nombre propio chileno, no un rótulo de rol                                                                             |
+| rut             | string  | UK, obligatorio, válido con Módulo 11 (`validarRut()`)                                         | RUT personal; visible completo solo para `admin_ti` en el Padrón y para el propio titular (FR-004, FR-043)             |
+| email           | string  | UK, obligatorio, formato corporativo                                                           | Correo corporativo; se valida al guardar una edición autorizada (FR-044)                                              |
+| rol             | enum    | `solicitante`, `comprador`, `jefe_compras`, `bodega`, `admin_ti`                               | Define qué acciones puede hacer (ver regla 8, segregación de funciones)                                               |
+| id_centro_costo | string  | FK → CENTRO_COSTO                                                                              | Área a la que pertenece                                                                                                |
+| activo          | bool    | default `true`                                                                                 | `false` representa una cuenta **Suspendida**; impide iniciar sesión (FR-043)                                          |
+| fecha_creacion  | datetime| opcional                                                                                       | Alta del registro; se registra en la auditoría forense                                                                 |
+
+Toda modificación de `nombre`, `rut`, `email`, `rol`, `id_centro_costo` o `activo` sobre otro usuario exige un OTP vigente del titular (FR-044) y genera un evento en LOG_AUDITORIA_FORENSE (FR-045). Un RUT inválido o un correo duplicado rechazan el guardado.
 
 ### 3.3 PROVEEDOR
 
@@ -342,7 +346,7 @@ Persona natural o empresa que vende bienes o servicios a la organización. Es el
 | rubro, categoria                  | string | obligatorio en la semilla                             | Rubro legible mostrado en la columna `Rubro`; `categoria` lo agrupa para reportes                                                                     |
 | email, telefono                   | string | al menos uno obligatorio                              | Contacto general (S si es persona natural); se muestran en la columna `Contacto`                                                                     |
 | direccion, comuna, region         | string | `region` obligatoria                                  | Dirección comercial                                                                                                                                  |
-| tamano_empresa                    | enum   | `micro`, `pequena`, `mediana`, `grande`               | Permite medir cuánto se compra a pymes (ver sesgos, sección 6)                                                                                       |
+| tamano_empresa                    | enum   | `micro`, `pequeña`, `mediana`, `grande`               | Permite medir cuánto se compra a pymes (ver sesgos, sección 6); coincide con `semilla.json` y con `src/compras/vista.js`                             |
 | estado_proveedor                  | enum   | `potencial`, `aprobado`, `bloqueado`                  | Estado operativo: solo `aprobado` puede recibir órdenes de compra                                                                                    |
 | estado                            | enum   | `En evaluación`, `Activo`, `Suspendido`               | Etiqueta legible derivada de `estado_proveedor` y mostrada en el listado                                                                             |
 | calificacion_promedio             | float  | 0 a 5; semilla > 0                                    | Calificación promedio del desempeño histórico del proveedor                                                                                          |
@@ -602,6 +606,68 @@ Registro inmutable de quién, cuándo y qué acción se ejecutó sobre los docum
 
 Restricciones: los eventos no se editan ni se eliminan. Un documento con al menos un evento no puede eliminarse; solo puede anularse con motivo (FR-029). El historial se muestra con la misma matriz de visibilidad que el resto de la aplicación (FR-025).
 
+### 3.15 NOTIFICACION_INTERNA
+
+Mensaje dirigido al titular de una cuenta cuando `admin_ti` solicita autorización para modificar sus datos (FR-044).
+
+| Atributo        | Tipo     | Restricción                                    | Descripción                                                                        |
+| --------------- | -------- | ---------------------------------------------- | ---------------------------------------------------------------------------------- |
+| id_notificacion | string   | PK                                             | Identificador de la notificación                                                   |
+| id_destinatario | string   | FK → USUARIO, obligatorio                      | Usuario titular de la cuenta afectada                                              |
+| tipo            | enum     | `otp_autorizacion`                             | Único tipo del MVP                                                                 |
+| codigo          | string   | 6 dígitos numéricos                            | Código OTP; en Modo Demo se muestra como ayuda visual al administrador             |
+| fecha_creacion  | datetime | obligatorio                                    | Momento de generación                                                              |
+| expira_en       | datetime | obligatorio, posterior a `fecha_creacion`      | Momento en que el código deja de ser válido                                        |
+| estado          | enum     | `pendiente`, `aprobada`, `rechazada`, `expirada` | Estado de la autorización                                                         |
+| leida           | bool     | default `false`                                | Marca de lectura por el titular                                                    |
+
+### 3.16 SOLICITUD_OTP
+
+Vínculo entre la autorización del titular y la intención de edición de `admin_ti` (FR-044).
+
+| Atributo         | Tipo     | Restricción                               | Descripción                                                       |
+| ---------------- | -------- | ----------------------------------------- | ----------------------------------------------------------------- |
+| id_solicitud     | string   | PK                                        | Identificador de la solicitud de autorización                     |
+| id_usuario       | string   | FK → USUARIO, obligatorio                 | Usuario cuyos datos se desean modificar                           |
+| id_notificacion  | string   | FK → NOTIFICACION_INTERNA, obligatorio    | Notificación que entrega el código                                |
+| id_solicitante   | string   | FK → USUARIO, obligatorio                 | `admin_ti` que solicita la autorización                           |
+| campos_solicitados | string[] | obligatorio                             | Nombre, correo, RUT, rol y/o centro de costo                      |
+| intentos         | int      | default `0`                               | Número de validaciones fallidas                                   |
+| validada         | bool     | default `false`                           | `true` solo tras un código vigente; habilita la edición           |
+| fecha_validacion | datetime | opcional                                  | Momento en que se validó el código                                |
+
+Restricciones: el código se consume una sola vez; un código expirado, erróneo o reutilizado no habilita la edición y deja los campos bloqueados.
+
+### 3.17 LOG_AUDITORIA_FORENSE
+
+Registro inmutable de operaciones administrativas sensibles (FR-045). Es distinto de HISTORIAL_TRAZABILIDAD: aquel cubre el ciclo de compras, este cubre la administración de identidades, parámetros y excepciones.
+
+| Atributo        | Tipo     | Restricción                                            | Descripción                                                                        |
+| --------------- | -------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| id_evento       | string   | PK                                                     | Identificador del evento forense                                                   |
+| actor           | string   | FK → USUARIO, obligatorio                              | Usuario que ejecutó la operación                                                   |
+| usuario_afectado | string  | FK → USUARIO, opcional                                 | Usuario cuyos datos cambiaron; nulo en cambios de parámetros                       |
+| tipo_evento     | enum     | `edicion_usuario`, `suspension`, `reactivacion`, `cambio_parametro`, `desbloqueo_excepcion` | Operación registrada                                      |
+| campos_modificados | text  | obligatorio                                        | Campos con valor anterior y nuevo en la representación autorizada por FR-004       |
+| otp_validado    | bool     | obligatorio                                            | Resultado de la validación OTP                                                     |
+| timestamp       | datetime | obligatorio                                            | Cuándo ocurrió                                                                     |
+
+Restricciones: los eventos no se editan ni se eliminan; solo `admin_ti` puede consultarlos y exportarlos, y ningún evento expone un valor sensible por encima de la matriz de FR-004.
+
+### 3.18 PARAMETRO_CONFIGURACION
+
+Parámetros de negocio dinámicos gobernados por `admin_ti` con consentimiento OTP (FR-046).
+
+| Atributo      | Tipo    | Restricción                         | Descripción                                                            |
+| ------------- | ------- | ----------------------------------- | ---------------------------------------------------------------------- |
+| clave         | enum    | PK                                  | `UMBRAL_COTIZACIONES`, `TOLERANCIA_CONCILIACION`                       |
+| valor         | number  | obligatorio, positivo               | Valor vigente; por defecto `1000000` y `1` respectivamente              |
+| unidad        | enum    | `CLP`, `porcentaje`                 | Unidad del valor                                                       |
+| modificado_por | string | FK → USUARIO, obligatorio           | `admin_ti` que aplicó el cambio                                        |
+| fecha_cambio  | datetime| obligatorio                         | Timestamp del cambio, replicado en LOG_AUDITORIA_FORENSE                |
+
+> Nota de alcance del MER: estas cuatro entidades de gobernanza se documentan en el diccionario de datos y no se incorporan al MER transaccional de 19 entidades de §2 ni al entregable vectorial `mer.svg`, que representan las 12 colecciones operativas de `semilla.json`.
+
 ---
 
 ## 4. Relaciones y cardinalidades
@@ -685,7 +751,7 @@ Restricciones: los eventos no se editan ni se eliminan. Un documento con al meno
 
 **Marco normativo de referencia**:
 
-- Ley 19.628 sobre protección de la vida privada y Ley 21.719, que la modifica. La Ley 21.719 entra en vigor el 1 de diciembre de 2026; en septiembre de 2026 se ingresó al Senado un proyecto que propone postergarla al 1 de diciembre de 2027.
+- Ley 19.628 sobre protección de la vida privada, vigente hoy, y Ley 21.719, que la modifica. La Ley 21.719 entraría en vigor el 1 de diciembre de 2026, pero la Ley 21.855, publicada en el Diario Oficial el 23 de noviembre de 2026, postergó su vigencia al 15 de octubre de 2027. Hasta esa fecha sigue aplicándose la Ley 19.628 en su texto actual.
 - Ley 21.131 (pago a 30 días): las facturas deben pagarse dentro de 30 días corridos desde su recepción; un plazo mayor exige acuerdo escrito, firmado e inscrito en el registro del Ministerio de Economía.
 - Las compras del Estado (Ley 19.886, Mercado Público) quedan **fuera de alcance**: el cliente es una pyme privada.
 
@@ -717,7 +783,7 @@ Los identificadores de estas entidades deben coincidir con los que use el templa
 | Ahorro respecto de lo estimado     | (monto_estimado de la solicitud − neto de su OC) / monto_estimado, promediado sobre las OC del período     |
 | Facturas con discrepancia          | facturas `con_discrepancia` / facturas registradas                                                         |
 | Facturas en riesgo de pago tardío  | facturas no `aprobada_pago` con fecha_vencimiento ≤ hoy + 5 días                                           |
-| Gasto en micro y pequeñas empresas | ∑ neto de OC a proveedores `micro` o `pequena` / gasto del período                                         |
+| Gasto en micro y pequeñas empresas | ∑ neto de OC a proveedores `micro` o `pequeña` / gasto del período                                        |
 | Evaluación promedio por proveedor  | promedio de (nota_calidad + nota_plazo + nota_servicio)/3, junto con el n° de evaluaciones                 |
 
 ---
@@ -751,15 +817,17 @@ Diferencias detectadas entre `src/compras/reglas.js` (constante `TRANSICIONES`) 
 
 ### 9.1 Usuarios semilla (7 personas chilenas)
 
-| ID | Nombre | Rol | Correo corporativo | Contraseña |
-|---|---|---|---|---|
-| u-solicitante-1 | Camila Rojas Soto | solicitante | camila.rojas@pyme.cl | Compras2026 |
-| u-solicitante-2 | Diego Muñoz Vera | solicitante | diego.munoz@pyme.cl | Compras2026 |
-| u-comprador-1 | Francisca Herrera Díaz | comprador | francisca.herrera@pyme.cl | Compras2026 |
-| u-jefe-1 | Andrés Contreras Pérez | jefe_compras | andres.contreras@pyme.cl | Compras2026 |
-| u-jefe-2 | Valentina Lagos Fuentes | jefe_compras | valentina.lagos@pyme.cl | Compras2026 |
-| u-bodega-1 | Encargado de Bodega | bodega | bodega@pyme.cl | Compras2026 |
-| u-admin-1 | Administrador TI | admin_ti | admin.ti@pyme.cl | Compras2026 |
+| ID | Nombre | RUT Módulo 11 | Rol | Correo corporativo | Contraseña |
+|---|---|---|---|---|---|
+| u-solicitante-1 | Camila Rojas Soto | 18.123.456-3 | solicitante | camila.rojas@pyme.cl | Compras2026 |
+| u-solicitante-2 | Diego Muñoz Vera | 17.234.567-0 | solicitante | diego.munoz@pyme.cl | Compras2026 |
+| u-comprador-1 | Francisca Herrera Díaz | 16.345.678-8 | comprador | francisca.herrera@pyme.cl | Compras2026 |
+| u-jefe-1 | Andrés Contreras Pérez | 18.100.001-5 | jefe_compras | andres.contreras@pyme.cl | Compras2026 |
+| u-jefe-2 | Valentina Lagos Fuentes | 15.567.890-9 | jefe_compras | valentina.lagos@pyme.cl | Compras2026 |
+| u-bodega-1 | Rodrigo Araya Mena | 14.678.901-3 | bodega | bodega@pyme.cl | Compras2026 |
+| u-admin-1 | Tomás Villarroel Sepúlveda | 13.789.012-7 | admin_ti | admin.ti@pyme.cl | Compras2026 |
+
+Los siete registros tienen `activo: true` y exhiben el RUT completo en la columna **RUT** del padrón de `admin_ti`.
 
 ### 9.2 Dataset semilla abundante (12 colecciones)
 

@@ -46,7 +46,7 @@ A continuación se registran las decisiones que materializan ese contexto, con s
 
 **Decisión**: guardar las colecciones en `localStorage` con el prefijo `erp_compras:`, conservar los proveedores en la Entidad base (`erp_base_module:entities`) y cargar `src/compras/semilla.json` automáticamente la primera vez. Si `localStorage` no está disponible o está lleno, la capa de almacenamiento conserva los datos en memoria y muestra un mensaje.
 
-**Justificación**: no hay backend ni cuentas de usuario; la semilla permite demostrar las 11 historias sin pedir datos al usuario. Las fechas de la semilla se desplazan respecto de una fecha de referencia para que los vencimientos y alertas sigan siendo vigentes. El prefijo evita colisiones con otros módulos del ERP.
+**Justificación**: no hay backend ni cuentas de usuario; la semilla permite demostrar las 13 historias sin pedir datos al usuario. Las fechas de la semilla se desplazan respecto de una fecha de referencia para que los vencimientos y alertas sigan siendo vigentes. El prefijo evita colisiones con otros módulos del ERP.
 
 **Alternativas consideradas**:
 
