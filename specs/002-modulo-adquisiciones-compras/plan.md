@@ -37,7 +37,7 @@ _Según `.specify/memory/constitution.md` v1.0.0._
 - **IV. Rendimiento**: las colecciones se leen una vez por pantalla y se filtran en memoria; el objetivo de 500 registros se verifica con los datos semilla ampliados.
 - **Estándares de calidad**: antes de la entrega se ejecutan `npm run lint` (ESLint) y `npm run format:check` (Prettier). El alcance real de `format:check`, definido en `.prettierignore`, cubre todo el código fuente y las pruebas (`src/**`, `tests/**`, `index.html` y la configuración `.mjs`); excluye dependencias, artefactos generados, `specs/`, `docs/` y archivos Markdown/JSON. T107 queda cerrada con este alcance ampliado.
 
-Resultado: **conforme en calidad de código**. La deuda conocida y el estado detallado se registran en [`tasks.md`](tasks.md) como fuente canónica; no queda deuda funcional pendiente, solo la validación humana externa indicada abajo.
+Resultado: **conforme en calidad de código**. La deuda funcional está cerrada: la implementación está completada y el MVP está verificado y listo para entrega (**cerrada con nota**). El recorrido manual indicado abajo queda como validación humana externa, no como trabajo pendiente. El estado detallado se registra en [`tasks.md`](tasks.md) como fuente canónica.
 
 **Puerta de cierre (Constitución II)**: las tareas funcionales T127, T137 y T139 están cerradas y las pruebas de FR-033 y FR-035 pasan. Queda como validación humana externa el recorrido manual de los escenarios 1 a 8 de `quickstart.md`.
 
@@ -201,7 +201,7 @@ Todos ficticios: 4 centros de costo, **7 usuarios** (`u-solicitante-1`, `u-solic
 ## Gobernanza de identidades y datos (Fase 23, 2026-11-25)
 
 - **Alcance**: `index.html`, `src/app.js`, `src/styles.css` y los módulos `gobernanza.js`, `auditoria.js` y `administracion.js` bajo `src/compras/`. Sin cambios en `src/storage.js`, `tests/unit/storage.test.js` ni `eslint.config.mjs`.
-- **Arquitectura**: `gobernanza.js` es la única fuente del modo de datos, los parámetros dinámicos, las solicitudes OTP y las notificaciones internas; usa el prefijo `erp_compras:` y respaldo en memoria. `auditoria.js` mantiene un log append-only con hash encadenado, separado de `trazabilidad.js`. `administracion.js` concentra las operaciones sensibles y exige token OTP vigente antes de escribir.
+- **Arquitectura**: `gobernanza.js` es la única fuente del modo de datos, los parámetros dinámicos, las solicitudes OTP y las notificaciones internas; usa el prefijo `erp_compras:` y respaldo en memoria; el OTP tiene vigencia de 5 minutos y admite hasta 3 intentos. `auditoria.js` mantiene un log append-only con hash encadenado, separado de `trazabilidad.js`. `administracion.js` concentra las operaciones sensibles y exige token OTP vigente antes de escribir.
 - **Modo Demo / Modo Real**: `almacenamiento.js` captura y restaura una instantánea por modo; el cambio cierra la sesión y evita mezclar datos transaccionales. El directorio solo se materializa en Modo Demo y revela correo, clave de simulación, rol y centro de costo.
 - **Identidad y permisos**: `autenticacion.js` acepta correo corporativo o RUT con Módulo 11 y filtra cuentas `activo === false`. `PERMISOS` incorpora `gestionar_usuarios`, `suspender_usuario`, `consultar_auditoria_forense`, `configurar_parametros` y `desbloquear_excepciones`, todos restringidos a `admin_ti`.
 - **Parámetros**: `COMPRAS_PARAMETROS` y `UMBRAL_COTIZACIONES` conservan sus valores iniciales para compatibilidad; las reglas y sus consumidores invocan `umbralCotizaciones()` / `toleranciaConciliacion()` para resolver los valores vigentes.
@@ -217,7 +217,7 @@ Todos ficticios: 4 centros de costo, **7 usuarios** (`u-solicitante-1`, `u-solic
 ## Arquitectura actual y restricciones (MVP)
 
 - Interfaz: GitHub Dark (#0D1117, #161B22, #2F81F7), barra lateral con íconos SVG lineales, Asistente IA local con guardrails RBAC y dominio ERP.
-- Login: conmutador único Modo Demo / Modo Real sin saltos de layout; Modo Demo carga 12 colecciones de semilla.json y directorio de acceso rápido con 7 usuarios; Modo Real exige correo+contraseña y colecciones transaccionales vacías con catálogos base.
+- Login: conmutador único Modo Demo / Modo Real sin saltos de layout; Modo Demo carga 12 colecciones de semilla.json y directorio de acceso rápido con 7 usuarios; Modo Real exige correo corporativo o RUT Módulo 11 y contraseña, con colecciones transaccionales vacías y catálogos base.
 - RBAC estricto por rol (solicitante, comprador, jefe_compras, bodega, admin_ti) según matriz FR-033.
 - No modificar src/storage.js ni eslint.config.mjs.
 - Prohibido renderizar vistas o botones genéricos del template base (Documentos, Entidades, Búsqueda, Panel genérico).

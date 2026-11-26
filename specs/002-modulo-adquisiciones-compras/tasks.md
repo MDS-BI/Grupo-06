@@ -423,7 +423,7 @@
 
 - [x] T169 [US1] [FR-038] [SC-018] Implementar los catálogos cerrados de bancos y tipos de cuenta y la normalización de alias en `src/compras/proveedores.js` y `src/compras/vista.js`; rechazar valores fuera del catálogo. Pruebas en `tests/unit/compras/catalogos-bancarios.test.js`.
 - [x] T170 [US1] [FR-039] [SC-018] Implementar el auto-relleno de CuentaRUT (banco fijo `BancoEstado`, número sin dígito verificador, aviso editable y restricción de banco) en `src/compras/proveedores.js`; pruebas en `tests/unit/compras/catalogos-bancarios.test.js` y `tests/integration/compras/vista.test.js`.
-- [x] T171 [US1] [FR-040] [SC-019] Mostrar las siete columnas y ampliar el buscador sincronizado en `src/compras/vista.js`; completar los 12 proveedores semilla en `src/compras/semilla.json`; pruebas en `tests/integration/compras/proveedores.test.js` y `vista.test.js`.
+- [x] T171 [US1] [FR-040] [SC-019] Mostrar las siete columnas y ampliar el buscador sincronizado en `src/compras/vista.js`, con un ancho mínimo de 320 px en escritorio y placeholder legible sin truncamiento (aserto en `tests/integration/compras/vista.test.js`); completar los 12 proveedores semilla en `src/compras/semilla.json`; pruebas en `tests/integration/compras/proveedores.test.js` y `vista.test.js`.
 - [x] T172 [US1] [FR-041] Mantener operativo en Modo Real el botón **Cargar catálogo base de proveedores/insumos** sin sobrescribir registros del usuario; prueba en `tests/integration/compras/proveedores.test.js`.
 - [x] T173 [SC-018, SC-019] Verificación automatizada completada: `npx vitest run` (27 archivos aprobados y 10 omitidos; 320 pruebas aprobadas y 56 omitidas), `npm run lint`, `npm run format:check` y `npm run build` sin errores.
 
@@ -439,7 +439,7 @@
 
 - [x] T161 [FR-042] Conmutador Modo Demo / Modo Real persistido en `gobernanza.js` con instantáneas separadas por modo en `almacenamiento.js`, ingreso por correo o RUT Módulo 11 en `autenticacion.js`, error junto al campo y directorio revelable solo en Modo Demo desde `app.js`/`index.html`.
 - [x] T162 [FR-043] Padrón completo en `vista.js` con siete usuarios de nombre propio, RUT resuelto por `visibilidad.js`, correo, centro de costo, estado y acciones; enlace clicable por nombre hacia la ficha, suspensión y reactivación con `administracion.js`, bloqueo de autop suspensión y de dejar sin `admin_ti` activo.
-- [x] T163 [FR-044] Solicitud y validación de OTP de 6 dígitos con expiración e intentos en `gobernanza.js`, notificación interna al titular, ayuda visual solo en Modo Demo, campos bloqueados hasta la validación y guardado con validación de RUT Módulo 11 y correo corporativo.
+- [x] T163 [FR-044] Solicitud y validación de OTP de 6 dígitos con vigencia de 5 minutos y máximo 3 intentos en `gobernanza.js`, notificación interna al titular, ayuda visual solo en Modo Demo, campos bloqueados hasta la validación y guardado con validación de RUT Módulo 11 y correo corporativo.
 - [x] T164 [FR-045] Log de Auditoría Forense inmutable en `auditoria.js`, separado de `trazabilidad.js`, con hash encadenado, filtros por actor/afectado/tipo, verificación de integridad y exportación CSV restringida a `admin_ti`.
 - [x] T165 [FR-046] Parámetros dinámicos de umbral y tolerancia en `gobernanza.js`, aplicados por `reglas.js` y sus consumidores (`cotizaciones.js`, `ordenes-compra.js`, `asistente.js`, `vista.js`) sin alterar los valores iniciales de `module-config.js`.
 - [x] T166 [FR-004] Desbloqueo de excepciones en `administracion.js`: exige permiso `desbloquear_excepciones` y token OTP vigente, reutiliza `desbloquearProveedor()` y deja evento forense.
@@ -454,7 +454,7 @@
 
 > **Fuente canónica**: esta sección y la tabla «Deuda conocida» de `tasks.md` son el registro único del estado de las Fases 16–23; `spec.md` y `plan.md` contienen solo un resumen con referencia cruzada aquí.
 >
-> Estado global: implementación completada (**cerrada con nota**); las tareas funcionales T127, T137 y T139 están cerradas y sus pruebas pasan. El recorrido manual de los escenarios 1 a 8 de `quickstart.md` (T144/T155/T168) queda registrado como **validación humana externa**, no como trabajo pendiente.
+> Estado global: implementación completada, MVP funcional, verificado y listo para entrega (**cerrada con nota**); las tareas funcionales T127, T137 y T139 están cerradas y sus pruebas pasan. El recorrido manual de los escenarios 1 a 8 de `quickstart.md` (T144/T155/T168) queda registrado como **validación humana externa**, no como trabajo pendiente.
 
 - **Fase 16**: cerrada (`visibilidad.js`, `PERMISOS` y pruebas de matriz).
 - **Fase 17**: navegación agrupada, solo lectura, bloqueo de accesos, historial/exportación, encabezado y filtro del `solicitante` en servicios, UI y CSV implementados y verificados (T127 cerrada).
@@ -511,8 +511,8 @@ El estado de estas tareas se registra aquí de forma canónica y `spec.md`/`plan
 - **Cierre del rediseño (Fase 19)**: al finalizar las fases 17 y 18.
 - **Solicitudes para los cinco roles y rol fijo (Fase 20)**: T146–T149 pueden empezar tras la Fase 16 (T149 en paralelo); T150 depende de T121 y T149; T151 de T150; T152 y T153 de T146–T148 (T152 también de T149); T154 y T155 cierran la fase. Conviene ejecutar T147 antes o junto con T125 y T130, porque las tres tocan la barra superior y la navegación.
 - **Matriz RBAC de datos sensibles (Fase 21)**: depende de las fases 1 a 20 y consolida la visibilidad de RUT y cuentas usada por US1, US12 y la exportación. T156 centraliza la matriz en `visibilidad.js`; T157 y T158 la propagan a servicios, vistas, trazabilidad, CSV y asistente; T159 y T160 verifican y sincronizan la documentación.
-- **Catálogos bancarios y listado de proveedores (Fase 22)**: depende de la Fase 21 porque la matriz de `visibilidad.js` rige la cuenta enmascarada del listado. T169 y T170 amplían el formulario y el auto-relleno de `CuentaRUT`; T171 y T172 el listado y la carga base en Modo Real; T173 cierra la fase.
-- **Gobernanza de identidades y datos (Fase 23)**: depende de la Fase 21 porque toda edición usa la matriz canónica de `visibilidad.js`, y de la Fase 22 porque el padrón y los parámetros se apoyan en los catálogos ya centralizados. T161 habilita el conmutador y el ingreso dual; T162 y T163 comparten el modal de ficha; T164 consume los eventos generados por T162, T163, T165 y T166; T167 y T168 cierran la fase.
+- **Catálogos bancarios y listado de proveedores (Fase 22)**: depende de la Fase 21 porque la matriz de `visibilidad.js` rige la cuenta enmascarada del listado. T169 y T170 amplían el formulario y el auto-relleno de `CuentaRUT`; T171 y T172 el listado y la carga base en Modo Real; T173 cierra la fase. T172 depende además de T161 (conmutador Modo Real): T161 se ejecuta al inicio de la Fase 23, en paralelo con el cierre de la Fase 22, y precede a T172, por lo que no hay ciclo entre las fases 22 y 23.
+- **Gobernanza de identidades y datos (Fase 23)**: depende de la Fase 21 porque toda edición usa la matriz canónica de `visibilidad.js`; T161 (conmutador e ingreso dual) puede iniciarse en paralelo con la Fase 22 y debe preceder a T172; T162–T168 dependen además de la Fase 22 porque el padrón y los parámetros se apoyan en los catálogos ya centralizados. T162 y T163 comparten el modal de ficha; T164 consume los eventos generados por T162, T163, T165 y T166; T167 y T168 cierran la fase.
 
 ### Dependencias Críticas
 
