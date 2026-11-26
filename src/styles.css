@@ -23,7 +23,7 @@
   --sidebar-accent: #2f81f7;
   --radius: 10px;
   --shadow: 0 1px 3px rgba(16, 24, 40, 0.08), 0 1px 2px rgba(16, 24, 40, 0.04);
-  --font-sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   --topbar-h: 60px;
   --sidebar-w: 230px;
 }
@@ -75,19 +75,19 @@ h3,
 
 h1 {
   font-size: 1.65rem;
-  font-weight: 600;
+  font-weight: 700;
   margin: 0 0 6px;
   line-height: 1.2;
 }
 h2 {
   font-size: 1.05rem;
-  font-weight: 600;
+  font-weight: 700;
   margin: 0 0 12px;
   line-height: 1.3;
 }
 h3 {
   font-size: 0.95rem;
-  font-weight: 600;
+  font-weight: 700;
   margin: 0 0 8px;
 }
 
@@ -140,9 +140,16 @@ h3 {
   overflow-y: auto;
   color-scheme: dark;
   background:
-    radial-gradient(900px 520px at 12% -10%, rgba(37, 99, 235, 0.22), transparent 62%),
-    radial-gradient(720px 480px at 100% 100%, rgba(59, 130, 246, 0.12), transparent 60%),
-    #1e2023;
+    linear-gradient(135deg, rgba(13, 17, 23, 0.92) 0%, rgba(13, 17, 23, 0.78) 55%, rgba(13, 17, 23, 0.94) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%230D1117'/%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.06'%3E%3Cpath d='M0 400 L400 0'/%3E%3Cpath d='M0 300 L300 0'/%3E%3Cpath d='M0 200 L200 0'/%3E%3Cpath d='M100 400 L400 100'/%3E%3Cpath d='M200 400 L400 200'/%3E%3C/g%3E%3C/svg%3E"),
+    #0D1117;
+  background-size: cover, cover, auto;
+  filter: none;
+}
+:root[data-theme='light'] .login-overlay {
+  background:
+    linear-gradient(135deg, rgba(246, 248, 250, 0.88) 0%, rgba(246, 248, 250, 0.82) 55%, rgba(246, 248, 250, 0.92) 100%);
+  background-color: #0D1117;
 }
 
 .login-overlay::before {
@@ -150,11 +157,13 @@ h3 {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  background-image:
-    linear-gradient(rgba(156, 163, 175, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(156, 163, 175, 0.045) 1px, transparent 1px);
-  background-size: 44px 44px;
-  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), transparent 75%);
+  z-index: -1;
+  background: url('/login-bg.avif') center/cover no-repeat;
+  filter: grayscale(100%) contrast(1.15) brightness(0.32);
+}
+:root[data-theme='light'] .login-overlay::before {
+  opacity: 0.14;
+  filter: grayscale(100%) contrast(1.15) brightness(0.6);
 }
 
 .login-overlay[hidden] {
@@ -165,9 +174,10 @@ h3 {
   position: relative;
   width: min(100%, 960px);
   padding: clamp(24px, 4vw, 40px);
-  border: 1px solid #36393f;
+  border: 1px solid #30363D;
   border-radius: 18px;
-  background: linear-gradient(155deg, rgba(40, 42, 46, 0.96), rgba(30, 32, 35, 0.98));
+  background: rgba(22, 27, 34, 0.94);
+  backdrop-filter: blur(12px);
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
@@ -227,7 +237,7 @@ h3 {
   margin-bottom: 8px;
   color: #f3f4f6;
   font-size: 0.86rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .login-form input,
@@ -269,13 +279,13 @@ h3 {
   white-space: nowrap;
   min-height: 44px;
   padding: 0 6px;
-  font-weight: 600;
+  font-weight: 700;
 }
 .login-password .link:hover { color: #bfdbfe; }
 
 .campo-ayuda { margin: 6px 0 0; color: #9ca3af; font-size: 0.78rem; }
 .campo-ayuda strong { color: #cbd5e1; }
-.campo-error { margin: 6px 0 0; color: #f87171; font-size: 0.8rem; font-weight: 600; }
+.campo-error { margin: 6px 0 0; color: #f87171; font-size: 0.8rem; font-weight: 700; }
 .campo-error[hidden],
 .login-error[hidden] { display: none; }
 
@@ -288,7 +298,7 @@ h3 {
   background: rgba(127, 29, 29, 0.22);
   color: #FECACA;
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .login-form button.login-submit {
@@ -310,7 +320,7 @@ h3 {
   background: rgba(37, 99, 235, 0.08);
   color: #93c5fd;
   font-size: 0.86rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
 }
 .btn-modo-presentacion:hover {
@@ -422,7 +432,7 @@ h3 {
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--danger) 10%, var(--surface));
   color: var(--danger);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .compras-aviso[hidden] {
@@ -460,13 +470,13 @@ h3 {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: -0.01em;
 }
 
 .brand-name {
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .logo-mark {
@@ -492,7 +502,7 @@ h3 {
   background: var(--surface);
   color: var(--text);
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .btn-tema:hover {
@@ -515,7 +525,7 @@ h3 {
   background: var(--surface-alt);
   color: var(--text);
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 700;
   white-space: nowrap;
   transition: all 0.2s ease;
 }
@@ -539,7 +549,7 @@ h3 {
   background: #ede9fe;
   color: #5b21b6;
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 700;
   white-space: nowrap;
 }
 
@@ -674,7 +684,7 @@ textarea:focus-visible {
 .nav-module.active {
   background: var(--accent);
   color: #ffffff;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .content {
@@ -731,7 +741,7 @@ textarea:focus-visible {
 
 .stat-value {
   font-size: 1.9rem;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
 }
@@ -850,7 +860,7 @@ form > div {
 
 label {
   display: block;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.9rem;
   margin-bottom: 4px;
 }
@@ -901,7 +911,7 @@ button.primary {
   background: var(--accent);
   border-color: var(--accent);
   color: #ffffff;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 button.primary:hover {
@@ -918,7 +928,7 @@ button.danger {
   background: color-mix(in srgb, var(--danger) 10%, var(--surface));
   border-color: color-mix(in srgb, var(--danger) 35%, var(--border));
   color: var(--danger);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 button.danger:hover {
@@ -983,7 +993,7 @@ button.danger:hover {
   border-radius: 999px;
   padding: 0 9px;
   font-size: 0.82em;
-  font-weight: 600;
+  font-weight: 700;
   white-space: nowrap;
 }
 
@@ -1155,7 +1165,7 @@ button.danger:hover {
 .compras-content th {
   color: var(--muted);
   font-size: 0.72rem;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   background: color-mix(in srgb, var(--surface-alt) 92%, var(--surface));
@@ -1182,7 +1192,7 @@ button.danger:hover {
   border: none;
   padding: 0;
   color: var(--accent-ink);
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   text-decoration: underline;
 }
@@ -1200,7 +1210,7 @@ button.danger:hover {
   background: rgba(37, 99, 235, 0.1);
   color: var(--accent-ink);
   font-size: 0.74rem;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.3;
   white-space: nowrap;
   border: 1px solid transparent;
@@ -1309,7 +1319,7 @@ button.danger:hover {
   justify-content: space-between;
   gap: 8px;
   font-size: 0.88rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .flow-step-head strong {
@@ -1337,13 +1347,14 @@ button.danger:hover {
 
 .pending-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
   gap: 14px;
 }
 
 .pending-card {
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   gap: 10px;
   padding: 16px;
   border: 1px solid var(--border);
@@ -1372,7 +1383,7 @@ button.danger:hover {
 
 .pending-card-title {
   font-size: 0.95rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text);
 }
 .pending-card-detail {
@@ -1388,6 +1399,7 @@ button.danger:hover {
 
 .pending-card-item {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 10px;
   font-size: 0.82rem;
@@ -1397,9 +1409,11 @@ button.danger:hover {
 
 .pending-card-item-label {
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  flex: 1 1 auto;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  word-break: break-word;
   color: var(--text);
 }
 
@@ -1415,8 +1429,55 @@ button.danger:hover {
 .pending-card-cta {
   margin-top: auto;
   font-size: 0.82rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--accent-ink);
+}
+
+.login-toggle-clave {
+  text-decoration: none;
+  background: #21262D;
+  color: #8B949E;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+.login-toggle-clave:hover {
+  color: #F0F6FC;
+  text-decoration: none;
+}
+
+.login-theme-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 50;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  background: #161B22;
+  border: 1px solid #30363D;
+  color: #F0F6FC;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+.login-theme-toggle:hover {
+  background: #21262D;
+}
+:root[data-theme='light'] .login-theme-toggle {
+  background: #FFFFFF;
+  border-color: #D0D7DE;
+  color: #1F2328;
+}
+.login-theme-toggle svg {
+  display: block;
 }
 
 .counter {
@@ -1483,7 +1544,7 @@ button.danger:hover {
   background: color-mix(in srgb, var(--accent) 8%, var(--surface));
   color: var(--accent-ink);
   font-size: 0.7rem;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.02em;
   line-height: 1.4;
 }
@@ -1593,7 +1654,7 @@ button.danger:hover {
 .asistente-sesion {
   margin: 12px 0 6px;
   font-size: 0.82rem;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.4;
   overflow-wrap: anywhere;
 }
@@ -1609,7 +1670,7 @@ button.danger:hover {
   background: color-mix(in srgb, var(--accent) 8%, var(--surface));
   color: var(--accent-ink);
   font-size: 0.72rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .asistente-limpiar {
@@ -1679,7 +1740,7 @@ button.danger:hover {
 .asistente-confirmar-titulo {
   margin: 0 0 8px;
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .asistente-confirmar-acciones {
@@ -1773,6 +1834,7 @@ button.danger:hover {
 
 /* Gobernanza: Modo Demo / Modo Real, padrón, OTP y auditoría forense */
 .login-modo-datos { margin:0 0 16px; padding:10px 12px; border:1px solid #30363d; border-radius:8px; background:#161b22; display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+.login-modo-datos[hidden] { display: none; }
 .login-modo-datos legend { padding:0 6px; color:#8b949e; font-size:12px; text-transform:uppercase; letter-spacing:.06em; }
 .login-modo-datos label { display:inline-flex; align-items:center; gap:6px; color:#c9d1d9; font-size:13px; cursor:pointer; }
 .login-modo-datos input[type="radio"] { accent-color:#2f81f7; }

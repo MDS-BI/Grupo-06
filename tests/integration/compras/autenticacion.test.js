@@ -147,7 +147,7 @@ describe('acceso a la interfaz de compras', () => {
   it('revela credenciales en Modo Demo pero nunca en Modo Real', async () => {
     qs('btn-modo-presentacion').click();
     expect(qs('login-directorio').hidden).toBe(false);
-    expect(qs('login-directorio-lista').querySelectorAll('.directory-user')).toHaveLength(7);
+    expect(qs('login-directorio-lista').querySelectorAll('.directory-user')).toHaveLength(8);
     expect(qs('login-directorio-lista').textContent).toContain(CLAVE_DEMO);
 
     const modoReal = qs('modo-real');

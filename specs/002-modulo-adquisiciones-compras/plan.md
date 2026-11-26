@@ -35,7 +35,7 @@ _Según `.specify/memory/constitution.md` v1.0.0._
 - **II. Pruebas primero**: cada regla de la sección 5 de `data-model.md` tiene prueba unitaria antes o junto con su implementación; cada historia P1 tiene al menos una prueba de integración de su flujo.
 - **III. Experiencia de usuario consistente**: todas las pantallas nuevas usan el marco del template (barra superior, barra lateral, tokens de `styles.css`), mensajes de validación en español y estados vacíos; encabezado con la sección actual y acciones rápidas rotuladas con una descripción legible, nunca con la clave interna del permiso. La accesibilidad (SC-013) se verifica en `tests/integration/compras/vista.test.js`: etiqueta por campo en las diez vistas, foco por teclado, errores junto al campo y contraste ≥ 4,5:1.
 - **IV. Rendimiento**: las colecciones se leen una vez por pantalla y se filtran en memoria; el objetivo de 500 registros se verifica con los datos semilla ampliados.
-- **Estándares de calidad**: antes de la entrega se ejecutan `npm run lint` (ESLint) y `npm run format:check` (Prettier). El alcance real de `format:check`, definido en `.prettierignore`, cubre todo el código fuente y las pruebas (`src/**`, `tests/**`, `index.html` y la configuración `.mjs`); excluye dependencias, artefactos generados, `specs/`, `docs/` y archivos Markdown/JSON. T107 queda cerrada con este alcance ampliado.
+- **Estándares de calidad**: antes de la entrega se ejecutan `npm run lint` (ESLint) y `npm run format:check` (Prettier). El alcance real de `format:check`, definido en `.prettierignore`, se limita al núcleo base conservado del template (`src/storage.js` y `tests/unit/storage.test.js`); el resto de `src/**`, `tests/**`, `index.html`, la configuración `.mjs`, dependencias, artefactos generados, `specs/`, `docs/` y archivos Markdown/JSON quedan fuera de la verificación de formato. T107 queda cerrada con este alcance real, coherente con `README.md` y con la fila de deuda de `tasks.md`.
 
 Resultado: **conforme en calidad de código**. La deuda funcional está cerrada: la implementación está completada y el MVP está verificado y listo para entrega (**cerrada con nota**). El recorrido manual indicado abajo queda como validación humana externa, no como trabajo pendiente. El estado detallado se registra en [`tasks.md`](tasks.md) como fuente canónica.
 
@@ -45,7 +45,7 @@ Resultado: **conforme en calidad de código**. La deuda funcional está cerrada:
 
 La interfaz final no usa las vistas genéricas del template: toda la navegación ocurre dentro de `#view-compras` y `#compras-root`, con el rol simulado que se fija al ingresar (FR-037), según FR-032 y SC-014. `src/module-config.js` mantiene `userConfig = null` y su `COMPRAS_CONFIG` solo como referencia de la iteración descartada por configuración. La barra lateral se agrupa en Panel / **Adquisiciones** (Proveedores, Catálogo, Evaluaciones) / **Compras** (Solicitudes, Cotizaciones, Órdenes de compra, Recepciones, Facturas, Devoluciones) y cada rol ve solo las vistas que le asigna la matriz de visibilidad (FR-033, FR-034). El encabezado muestra la sección actual y no existe tarjeta "Sesión activa": el usuario y el rol se ven solo en el indicador de solo lectura de la barra superior, junto a **Cerrar sesión** (FR-036).
 
-**Rol fijo por sesión (FR-037)**: el rol se fija en `iniciarSesion()` (`src/compras/autenticacion.js`) y no cambia hasta `cerrarSesion()`. `src/app.js` deja de escuchar el `change` del antiguo selector `#rol-activo` y muestra en su lugar el indicador del usuario y rol; `setRolActivo()` (`src/compras/almacenamiento.js`) no modifica el rol de una sesión iniciada. `jefe_compras` pasa a pedir nombre al ingresar, igual que `solicitante` y `comprador`, para distinguir a los dos usuarios `jefe_compras` de la semilla.
+**Rol fijo por sesión (FR-037)**: el rol se fija en `iniciarSesion()` (`src/compras/autenticacion.js`) y no cambia hasta `cerrarSesion()`. `src/app.js` deja de escuchar el `change` del antiguo selector `#rol-activo` y muestra en su lugar el indicador del usuario y rol; `setRolActivo()` (`src/compras/almacenamiento.js`) no modifica el rol de una sesión iniciada. `jefe_compras` y `bodega` pasan a pedir nombre al ingresar, igual que `solicitante` y `comprador`, para distinguir a los dos usuarios de cada rol en la semilla; `admin_ti` ingresa solo por su rol por ser el único usuario de ese rol. En Modo Real la identidad se resuelve por correo o RUT para cualquier usuario.
 
 **Creación de solicitudes por los cinco roles**: `crear_solicitud` pasa a incluir a los cinco roles en `PERMISOS`; `src/compras/solicitudes.js` limita la edición al autor y la visibilidad de `solicitante` y `bodega` a sus propias solicitudes, y la aprobación sigue exigiendo un `jefe_compras` distinto del solicitante (regla 8).
 
@@ -151,7 +151,7 @@ Cada historia se asigna a un responsable en un Issue de GitHub con la etiqueta d
 
 ## Estado de las Fases 16–23 (2026-11-25)
 
-El registro detallado del estado de las Fases 16–23 y de la deuda conocida está en [`tasks.md`](tasks.md) como **fuente canónica**; aquí solo se mantiene este resumen con referencia cruzada. Las fases 16 a 23 están **cerradas con nota**: navegación agrupada, modo solo lectura, filtros por rol, panel FR-035, matriz RBAC de datos sensibles (Fase 21), catálogos bancarios (Fase 22) y gobernanza de identidades (Fase 23) quedan implementados y verificados. La verificación automatizada registró **27 archivos aprobados y 10 omitidos; 320 pruebas aprobadas y 56 omitidas**, con `npm run lint`, `npm run format:check` y `npm run build` sin errores. El recorrido manual de los escenarios 1 a 8 de `quickstart.md` queda únicamente como validación humana externa.
+El registro detallado del estado de las Fases 16–23 y de la deuda conocida está en [`tasks.md`](tasks.md) como **fuente canónica**; aquí solo se mantiene este resumen con referencia cruzada. Las fases 16 a 23 están **cerradas con nota**: navegación agrupada, modo solo lectura, filtros por rol, panel FR-035, matriz RBAC de datos sensibles (Fase 21), catálogos bancarios (Fase 22) y gobernanza de identidades (Fase 23) quedan implementados y verificados. La verificación automatizada registró **27 archivos aprobados y 10 omitidos; 321 pruebas aprobadas y 56 omitidas**, con `npm run lint`, `npm run format:check` y `npm run build` sin errores. El recorrido manual de los escenarios 1 a 8 de `quickstart.md` queda únicamente como validación humana externa.
 
 ## Plan de Pruebas
 
@@ -165,7 +165,7 @@ El registro detallado del estado de las Fases 16–23 y de la deuda conocida est
 
 ## Datos Semilla
 
-Todos ficticios: 4 centros de costo, **7 usuarios** (`u-solicitante-1`, `u-solicitante-2`, `u-comprador-1`, `u-jefe-1`, `u-jefe-2`, `u-bodega-1` y `u-admin-1`; el segundo `jefe_compras` aprueba las solicitudes que crea el primero), 12 proveedores (al menos uno de cada tamaño, uno bloqueado y uno con cuenta bancaria cambiada hace menos de 30 días), 20 productos, 10 solicitudes, 7 cotizaciones, 8 OC, 5 recepciones, 7 facturas, 2 devoluciones, 10 referencias de catálogo y 2 evaluaciones, con estados suficientes para que cada pantalla y alerta tenga algo que mostrar. Los siete usuarios tienen nombre propio chileno, correo único, `activo: true` y RUT válido con Módulo 11 (`validarRut()` en `reglas.js`); el RUT completo se exhibe en la columna **RUT** del padrón de `admin_ti`.
+Todos ficticios: 4 centros de costo, **8 usuarios** (`u-solicitante-1`, `u-solicitante-2`, `u-comprador-1`, `u-jefe-1`, `u-jefe-2`, `u-bodega-1`, `u-bodega-2` y `u-admin-1`; el segundo `jefe_compras` aprueba las solicitudes que crea el primero), 12 proveedores (al menos uno de cada tamaño, uno bloqueado y uno con cuenta bancaria cambiada hace menos de 30 días), 20 productos, 10 solicitudes, 7 cotizaciones, 8 OC, 5 recepciones, 7 facturas, 2 devoluciones, 10 referencias de catálogo y 2 evaluaciones, con estados suficientes para que cada pantalla y alerta tenga algo que mostrar. Los ocho usuarios tienen nombre propio chileno, correo único, `activo: true` y RUT válido con Módulo 11 (`validarRut()` en `reglas.js`); el RUT completo se exhibe en la columna **RUT** del padrón de `admin_ti`.
 
 ## Escalabilidad y Desarrollo Futuro
 
@@ -195,7 +195,7 @@ Todos ficticios: 4 centros de costo, **7 usuarios** (`u-solicitante-1`, `u-solic
 - **Accesibilidad/responsive**: mantener contraste 4.5:1, foco visible, teclado/ARIA, y evitar overflow horizontal de página.
 - **Sesión/rol**: `src/app.js` muestra indicador compacto de sesión; no existe control "Vista de rol"; `src/compras/almacenamiento.js` impide el cambio de rol en una sesión iniciada para los cinco roles.
 - **Permisos base**: `crear_solicitud` incluye los cinco roles; la semilla actualiza los nombres de los dos `jefe_compras`.
-- **Verificación**: `npm run lint`, `npm run format:check` y `npm run build` OK con el alcance ampliado de `.prettierignore`; `npm test -- --run` registra 27 archivos aprobados y 10 omitidos, 320 pruebas aprobadas y 56 omitidas. El recorrido manual por rol de los escenarios 1 a 8 de `quickstart.md` queda como validación humana externa en navegador.
+- **Verificación**: `npm run lint`, `npm run format:check` y `npm run build` OK con el alcance real de `.prettierignore` (núcleo base); `npm test -- --run` registra 27 archivos aprobados y 10 omitidos, 321 pruebas aprobadas y 56 omitidas. El recorrido manual por rol de los escenarios 1 a 8 de `quickstart.md` queda como validación humana externa en navegador.
 - **Cierre verificado**: navegación agrupada, modo lectura, filtros por rol, encabezado por sección, panel FR-035 y pruebas SC-015/SC-016/SC-017 completados y verificados (T125–T139); el cumplimiento de la matriz de visibilidad queda declarado.
 
 ## Gobernanza de identidades y datos (Fase 23, 2026-11-25)
@@ -205,7 +205,7 @@ Todos ficticios: 4 centros de costo, **7 usuarios** (`u-solicitante-1`, `u-solic
 - **Modo Demo / Modo Real**: `almacenamiento.js` captura y restaura una instantánea por modo; el cambio cierra la sesión y evita mezclar datos transaccionales. El directorio solo se materializa en Modo Demo y revela correo, clave de simulación, rol y centro de costo.
 - **Identidad y permisos**: `autenticacion.js` acepta correo corporativo o RUT con Módulo 11 y filtra cuentas `activo === false`. `PERMISOS` incorpora `gestionar_usuarios`, `suspender_usuario`, `consultar_auditoria_forense`, `configurar_parametros` y `desbloquear_excepciones`, todos restringidos a `admin_ti`.
 - **Parámetros**: `COMPRAS_PARAMETROS` y `UMBRAL_COTIZACIONES` conservan sus valores iniciales para compatibilidad; las reglas y sus consumidores invocan `umbralCotizaciones()` / `toleranciaConciliacion()` para resolver los valores vigentes.
-- **Verificación**: 27 archivos aprobados y 10 omitidos, 320 pruebas aprobadas y 56 omitidas; `lint`, `format:check` y `build` sin errores. Cobertura específica en `usuarios.test.js` (unitario e integración), `otp.test.js`, `auditoria-forense.test.js` y `autenticacion.test.js`.
+- **Verificación**: 27 archivos aprobados y 10 omitidos, 321 pruebas aprobadas y 56 omitidas; `lint`, `format:check` y `build` sin errores. Cobertura específica en `usuarios.test.js` (unitario e integración), `otp.test.js`, `auditoria-forense.test.js` y `autenticacion.test.js`.
 
 ## Seguimiento de Complejidad
 
@@ -217,7 +217,7 @@ Todos ficticios: 4 centros de costo, **7 usuarios** (`u-solicitante-1`, `u-solic
 ## Arquitectura actual y restricciones (MVP)
 
 - Interfaz: GitHub Dark (#0D1117, #161B22, #2F81F7), barra lateral con íconos SVG lineales, Asistente IA local con guardrails RBAC y dominio ERP.
-- Login: conmutador único Modo Demo / Modo Real sin saltos de layout; Modo Demo carga 12 colecciones de semilla.json y directorio de acceso rápido con 7 usuarios; Modo Real exige correo corporativo o RUT Módulo 11 y contraseña, con colecciones transaccionales vacías y catálogos base.
+- Login: conmutador único Modo Demo / Modo Real sin saltos de layout; Modo Demo carga 12 colecciones de semilla.json y directorio de acceso rápido con 8 usuarios; Modo Real exige correo corporativo o RUT Módulo 11 y contraseña, con colecciones transaccionales vacías y catálogos base.
 - RBAC estricto por rol (solicitante, comprador, jefe_compras, bodega, admin_ti) según matriz FR-033.
 - No modificar src/storage.js ni eslint.config.mjs.
 - Prohibido renderizar vistas o botones genéricos del template base (Documentos, Entidades, Búsqueda, Panel genérico).

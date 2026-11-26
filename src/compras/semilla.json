@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "usuarios": [
     {
       "id": "u-solicitante-1",
@@ -44,6 +44,15 @@
       "rut": "14.678.901-3",
       "centro_costo_id": "cc-004",
       "email": "bodega@pyme.cl",
+      "activo": true
+    },
+    {
+      "id": "u-bodega-2",
+      "nombre": "Paula Cárdenas Rivas",
+      "rol": "bodega",
+      "rut": "19.876.543-0",
+      "centro_costo_id": "cc-004",
+      "email": "paula.cardenas@pyme.cl",
       "activo": true
     },
     {

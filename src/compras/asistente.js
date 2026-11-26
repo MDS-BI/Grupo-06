@@ -498,7 +498,7 @@ function respuestaRutEmpleados(usuario) {
   return {
     texto:
       `RUT de empleados visibles para ${etiquetaRol(usuario.rol)}:\n` +
-      listaTexto(empleados, 7)
+      listaTexto(empleados, 8)
   };
 }
 

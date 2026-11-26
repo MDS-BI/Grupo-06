@@ -33,7 +33,12 @@ export const DIAS_CATALOGO_DESACTUALIZADO = 90;
 export const ROLES = ['solicitante', 'comprador', 'jefe_compras', 'bodega', 'admin_ti'];
 
 /** Roles que identifican a una persona por nombre en el acceso. */
-export const ROLES_CON_NOMBRE = Object.freeze(['solicitante', 'comprador', 'jefe_compras']);
+export const ROLES_CON_NOMBRE = Object.freeze([
+  'solicitante',
+  'comprador',
+  'jefe_compras',
+  'bodega'
+]);
 
 export function requiereNombre(rol) {
   return ROLES_CON_NOMBRE.includes(rol);

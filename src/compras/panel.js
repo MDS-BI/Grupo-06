@@ -40,7 +40,7 @@ function itemOrden(o) {
 function itemFactura(f) {
   return {
     id: f.id,
-    etiqueta: `${f.tipo_documento} ${f.folio} · ${f.proveedor_id}`,
+    etiqueta: `Folio ${f.folio} · ${f.proveedor_id}`,
     estado: f.estado,
     monto: f.total,
     dias_restantes: f.dias_restantes
@@ -261,6 +261,21 @@ export function construirPanel(usuario = getUsuarioActivo(), hoy = hoyISO()) {
     (o) => o.estado !== 'anulada' && mesDe(o.fecha_emision) === mes
   );
   const indicadores = { mes };
+  indicadores.monto_comprometido = ordenesMes.reduce(
+    (sum, o) => sum + Number(o.total || 0),
+    0
+  );
+  indicadores.ordenes_abiertas = ordenes.filter((o) =>
+    ['emitida', 'recibida_parcial'].includes(o.estado)
+  ).length;
+  const facturasAprobadasPago = facturas.filter(
+    (f) => f.estado === 'aprobada_pago'
+  );
+  indicadores.facturas_aprobadas_pago = facturasAprobadasPago.length;
+  indicadores.monto_aprobado_pago = facturasAprobadasPago.reduce(
+    (sum, f) => sum + Number(f.total || 0),
+    0
+  );
   if (rol === 'comprador') {
     const registradas = facturas.filter((f) => f.tipo_documento === 'factura').length;
     indicadores.facturas_con_discrepancia = registradas

@@ -6,7 +6,7 @@ Describir las interfaces que el módulo `002` expone hacia el usuario y hacia ot
 
 ## Interfaz de sesión y permisos
 
-- El rol de la sesión es uno de `solicitante`, `comprador`, `bodega`, `jefe_compras` y `admin_ti`, se elige en la pantalla de ingreso (`iniciarSesion(rol, nombre, clave)`) y queda fijo hasta `cerrarSesion()` (FR-037). `solicitante`, `comprador` y `jefe_compras` exigen un nombre que corresponda a un usuario semilla de ese rol; `bodega` y `admin_ti` ingresan solo por su rol.
+- El rol de la sesión es uno de `solicitante`, `comprador`, `bodega`, `jefe_compras` y `admin_ti`, se elige en la pantalla de ingreso (`iniciarSesion(rol, nombre, clave)`) y queda fijo hasta `cerrarSesion()` (FR-037). `solicitante`, `comprador`, `jefe_compras` y `bodega` exigen un nombre que corresponda a un usuario semilla de ese rol; `admin_ti` ingresa solo por su rol por ser el único usuario de ese rol. En Modo Real la identidad se resuelve por correo o RUT para cualquier usuario.
 - La barra superior no tiene un selector de rol: el antiguo `#rol-activo` se reemplaza por un indicador de solo lectura con el usuario y el rol de la sesión, junto al botón **Cerrar sesión**. Ningún evento de la interfaz cambia el rol de una sesión iniciada.
 - `setRolActivo(rol)` no modifica el rol de una sesión iniciada: devuelve la sesión vigente sin cambios. Para usar otro rol se cierra sesión y se ingresa de nuevo; al ingresar, la aplicación abre el Panel del rol (FR-034).
 - `getUsuarioActivo()` devuelve el usuario de la semilla con que se inició la sesión. `puede(accion, usuario)` consulta `PERMISOS` y `exigirPermiso()` lanza un error en español cuando la acción no está permitida.

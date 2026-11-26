@@ -34,11 +34,11 @@ http://localhost:5173
 En la pantalla de acceso se pueden usar dos caminos:
 
 1. **Correo corporativo o RUT**: escribir uno de los correos o RUT válidos de la tabla siguiente y la clave genérica `Compras2026`. El RUT se valida con Módulo 11 y un dígito verificador incorrecto se rechaza junto al campo.
-2. **Directorio de acceso rápido**: solo en **Modo Demo**, pulsar **Activar modo presentación** y elegir una de las siete entradas; cada una completa correo y clave y revela la clave para exhibirla. En **Modo Real** el directorio no se materializa en el DOM.
+2. **Directorio de acceso rápido**: solo en **Modo Demo**, pulsar **Activar modo presentación** y elegir una de las ocho entradas; cada una completa correo y clave y revela la clave para exhibirla. En **Modo Real** el directorio no se materializa en el DOM.
 
-El botón **Mostrar** permite verificar la clave. **Cerrar sesión** vuelve al portal sin borrar los datos. El rol queda fijo durante toda la sesión: para probar otro rol hay que cerrar sesión e ingresar de nuevo. No existe un control para cambiar de rol en vivo.
+El botón **Mostrar** permite verificar la clave. **Cerrar sesión** vuelve al portal sin borrar los datos. `solicitante`, `comprador`, `jefe_compras` y `bodega` se identifican por nombre —o por correo/RUT en Modo Real— para distinguir a los dos usuarios de jefatura y de bodega; `admin_ti` ingresa solo por su rol por ser el único usuario de ese rol. El rol queda fijo durante toda la sesión: para probar otro rol hay que cerrar sesión e ingresar de nuevo. No existe un control para cambiar de rol en vivo.
 
-### 1.3 Credenciales de los 7 usuarios de `semilla.json`
+### 1.3 Credenciales de los 8 usuarios de `semilla.json`
 
 La clave es común para todos: **`Compras2026`**. Es una clave de demostración, no protege datos reales.
 
@@ -51,12 +51,13 @@ La clave es común para todos: **`Compras2026`**. Es una clave de demostración,
 | 5 | `u-bodega-1` | Rodrigo Araya Mena | `14.678.901-3` | `bodega@pyme.cl` | `bodega` | `cc-004` · `CC-BOD` Bodega |
 | 6 | `u-admin-1` | Tomás Villarroel Sepúlveda | `13.789.012-7` | `admin.ti@pyme.cl` | `admin_ti` | `cc-003` · `CC-COM` Compras |
 | 7 | `u-jefe-2` | Valentina Lagos Fuentes | `15.567.890-9` | `valentina.lagos@pyme.cl` | `jefe_compras` | `cc-003` · `CC-COM` Compras |
+| 8 | `u-bodega-2` | Paula Cárdenas Rivas | `19.876.543-0` | `paula.cardenas@pyme.cl` | `bodega` | `cc-004` · `CC-BOD` Bodega |
 
 Los dos usuarios `jefe_compras` existen para demostrar la segregación de funciones: un jefe no puede aprobar su propia solicitud, por lo que debe aprobarla el otro jefe.
 
 ### 1.4 Primera visita y reinicio
 
-La primera visita carga automáticamente `src/compras/semilla.json`: 7 usuarios, 4 centros de costo, 20 productos, 12 proveedores, 10 solicitudes, 7 cotizaciones, 8 órdenes de compra, 5 recepciones, 7 documentos de facturación, 2 devoluciones, 10 referencias de catálogo y 2 evaluaciones. Las fechas se desplazan al día actual para mantener vigentes plazos y vencimientos.
+La primera visita carga automáticamente `src/compras/semilla.json`: 8 usuarios, 4 centros de costo, 20 productos, 12 proveedores, 10 solicitudes, 7 cotizaciones, 8 órdenes de compra, 5 recepciones, 7 documentos de facturación, 2 devoluciones, 10 referencias de catálogo y 2 evaluaciones. Las fechas se desplazan al día actual para mantener vigentes plazos y vencimientos.
 
 Para volver al estado inicial:
 
@@ -75,7 +76,7 @@ Para volver al estado inicial:
 |---|---|
 | `npm run dev` | Servidor Vite activo; portal de acceso y módulo de Adquisiciones y Compras. |
 | `npm run lint` | 0 errores y 0 advertencias. |
-| `npm test -- --run` | 320 pruebas aprobadas en 27 archivos y 56 omitidas en 10 archivos (los omitidos pertenecen al template base). |
+| `npm test -- --run` | 321 pruebas aprobadas en 27 archivos y 56 omitidas en 10 archivos (los omitidos pertenecen al template base). |
 | `npm run build` | Build de producción sin errores. |
 | `npm run preview` | Build servido en `http://localhost:4173`. |
 | `npm run format:check` | Sin diferencias en el alcance de `.prettierignore`. |
@@ -133,7 +134,7 @@ La fuente de verdad es `PERMISOS` y `puede()` en `src/compras/almacenamiento.js`
 - **Comprador**: opera proveedores, cotizaciones, OC, recepciones ajenas en solo lectura, facturas, catálogo y evaluaciones; registra y concilia facturas. Ve el RUT tributario completo y la cuenta como `****XXXX`.
 - **Jefe de compras**: aprueba o rechaza solicitudes ajenas, aprueba pagos y devoluciones, evalúa proveedores y consulta trazabilidad. Ve datos bancarios completos, pero no los edita.
 - **Encargado de bodega**: registra recepciones y devoluciones; crea y ve solo sus propias solicitudes; ve OC en solo lectura.
-- **Administrador TI**: administra datos bancarios, desbloquea proveedores y excepciones, consulta/exporta trazabilidad y el Log de Auditoría Forense, gestiona el padrón de usuarios y configura umbral y tolerancia con OTP del titular. Ve el resto en solo lectura, salvo sus propias solicitudes. **No** emite OC, registra recepciones ni aprueba solicitudes, pagos o devoluciones.
+- **Administrador TI**: administra datos bancarios, desbloquea proveedores y excepciones, consulta/exporta trazabilidad y el Log de Auditoría Forense, gestiona el padrón de usuarios y configura umbral y tolerancia con un OTP que él mismo solicita y valida como titular de ese cambio. Ve el resto en solo lectura, salvo sus propias solicitudes. **No** emite OC, registra recepciones ni aprueba solicitudes, pagos o devoluciones.
 
 La lista anterior de permisos es la implementada en código. Cuando una descripción histórica de `spec.md` mencione una facultad que no aparece en `PERMISOS`, prevalece la matriz de permisos vigente y se documenta la diferencia como deuda conocida.
 

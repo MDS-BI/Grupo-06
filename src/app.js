@@ -69,12 +69,30 @@ function temaInicial() {
 function aplicarModo(tema) {
   const oscuro = tema === 'dark';
   document.documentElement.dataset.theme = tema;
-  const boton = qs('btn-tema');
-  if (boton) {
-    boton.textContent = oscuro ? 'Modo claro' : 'Modo oscuro';
-    boton.setAttribute('aria-pressed', String(oscuro));
-    boton.setAttribute('aria-label', oscuro ? 'Activar modo claro' : 'Activar modo oscuro');
-  }
+  ['btn-tema', 'login-btn-tema'].forEach((id) => {
+    const boton = qs(id);
+    if (boton) {
+      if (id === 'login-btn-tema') {
+        const icono = boton.querySelector('.login-theme-icon');
+        if (icono) {
+          icono.innerHTML = oscuro
+            ? '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>'
+            : '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>';
+          icono.setAttribute('width', '18');
+          icono.setAttribute('height', '18');
+          icono.setAttribute('fill', 'none');
+          icono.setAttribute('stroke', 'currentColor');
+          icono.setAttribute('stroke-width', '1.75');
+          icono.setAttribute('stroke-linecap', 'round');
+          icono.setAttribute('stroke-linejoin', 'round');
+        }
+      } else {
+        boton.textContent = oscuro ? 'Modo claro' : 'Modo oscuro';
+      }
+      boton.setAttribute('aria-pressed', String(oscuro));
+      boton.setAttribute('aria-label', oscuro ? 'Activar modo claro' : 'Activar modo oscuro');
+    }
+  });
 }
 
 function alternarTema() {
@@ -447,6 +465,7 @@ function cablearEventos() {
     radio.addEventListener('change', () => cambiarModoDatos(radio.value))
   );
   qs('btn-tema')?.addEventListener('click', alternarTema);
+  qs('login-btn-tema')?.addEventListener('click', alternarTema);
   qs('btn-logout')?.addEventListener('click', () => {
     cerrarSesion();
     bloquearInterfaz();

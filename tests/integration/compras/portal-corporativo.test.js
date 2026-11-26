@@ -57,7 +57,7 @@ describe('portal corporativo de acceso', () => {
   it('carga todas las colecciones semilla en el primer arranque', async () => {
     const { leer } = await import('../../../src/compras/almacenamiento.js');
     const expected = {
-      usuarios: 7,
+      usuarios: 8,
       centros_costo: 4,
       productos: 20,
       proveedores: 12,
@@ -104,11 +104,11 @@ describe('portal corporativo de acceso', () => {
     expect(document.activeElement).toBe(qs('btn-modo-presentacion'));
   });
 
-  it('muestra el directorio con los siete usuarios reales y sus centros al activar el modo', () => {
+  it('muestra el directorio con los ocho usuarios reales y sus centros al activar el modo', () => {
     activarModoPresentacion();
     const botones = [...qs('login-directorio-lista').querySelectorAll('.directory-user')];
     expect(botones.map((b) => b.dataset.email).sort()).toEqual([...CORREOS].sort());
-    expect(botones).toHaveLength(7);
+    expect(botones).toHaveLength(8);
     expect(botones.map((b) => b.textContent).join(' ')).toContain('CC-ADM');
     expect(botones.map((b) => b.textContent).join(' ')).toContain('CC-OPE');
     expect(botones.map((b) => b.textContent).join(' ')).toContain('CC-COM');
@@ -135,8 +135,26 @@ describe('portal corporativo de acceso', () => {
     boton.click();
 
     expect(qs('login-overlay').hidden).toBe(true);
+    expect(qs('sesion-indicador').textContent).toContain(USUARIOS.bodega.nombre);
     expect(qs('sesion-indicador').textContent).toContain('Encargado de Bodega');
     expect(qs('sesion-indicador').textContent).toContain('CC-BOD · Bodega');
+  });
+
+  it('distingue a los dos usuarios bodega en la sesión', () => {
+    activarModoPresentacion();
+    const boton = [...qs('login-directorio-lista').querySelectorAll('.directory-user')].find(
+      (item) => item.dataset.email === 'paula.cardenas@pyme.cl'
+    );
+    boton.click();
+
+    expect(qs('sesion-indicador').textContent).toContain(USUARIOS.bodega2.nombre);
+    expect(qs('sesion-indicador').textContent).not.toContain(USUARIOS.bodega.nombre);
+
+    qs('btn-logout').click();
+    ingresar('bodega@pyme.cl');
+
+    expect(qs('sesion-indicador').textContent).toContain(USUARIOS.bodega.nombre);
+    expect(qs('sesion-indicador').textContent).not.toContain(USUARIOS.bodega2.nombre);
   });
 
   it('vuelve a ocultar el directorio al cerrar sesión', () => {

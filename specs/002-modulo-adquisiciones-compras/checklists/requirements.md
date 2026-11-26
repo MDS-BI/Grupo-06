@@ -68,7 +68,7 @@
 - [x] FR-038 enumera los doce bancos chilenos y los cinco tipos de cuenta, exige listas desplegables y determina la normalización de alias y el rechazo de valores fuera del catálogo.
 - [x] FR-039 define el auto-relleno de CuentaRUT desde el cuerpo numérico del RUT del proveedor, el banco fijo `BancoEstado`, el aviso editable y la restricción de banco.
 - [x] FR-040 fija las siete columnas del listado, el buscador amplio y sincronizado, y el mínimo de ocho proveedores sintéticos con RUT Módulo 11 y datos completos (semilla-base de 12).
-- [x] FR-041 mantiene el botón **Cargar catálogo base de proveedores/insumos** en Modo Real sin sobrescribir registros del usuario.
+- [x] FR-041 mantiene el botón **Cargar catálogo base de proveedores/insumos** en Modo Real: agrega proveedores por `entity_id` ausente, carga los catálogos solo si están vacíos y conserva íntegramente los registros ya editados por el usuario.
 - [x] US1 incorpora escenarios verificables para catálogos, auto-relleno, listado y carga base; SC-018 y SC-019 miden el cumplimiento.
 - [x] `data-model.md` v1.5 documenta los nuevos atributos de PROVEEDOR, los catálogos de §3.3.1, la regla de CuentaRUT y la semilla de 12 proveedores en §9.3.
 - [x] Las pruebas unitarias de catálogos y las pruebas de integración de proveedores y vista cubren banco, tipo de cuenta, auto-relleno, columnas, semilla y botón de carga base.

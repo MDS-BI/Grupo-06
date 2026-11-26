@@ -56,10 +56,10 @@ afterEach(() => {
 });
 
 describe('padrón y administración de usuarios', () => {
-  it('muestra los siete usuarios con RUT completo y enlaces clicables solo para admin_ti', async () => {
+  it('muestra los ocho usuarios con RUT completo y enlaces clicables solo para admin_ti', async () => {
     const padron = qs('padron-usuarios');
     expect(padron).toBeTruthy();
-    expect(padron.querySelectorAll('tbody tr')).toHaveLength(7);
+    expect(padron.querySelectorAll('tbody tr')).toHaveLength(8);
     const columnas = [...padron.querySelectorAll('thead th')].map((th) => th.textContent.trim());
     expect(columnas).toEqual([
       'Nombre',
@@ -72,7 +72,7 @@ describe('padrón y administración de usuarios', () => {
     ]);
     expect(padron.textContent).toContain('18.100.001-5');
     expect(padron.textContent).not.toContain('••••••••-•');
-    expect(padron.querySelectorAll('.usuario-link')).toHaveLength(7);
+    expect(padron.querySelectorAll('.usuario-link')).toHaveLength(8);
     expect(qs('admin-auditoria')).toBeTruthy();
     expect(qs('admin-parametros')).toBeTruthy();
 

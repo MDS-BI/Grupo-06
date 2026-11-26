@@ -123,7 +123,7 @@ describe('panel por rol y alertas (FR-035)', () => {
   const ESPERADO = {
     solicitante: {
       pendientes: ['mis_solicitudes'],
-      indicadores: ['mes'],
+      indicadores: ['mes', 'monto_comprometido', 'ordenes_abiertas', 'facturas_aprobadas_pago', 'monto_aprobado_pago'],
       alertas: 0,
       seguimiento: 0
     },
@@ -134,7 +134,7 @@ describe('panel por rol y alertas (FR-035)', () => {
         'solicitudes_aprobadas_sin_cotizar',
         'facturas_con_discrepancia'
       ],
-      indicadores: ['mes', 'facturas_con_discrepancia'],
+      indicadores: ['mes', 'monto_comprometido', 'ordenes_abiertas', 'facturas_aprobadas_pago', 'monto_aprobado_pago', 'facturas_con_discrepancia'],
       alertas: 1,
       seguimiento: 2
     },
@@ -146,19 +146,19 @@ describe('panel por rol y alertas (FR-035)', () => {
         'facturas_conciliadas_por_aprobar',
         'devoluciones_pendientes'
       ],
-      indicadores: ['mes', 'gasto_del_periodo', 'facturas_en_riesgo'],
+      indicadores: ['mes', 'monto_comprometido', 'ordenes_abiertas', 'facturas_aprobadas_pago', 'monto_aprobado_pago', 'gasto_del_periodo', 'facturas_en_riesgo'],
       alertas: 1,
       seguimiento: 0
     },
     bodega: {
       pendientes: ['mis_solicitudes', 'oc_esperando_entrega', 'recepciones_parciales'],
-      indicadores: ['mes', 'tasa_rechazo'],
+      indicadores: ['mes', 'monto_comprometido', 'ordenes_abiertas', 'facturas_aprobadas_pago', 'monto_aprobado_pago', 'tasa_rechazo'],
       alertas: 0,
       seguimiento: 2
     },
     admin_ti: {
       pendientes: ['mis_solicitudes', 'alertas_fraude'],
-      indicadores: ['mes'],
+      indicadores: ['mes', 'monto_comprometido', 'ordenes_abiertas', 'facturas_aprobadas_pago', 'monto_aprobado_pago'],
       alertas: 1,
       seguimiento: 0
     }

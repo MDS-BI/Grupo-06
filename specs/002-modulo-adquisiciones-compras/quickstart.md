@@ -25,9 +25,9 @@
    ```
 
 3. Abra la URL local que muestra Vite (por defecto `http://localhost:5173`).
-4. En la pantalla de acceso escriba un correo de la semilla (por ejemplo `francisca.herrera@pyme.cl`) o su RUT (por ejemplo `16.345.678-8`) y la clave genérica `Compras2026`. En **Modo Demo** puede pulsar **Activar modo presentación** y elegir una de las siete entradas del directorio para completar correo y clave con un clic; cada entrada revela la clave para exhibirla. El botón **Mostrar** permite verificar la clave y **Cerrar sesión** devuelve a esta pantalla sin borrar los datos. Con la sesión iniciada no es posible cambiar de rol: en los escenarios, "como `<rol>`" significa cerrar sesión e ingresar con el correo o RUT de ese rol (los dos `jefe_compras` son `andres.contreras@pyme.cl` y `valentina.lagos@pyme.cl`).
+4. En la pantalla de acceso escriba un correo de la semilla (por ejemplo `francisca.herrera@pyme.cl`) o su RUT (por ejemplo `16.345.678-8`) y la clave genérica `Compras2026`. En **Modo Demo** puede pulsar **Activar modo presentación** y elegir una de las ocho entradas del directorio para completar correo y clave con un clic; cada entrada revela la clave para exhibirla. El botón **Mostrar** permite verificar la clave y **Cerrar sesión** devuelve a esta pantalla sin borrar los datos. Con la sesión iniciada no es posible cambiar de rol: en los escenarios, "como `<rol>`" significa cerrar sesión e ingresar con el correo o RUT de ese rol (los dos `jefe_compras` son `andres.contreras@pyme.cl` y `valentina.lagos@pyme.cl`).
 
-La primera visita carga automáticamente `src/compras/semilla.json`: 7 usuarios (dos de ellos `jefe_compras`), 4 centros de costo, 20 productos, 12 proveedores, 10 solicitudes, 7 cotizaciones, 8 órdenes de compra, 5 recepciones, 7 documentos de facturación, 2 devoluciones, 10 referencias de catálogo y 2 evaluaciones. Todos los datos son ficticios y las fechas se ajustan al día actual.
+La primera visita carga automáticamente `src/compras/semilla.json`: 8 usuarios (dos `jefe_compras` y dos `bodega`), 4 centros de costo, 20 productos, 12 proveedores, 10 solicitudes, 7 cotizaciones, 8 órdenes de compra, 5 recepciones, 7 documentos de facturación, 2 devoluciones, 10 referencias de catálogo y 2 evaluaciones. Todos los datos son ficticios y las fechas se ajustan al día actual.
 
 Si quiere volver al estado inicial, limpie las claves `erp_compras:*` y `erp_base_module:entities` desde las herramientas de desarrollo del navegador y recargue. Con el servidor de Vite abierto también puede ejecutar en la consola:
 
@@ -42,7 +42,7 @@ Después recargue la página para que se vuelva a cargar la semilla.
 | Comando                | Resultado esperado                                                                                              |
 | ---------------------- | --------------------------------------------------------------------------------------------------------------- |
 | `npm run dev`          | Servidor Vite activo; la interfaz pide acceso y luego muestra solo el módulo Adquisiciones y Compras.          |
-| `npm test -- --run`    | 320 pruebas aprobadas en 27 archivos y 56 omitidas en 10 archivos (los omitidos pertenecen al template base).   |
+| `npm test -- --run`    | 321 pruebas aprobadas en 27 archivos y 56 omitidas en 10 archivos (los omitidos pertenecen al template base).   |
 | `npm run lint`         | 0 errores y 0 advertencias.                                                                                      |
 | `npm run build`        | Build de producción sin errores.                                                                                |
 | `npm run preview`      | El build se sirve en `http://localhost:4173` con el mismo comportamiento.                                       |
@@ -52,13 +52,14 @@ Después recargue la página para que se vuelva a cargar la semilla.
 
 ### 1. Arranque, navegación y rol fijo por sesión (FR-018, FR-033, FR-034, FR-036, FR-037, SC-002)
 
-1. Ingrese con un rol y la clave `Compras2026` (con nombre si es Solicitante, Comprador o Jefe de Compras). Confirme que la barra superior muestra la marca **Adquisiciones y Compras**, el indicador de solo lectura con el usuario y el rol actuales y el botón **Cerrar sesión**, sin ningún selector de rol; que la barra lateral muestra **Panel** y los grupos **Adquisiciones** y **Compras**; que el encabezado muestra la sección actual; y que no aparece la tarjeta **Sesión activa**.
+1. Ingrese con un rol y la clave `Compras2026` (con nombre si es Solicitante, Comprador, Jefe de Compras o Encargado de Bodega; como Administrador TI basta el rol). Confirme que la barra superior muestra la marca **Adquisiciones y Compras**, el indicador de solo lectura con el usuario y el rol actuales y el botón **Cerrar sesión**, sin ningún selector de rol; que la barra lateral muestra **Panel** y los grupos **Adquisiciones** y **Compras**; que el encabezado muestra la sección actual; y que no aparece la tarjeta **Sesión activa**.
 2. Compruebe las vistas visibles por rol:
    - `comprador`, `jefe_compras` y `admin_ti`: las diez vistas (Panel, Proveedores, Catálogo, Evaluaciones, Solicitudes, Cotizaciones, Órdenes de compra, Recepciones, Facturas y Devoluciones).
    - `solicitante`: Panel, Catálogo, Solicitudes, Órdenes de compra y Recepciones.
    - `bodega`: Panel, Solicitudes (solo las propias), Órdenes de compra, Recepciones y Devoluciones, sin el grupo Adquisiciones.
 3. En el Panel, verifique los pendientes por rol, las alertas de vencimiento y los indicadores del período, y que las acciones rápidas muestran una descripción (p. ej., _Crear solicitud de compra_), no la clave del permiso. La acción _Crear solicitud de compra_ aparece para los cinco roles.
 4. Con la sesión de `solicitante` iniciada, compruebe que no hay forma de cambiar de rol desde la barra superior. Pulse **Cerrar sesión**, ingrese como `jefe_compras` y repita con `bodega` y con `admin_ti`. Estando en **Cotizaciones** con `comprador`, cierre sesión e ingrese como `bodega`.
+5. Repita el ingreso con `Rodrigo Araya Mena` y con `Paula Cárdenas Rivas`: el indicador y las solicitudes propias deben corresponder a cada persona, no al rol genérico `bodega`.
 
 **Resultado esperado**: el rol no cambia mientras la sesión está iniciada; el indicador muestra siempre el usuario y el rol con que se ingresó. Tras cerrar sesión e ingresar con otro rol, la aplicación abre el Panel de ese rol y la barra lateral y los botones corresponden a la matriz de visibilidad.
 
@@ -71,7 +72,7 @@ Después recargue la página para que se vuelva a cargar la semilla.
 5. Ingrese como `solicitante`: confirme que no ve el directorio de proveedores, el RUT tributario ni cuentas en catálogo, OC ni recepciones; en el indicador de sesión ve solo su propio RUT sin enmascarar.
 6. Abra la trazabilidad como `jefe_compras` y confirme que el RUT personal de otro empleado aparece como `18.XXX.XXX-5`; como `admin_ti` aparece completo y como `solicitante`, `comprador` o `bodega` aparece `••••••••-•` o no se entrega.
 7. Con `admin_ti`, desbloquee el proveedor bloqueado de la semilla y confirme que vuelve a `aprobado`. Ingresando como `comprador`, la acción de desbloquear no aparece. Con `admin_ti`, no se pueden crear proveedores ni editar sus datos generales.
-8. Busque un proveedor sin cuenta registrada y confirme **No registrado**; busque una cuenta existente con `solicitante` o `bodega` y confirme **No disponible** en `cuenta_visible`, sin ningún dígito.
+8. Busque un proveedor sin cuenta registrada y confirme **No registrado**; busque una cuenta existente con `solicitante` o `bodega` y confirme **No disponible** en `cuenta_visible`, sin ningún dígito ni valor inventado.
 
 **Resultado esperado**: tablas, modales, búsquedas, CSV y respuestas del asistente entregan solo la representación autorizada por la matriz de `visibilidad.js` para cada rol y canal; nunca el valor completo ni dígitos no autorizados. El cambio bancario actualiza `fecha_cambio_cuenta` y deja un evento de trazabilidad con la representación autorizada.
 
@@ -124,8 +125,8 @@ Con los datos semilla ya hay documentos en todos los estados. Para repetir el ci
 
 ### 8. Gobernanza: modos, padrón, OTP y auditoría forense (FR-042–FR-046, SC-020–SC-023)
 
-1. En la pantalla de acceso seleccione **Modo Demo**, pulse **Activar modo presentación** y confirme que las siete entradas muestran nombre, correo, clave, rol y centro de costo. Cambie a **Modo Real**, recargue y confirme que el directorio no aparece ni existe en el DOM; ingrese con `13.789.012-7` y `Compras2026`.
-2. Como `admin_ti`, abra el **Padrón de Usuarios · Administración TI**: debe tener siete filas con nombre propio, RUT completo, correo, centro de costo, estado y acciones. El nombre `Tomás Villarroel Sepúlveda` y los demás son enlaces; pulse `Camila Rojas Soto`.
+1. En la pantalla de acceso seleccione **Modo Demo**, pulse **Activar modo presentación** y confirme que las ocho entradas muestran nombre, correo, clave, rol y centro de costo. Cambie a **Modo Real**, recargue y confirme que el directorio no aparece ni existe en el DOM; ingrese con `13.789.012-7` y `Compras2026`.
+2. Como `admin_ti`, abra el **Padrón de Usuarios · Administración TI**: debe tener ocho filas con nombre propio, RUT completo, correo, centro de costo, estado y acciones. El nombre `Tomás Villarroel Sepúlveda` y los demás son enlaces; pulse `Camila Rojas Soto`.
 3. En la ficha confirme que Nombre, Correo corporativo, RUT, Rol y Centro de costo están bloqueados. Pulse **Solicitar autorización del titular (Código OTP)**; en Modo Demo aparece la ayuda visual con el código y se crea una notificación interna al titular. Escriba un código erróneo y compruebe el rechazo; luego escriba el código mostrado y confirme que los campos se habilitan. Modifique el nombre, guarde y verifique que el RUT inválido o el correo mal formado se rechazan, pero el cambio válido se aplica.
 4. Vuelva al padrón, abra la ficha de `Diego Muñoz Vera`, solicite autorización para cambiar estado, valide el OTP y pulse **Suspender cuenta**. Intente ingresar con `diego.munoz@pyme.cl` o `17.234.567-0`: el sistema lo rechaza. Confirme que no puede suspenderse a sí mismo ni dejar al sistema sin `admin_ti` activo.
 5. En **Parámetros de compras** solicite OTP y cambie el umbral de cotizaciones a `900000` y la tolerancia a `0,02`. Confirme que el nuevo umbral se aplica de inmediato en Cotizaciones y Órdenes de compra y persiste tras recargar.
@@ -146,7 +147,7 @@ Los flujos de cada historia están en `tests/integration/compras/`: `proveedores
 
 ## Cobertura pendiente
 
-- Recorrido manual en navegador (T144/T155/T168): ejecutar los escenarios 1 a 8 con los cinco roles, cerrando sesión entre cada uno. La verificación automatizada ya está completada (320 pruebas aprobadas).
+- Recorrido manual en navegador (T144/T155/T168): ejecutar los escenarios 1 a 8 con los cinco roles, cerrando sesión entre cada uno. La verificación automatizada ya está completada (321 pruebas aprobadas).
 
 T127, T137 y T139 están cerradas: el filtro del `solicitante` se aplica en servicios, UI y CSV, y el panel muestra «Mis solicitudes» y los indicadores de FR-035 para los cinco roles, con pruebas parametrizadas por rol.
 

@@ -25,6 +25,7 @@ export const USUARIOS = Object.freeze({
   jefe: identidad('u-jefe-1'),
   jefe2: identidad('u-jefe-2'),
   bodega: identidad('u-bodega-1'),
+  bodega2: identidad('u-bodega-2'),
   admin: identidad('u-admin-1')
 });
 

@@ -4,21 +4,22 @@ import semilla from '../../../src/compras/semilla.json';
 import { formatearRut, normalizarRut, validarRut } from '../../../src/compras/reglas.js';
 import { RUT_OCULTO, rutEmpleadoVisible } from '../../../src/compras/visibilidad.js';
 
-/** Roles que debe cubrir el padrón semilla: dos solicitantes y dos jefaturas. */
+/** Roles que debe cubrir el padrón semilla: dos solicitantes, dos bodegas y dos jefaturas. */
 const ROLES_ESPERADOS = [
   'solicitante',
   'solicitante',
   'comprador',
   'jefe_compras',
   'bodega',
+  'bodega',
   'admin_ti',
   'jefe_compras'
 ];
 
 describe('padrón de usuarios (FR-043)', () => {
-  it('contiene exactamente siete identidades con nombre propio, RUT Módulo 11 y correo corporativo', () => {
-    expect(semilla.usuarios).toHaveLength(7);
-    expect(new Set(semilla.usuarios.map((u) => u.id)).size).toBe(7);
+  it('contiene exactamente ocho identidades con nombre propio, RUT Módulo 11 y correo corporativo', () => {
+    expect(semilla.usuarios).toHaveLength(8);
+    expect(new Set(semilla.usuarios.map((u) => u.id)).size).toBe(8);
     expect(semilla.usuarios.map((u) => u.rol).sort()).toEqual([...ROLES_ESPERADOS].sort());
     for (const usuario of semilla.usuarios) {
       expect(usuario.nombre.trim().length, usuario.id).toBeGreaterThan(0);
@@ -30,7 +31,7 @@ describe('padrón de usuarios (FR-043)', () => {
     }
   });
 
-  it('no repite correos ni RUT entre los siete usuarios', () => {
+  it('no repite correos ni RUT entre los ocho usuarios', () => {
     const correos = semilla.usuarios.map((u) => u.email.toLowerCase());
     const ruts = semilla.usuarios.map((u) => normalizarRut(u.rut));
     expect(new Set(correos).size).toBe(correos.length);

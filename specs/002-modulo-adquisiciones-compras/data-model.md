@@ -348,13 +348,21 @@ Persona natural o empresa que vende bienes o servicios a la organización. Es el
 | direccion, comuna, region         | string | `region` obligatoria                                  | Dirección comercial                                                                                                                                  |
 | tamano_empresa                    | enum   | `micro`, `pequeña`, `mediana`, `grande`               | Permite medir cuánto se compra a pymes (ver sesgos, sección 6); coincide con `semilla.json` y con `src/compras/vista.js`                             |
 | estado_proveedor                  | enum   | `potencial`, `aprobado`, `bloqueado`                  | Estado operativo: solo `aprobado` puede recibir órdenes de compra                                                                                    |
-| estado                            | enum   | `En evaluación`, `Activo`, `Suspendido`               | Etiqueta legible derivada de `estado_proveedor` y mostrada en el listado                                                                             |
+| estado                            | enum   | `En evaluación`, `Activo`, `Suspendido`               | Etiqueta legible derivada de `estado_proveedor` según la tabla de correspondencia de §3.3; se muestra en el listado                                  |
 | calificacion_promedio             | float  | 0 a 5; semilla > 0                                    | Calificación promedio del desempeño histórico del proveedor                                                                                          |
 | condicion_pago_dias               | int    | default 30; > 30 solo si `acuerdo_plazo_mayor = true` | Plazo de pago acordado, contado desde la recepción de la factura                                                                                     |
 | acuerdo_plazo_mayor               | bool   | default `false`                                       | `true` solo si existe un acuerdo escrito de plazo mayor a 30 días inscrito según la Ley 21.131                                                       |
 | banco, tipo_cuenta, numero_cuenta | string | opcional; catálogo cerrado si se registran           | Datos para el pago (S). `banco` y `tipo_cuenta` siguen los catálogos de §3.3.1; `CuentaRUT (BancoEstado)` exige `BancoEstado`. Completos para `jefe_compras` y `admin_ti`; `****XXXX` para `comprador`; ocultos para `solicitante` y `bodega`. `vistaProveedor()` expone `cuenta_visible`: completo, `****XXXX`, `No registrado` (sin cuenta) o `No disponible` (sin acceso). Solo `admin_ti` puede editarlos |
 | fecha_cambio_cuenta               | date   | se actualiza al modificar datos bancarios             | Permite alertar pagos a cuentas recién cambiadas (ver sección 6)                                                                                     |
 | fecha_registro                    | date   | obligatorio                                           |                                                                                                                                                      |
+
+**Correspondencia canónica de estados de proveedor** (`ETIQUETA_ESTADO` en `src/compras/proveedores.js`):
+
+| `estado_proveedor` | `estado` legible | Uso operativo |
+| --- | --- | --- |
+| `potencial` | `En evaluación` | Alta inicial; todavía no recibe órdenes de compra |
+| `aprobado` | `Activo` | Único estado habilitado para cotizar y emitir OC |
+| `bloqueado` | `Suspendido` | Sin operación nueva; solo `admin_ti` puede desbloquearlo |
 
 #### 3.3.1 Catálogos bancarios chilenos (FR-038, FR-039)
 
@@ -815,7 +823,7 @@ Diferencias detectadas entre `src/compras/reglas.js` (constante `TRANSICIONES`) 
 
 ## 9. Datos semilla (MVP)
 
-### 9.1 Usuarios semilla (7 personas chilenas)
+### 9.1 Usuarios semilla (8 personas chilenas)
 
 | ID | Nombre | RUT Módulo 11 | Rol | Correo corporativo | Contraseña |
 |---|---|---|---|---|---|
@@ -825,9 +833,10 @@ Diferencias detectadas entre `src/compras/reglas.js` (constante `TRANSICIONES`) 
 | u-jefe-1 | Andrés Contreras Pérez | 18.100.001-5 | jefe_compras | andres.contreras@pyme.cl | Compras2026 |
 | u-jefe-2 | Valentina Lagos Fuentes | 15.567.890-9 | jefe_compras | valentina.lagos@pyme.cl | Compras2026 |
 | u-bodega-1 | Rodrigo Araya Mena | 14.678.901-3 | bodega | bodega@pyme.cl | Compras2026 |
+| u-bodega-2 | Paula Cárdenas Rivas | 19.876.543-0 | bodega | paula.cardenas@pyme.cl | Compras2026 |
 | u-admin-1 | Tomás Villarroel Sepúlveda | 13.789.012-7 | admin_ti | admin.ti@pyme.cl | Compras2026 |
 
-Los siete registros tienen `activo: true` y exhiben el RUT completo en la columna **RUT** del padrón de `admin_ti`.
+Los ocho registros tienen `activo: true` y exhiben el RUT completo en la columna **RUT** del padrón de `admin_ti`.
 
 ### 9.2 Dataset semilla abundante (12 colecciones)
 
@@ -835,4 +844,4 @@ El seed (semilla.json) debe incluir, en las 12 colecciones transaccionales, dato
 
 ### 9.3 Proveedores semilla (FR-040)
 
-La semilla-base contiene **12 proveedores chilenos sintéticos** (`prov-001` a `prov-012`, códigos `PRV-001` a `PRV-012`) con RUT válido Módulo 11, razón social, nombre de fantasía, giro y rubro, correo, teléfono, dirección comercial, región y comuna, estado legible (`Activo`, `En evaluación` o `Suspendido`), calificación promedio mayor que cero y datos bancarios configurados con los catálogos de §3.3.1. Incluye un caso de `CuentaRUT (BancoEstado)` y un caso de institución de pago prepago para demostrar el catálogo completo. El botón **Cargar catálogo base de proveedores/insumos** agrega lo que falta sin sobrescribir registros del usuario (FR-041).
+La semilla-base contiene **12 proveedores chilenos sintéticos** (`prov-001` a `prov-012`, códigos `PRV-001` a `PRV-012`) con RUT válido Módulo 11, razón social, nombre de fantasía, giro y rubro, correo, teléfono, dirección comercial, región y comuna, estado legible (`Activo`, `En evaluación` o `Suspendido`, ver correspondencia en §3.3), calificación promedio mayor que cero y datos bancarios configurados con los catálogos de §3.3.1. Incluye un caso de `CuentaRUT (BancoEstado)` y un caso de institución de pago prepago para demostrar el catálogo completo. El botón **Cargar catálogo base de proveedores/insumos** agrega proveedores por `entity_id` ausente y carga centros de costo, productos y catálogo solo si esas colecciones están vacías; un ID semilla ya existente se conserva con las ediciones del usuario (FR-041).

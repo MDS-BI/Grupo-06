@@ -143,10 +143,13 @@ export function etiquetaRol(rol) {
 
 /** Devuelve la etiqueta legible de un estado, sin guiones bajos. */
 export function etiquetaEstado(estado) {
-  return String(estado ?? '')
+  const texto = String(estado ?? '')
+    .replace(/aprobacion/g, 'aprobación')
     .split('_')
     .filter(Boolean)
     .join(' ');
+  if (!texto) return '';
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
 }
 
 const TABS = [

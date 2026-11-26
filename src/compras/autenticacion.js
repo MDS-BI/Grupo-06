@@ -27,7 +27,7 @@ function normalizar(texto) {
 }
 
 /**
- * Valida rol, nombre (solo para solicitante y comprador) y clave sin modificar la sesión.
+ * Valida rol, nombre (para los roles con varios usuarios semilla) y clave sin modificar la sesión.
  * Devuelve `campo` para llevar el foco al control que debe corregirse.
  */
 export function validarCredenciales(rol, nombre, clave) {
