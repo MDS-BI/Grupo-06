@@ -6,9 +6,9 @@
 
 **Pruebas**: obligatorias según la constitución del proyecto y el plan. Cada regla de la sección 5 de `data-model.md` debe tener prueba unitaria, y cada historia de usuario debe tener al menos una prueba de integración de su flujo.
 
-**Organización**: las tareas siguen el orden y la numeración de las historias de `spec.md`: **US1, US2, US3, US4, US5, US6, US7, US8, US9, US10, US11 y US12**. Cada historia tiene su propia fase y no se mezclan responsabilidades entre ellas.
+**Organización**: las tareas siguen el orden y la numeración de las historias de `spec.md`: **US1, US2, US3, US4, US5, US6, US7, US8, US9, US10, US11, US12 y US13**. Cada historia tiene su propia fase y no se mezclan responsabilidades entre ellas.
 
-> **Alineación con spec.md**: las cotizaciones se separan en **US6** (registro y comparativa side-by-side), la emisión de OC queda en **US3**, el catálogo en **US8**, la evaluación de proveedores en **US9** y la exportación CSV en **US10**. Todas fueron creadas y ordenadas en `spec.md`; ya no existen tareas de "soporte" sin historia.
+> **Alineación con spec.md**: las cotizaciones se separan en **US6** (registro y comparativa side-by-side), la emisión de OC queda en **US3**, el catálogo en **US8**, la evaluación de proveedores en **US9**, la exportación CSV en **US10** y la administración de usuarios con OTP y auditoría forense en **US13** (T161–T168, Fase 23). Todas fueron creadas y ordenadas en `spec.md`; ya no existen tareas de "soporte" sin historia.
 >
 > **Roles**: se usan los roles definidos en `spec.md`: `solicitante`, `comprador`, `jefe_compras`, `bodega` y `admin_ti`. Desde el 2026-11-23, `admin_ti` es administrador del sistema y no opera el ciclo de compras; la visibilidad de cada vista sigue la matriz de FR-033 (fases 16 a 19).
 >
@@ -85,7 +85,7 @@
 
 **Objetivo**: crear solicitudes con líneas, enviarlas y aprobarlas o rechazarlas con segregación de funciones.
 
-**Prueba Independiente**: un solicitante crea una solicitud de dos productos y la envía; el jefe de compras la aprueba y queda `aprobada` con número `SC-AAAA-NNNN`; no puede aprobar su propia solicitud.
+**Prueba Independiente**: un solicitante crea una solicitud de dos productos y la envía; el Jefe de Compras la aprueba y queda `aprobada` con número `SC-AAAA-NNNN`; no puede aprobar su propia solicitud.
 
 - [x] T020 [US2] Crear los esquemas de `SOLICITUD_COMPRA` y sus `lineas` de detalle en `src/compras/almacenamiento.js`, conforme a `data-model.md`. [FR-005]
 - [x] T021 [US2] Implementar la creación y edición de solicitudes con al menos un producto activo, justificación, fecha requerida, centro de costo, prioridad y cálculo de `monto_estimado`. [FR-005]
@@ -143,13 +143,13 @@
 
 **Objetivo**: mostrar al ingresar solo los pendientes que corresponden al rol, las alertas de vencimiento y los indicadores del período.
 
-**Prueba Independiente**: un jefe de compras con dos solicitudes enviadas y una factura que vence en 3 días abre el panel, ve esos tres pendientes con acceso directo y, al aprobar una solicitud, el contador baja sin recargar la página.
+**Prueba Independiente**: un Jefe de Compras con dos solicitudes enviadas y una factura que vence en 3 días abre el panel, ve esos tres pendientes con acceso directo y, al aprobar una solicitud, el contador baja sin recargar la página.
 
 - [x] T043 [US5] Crear el componente de panel en `src/compras/panel.js` e integrarlo en la navegación principal de la aplicación. [FR-018]
 - [x] T044 [US5] Mostrar pendientes por rol con contador y acceso directo: solicitudes por aprobar, OC sin recepción, recepciones por registrar y facturas por conciliar. El `solicitante` solo ve sus propias solicitudes y no los pendientes de otros usuarios. [FR-018] **Reemplazada por T137 (rediseño 2026-11-23).**
 - [x] T045 [US5] Mostrar una alerta destacada para facturas no aprobadas que vencen en 5 días o menos, con proveedor, folio y días restantes. [FR-017]
 - [x] T046 [US5] Listar como pendientes de seguimiento las OC emitidas sin recepción registrada por más de 7 días, visibles para `bodega` y `comprador`. [FR-018] **Reemplazada por T137 (rediseño 2026-11-23).**
-- [x] T047 [US5] Calcular y mostrar los indicadores del período seleccionado (mes actual): monto comprometido en OC no anuladas, órdenes abiertas y facturas aprobadas para pago. [FR-018]
+- [x] T047 [US5] Calcular y mostrar los indicadores del período seleccionado (mes actual): monto comprometido en OC no anuladas, órdenes abiertas y facturas aprobadas para pago. [FR-018] (sustituida por T137 de FR-035: indicadores dinámicos por rol.)
 - [x] T048 [US5] Implementar el estado vacío del panel cuando no hay pendientes y actualizar los contadores sin recargar la página tras una acción. [FR-018]
 - [x] T049 [US5] Agregar acciones rápidas por rol para crear solicitud, OC, recepción o registrar factura según corresponda. [FR-018] **Reemplazada por T138 (rediseño 2026-11-23).**
 - [x] T050 [US5] Agregar prueba de integración de US5 que cubra los seis escenarios y SC-005 en `tests/integration/compras/catalogo-panel.test.js` y `tests/integration/compras/vista.test.js`.
@@ -229,7 +229,7 @@
 
 **Objetivo**: exportar los listados y reportes visibles a CSV, respetando filtros, permisos del rol y escapado correcto.
 
-**Prueba Independiente**: un jefe de compras exporta el listado de órdenes del período y obtiene un CSV con encabezados y una fila por OC, respetando los filtros y el rol activo.
+**Prueba Independiente**: un Jefe de Compras exporta el listado de órdenes del período y obtiene un CSV con encabezados y una fila por OC, respetando los filtros y el rol activo.
 
 - [x] T074 [US10] Implementar en `src/compras/exportacion.js` el generador CSV sin dependencias externas, con encabezados, escapado de comas, comillas y saltos de línea. [FR-024]
 - [x] T075 [US10] Agregar acciones de exportación a los listados de proveedores, solicitudes, OC, recepciones y facturas, respetando el filtro vigente. [FR-024]
@@ -370,8 +370,8 @@
 **Propósito**: datos de demostración, documentación y verificación final del rediseño.
 
 - [x] T142 Revisado `src/compras/semilla.json`: hay proveedor con cambio bancario reciente, factura no aprobada y devolución `pendiente_aprobacion`, con datos ficticios, para los paneles de `admin_ti` y `jefe_compras`. [FR-020, FR-035]
-- [x] T143 Documentación sincronizada: `README.md`, `spec.md`, `plan.md`, `quickstart.md` y este `tasks.md` comparten el estado de las Fases 17–23; el árbol de código de `plan.md` incluye `visibilidad.js`, `asistente.js` y los tests nuevos; el contrato de exportación documenta `trazabilidad.csv` en UTF-8 con BOM y separador `;`.
-- [x] T144 Verificación automatizada completada: `npm test -- --run` (27 archivos, 320 pruebas aprobadas, 56 omitidas), `npm run lint`, `npm run format:check` y `npm run build` sin errores. Queda como procedimiento de validación en navegador el recorrido con los cinco roles de los escenarios 1 a 8 de `specs/002-modulo-adquisiciones-compras/quickstart.md`. [SC-015, SC-016, SC-017]
+- [x] T143 Documentación sincronizada: `README.md`, `spec.md`, `plan.md`, `quickstart.md` y este `tasks.md` referencian el estado canónico de las Fases 16–23 en `tasks.md`; el árbol de código de `plan.md` incluye los módulos y tests de las Fases 21–23; el contrato de exportación documenta `trazabilidad.csv` en UTF-8 con BOM y separador `;`.
+- [x] T144 Verificación automatizada completada: `npm test -- --run` (27 archivos aprobados y 10 omitidos; 320 pruebas aprobadas y 56 omitidas), `npm run lint`, `npm run format:check` y `npm run build` sin errores. Queda como validación humana externa en navegador el recorrido con los cinco roles de los escenarios 1 a 8 de `specs/002-modulo-adquisiciones-compras/quickstart.md`. [SC-015, SC-016, SC-017]
 - [x] T145 [US12] [FR-037] Documentar y verificar la pantalla de ingreso simulada ya implementada en `src/compras/autenticacion.js` (selector de rol, nombre condicional para `solicitante`/`comprador`, clave genérica `Compras2026`, botón **Cerrar sesión**), con pruebas en `tests/integration/compras/autenticacion.test.js`. **El nombre condicional y el selector Rol Activo los modifican T146–T148 (2026-11-23).**
 
 **Punto de control**: rediseño de permisos y navegación por rol cerrado.
@@ -392,8 +392,8 @@
 - [x] T151 [US2] Agregadas en `tests/integration/compras/flujo-compras.test.js`: los cinco roles crean y envían una solicitud; `bodega` y `solicitante` ven solo las propias; ningún usuario edita una solicitud ajena; una solicitud de `u-jefe-1` la aprueba `u-jefe-2` y `u-jefe-1` no puede aprobarla (regla 8). [FR-005, FR-006, SC-016]
 - [x] T152 [US12] Ajustar las pruebas que usan `setRolActivo()` o cambian de rol en vivo, sin debilitar lo que verifican: agregar a `tests/integration/compras/helpers.js` un helper que inicie sesión por rol (con nombre para `solicitante`, `comprador` y `jefe_compras`); en `tests/integration/compras/vista.test.js`, reemplazar el uso del selector `#rol-activo` (líneas 43, 55-65, 83-108, 112, 149 y 200) por cierre de sesión e ingreso con el otro rol, y convertir "cambia el rol activo y vuelve a renderizar" en una prueba del indicador de solo lectura; en `tests/integration/compras/autenticacion.test.js`, actualizar "pide nombre solo a solicitante y comprador" y "ingresa sin nombre para jefatura y muestra solo el rol" (líneas 65-118) para que `jefe_compras` pida nombre y la sesión se compruebe en el indicador. Depende de T146–T149. [FR-037, SC-015]
 - [x] T153 [US12] Verificado en `tests/integration/compras/vista.test.js` y `tests/integration/compras/autenticacion.test.js`: con la sesión iniciada, `setRolActivo()` no cambia el rol ni `getUsuarioActivo()`; no existe `#rol-activo`; el indicador muestra usuario y rol; tras cerrar sesión e ingresar con otro rol, la barra lateral y el panel corresponden al nuevo rol. [FR-037, FR-034, FR-036]
-- [x] T154 `README.md` actualizado: acceso con nombre para `solicitante`, `comprador` y `jefe_compras`, indicador de solo lectura en lugar del selector **Rol Activo**, rol fijo durante la sesión y creación de solicitudes por los cinco roles; la fila T146-T155 de `plan.md` queda sincronizada con este estado. [FR-037]
-- [x] T155 Verificación automatizada completada (`npm test -- --run` y `npm run lint` sin errores); el recorrido de los escenarios 1 a 8 de `specs/002-modulo-adquisiciones-compras/quickstart.md` cerrando sesión entre roles queda como procedimiento de validación en navegador. [FR-005, FR-006, FR-037, SC-015, SC-016]
+- [x] T154 `README.md` actualizado: acceso con nombre para `solicitante`, `comprador` y `jefe_compras`, indicador de solo lectura en lugar del selector **Rol Activo**, rol fijo durante la sesión y creación de solicitudes por los cinco roles; el resumen de `plan.md` referencia a `tasks.md` como fuente canónica de este estado. [FR-037]
+- [x] T155 Verificación automatizada completada (`npm test -- --run` y `npm run lint` sin errores); clasificada como **cerrada con nota**: el recorrido de los escenarios 1 a 8 de `specs/002-modulo-adquisiciones-compras/quickstart.md` cerrando sesión entre roles queda como **validación humana externa** en navegador. [FR-005, FR-006, FR-037, SC-015, SC-016]
 
 **Punto de control**: el rol no cambia dentro de una sesión, los cinco roles crean solicitudes y la regla 8 se cumple también para las solicitudes de `jefe_compras`.
 
@@ -405,10 +405,10 @@
 
 **Prueba Independiente**: para los cinco roles, cada dato sensible coincide con la matriz en tablas, modales, búsquedas, trazabilidad, CSV y respuestas del asistente; el RUT propio siempre se ve sin enmascarar y el RUT tributario de proveedores no se confunde con el RUT personal de empleados en texto de auditoría.
 
-- [x] T156 [P] Centralizar en `src/compras/visibilidad.js` la matriz y las funciones puras `puedeVerRutEmpleado`, `enmascararRut`, `rutEmpleadoVisible`, `puedeVerRutProveedor`, `enmascararRutProveedor`, `formatearRutVisible`, `puedeVerDatosBancarios`, `enmascararCuentaPorRol`, `sanitizarRutsEnTexto` y `enmascararDatosEnTexto`, con `RUT_OCULTO` y `CUENTA_NO_DISPONIBLE`; `reglas.js` y `module-config.js` delegan en este módulo. [FR-004, FR-025]
+- [x] T156 [P] Centralizar en `src/compras/visibilidad.js` la matriz canónica y las funciones puras `puedeVerRutEmpleado`, `enmascararRut`, `rutEmpleadoVisible`, `puedeVerRutProveedor`, `enmascararRutProveedor`, `formatearRutVisible`, `puedeVerDatosBancarios`, `enmascararCuentaPorRol`, `sanitizarRutsEnTexto` y `enmascararDatosEnTexto`, con las constantes `RUT_OCULTO` (`••••••••-•`) y `CUENTA_NO_DISPONIBLE` (`No disponible`). `enmascararRut`/`enmascararCuenta` de `src/compras/reglas.js` y `puedeVerDatosBancarios` de `src/module-config.js` re-exportan/delegan, sin definir una segunda fuente de reglas. [FR-004, FR-025]
 - [x] T157 [US1] Aplicar la matriz en `proveedores.js` (`vistaProveedor()` con `rut_visible`/`cuenta_visible`), `almacenamiento.js` (sesión con `rut` y `datosUsuario()`), `catalogo.js`, `cotizaciones.js`, `recepciones.js` y `vista.js`, incluidos modales, búsquedas y celdas de identidad. [FR-004, FR-025, SC-009]
 - [x] T158 [US12] Aplicar la matriz en `trazabilidad.js`, `exportacion.js` (CSV con RUT de empleados en auditoría y cuentas según rol) y `asistente.js`, usando `enmascararDatosEnTexto()` con la lista explícita de RUT de empleados para no ocultar RUT tributarios de proveedores. [FR-025, FR-030]
-- [x] T159 [US1] Cubrir en `tests/unit/compras/visibilidad-sensible.test.js` las cinco combinaciones de rol para los tres datos sensibles, contextos `listado`/`auditoria`, canales `recepcion`/`guia_despacho`, cuentas cortas y vacías, y texto libre con RUT de empleados y proveedores. Actualizar las pruebas de integración que afirmaban máscaras obsoletas. [SC-009]
+- [x] T159 [US1] Cubrir en `tests/unit/compras/visibilidad-sensible.test.js` la matriz RBAC completa con las cinco combinaciones de rol para los tres datos sensibles: RUT de terceros oculto (`••••••••-•`) para `solicitante`, `comprador` y `bodega`; `18.XXX.XXX-5` para `jefe_compras` solo en auditoría; completo para `admin_ti`; RUT propio siempre visible; RUT tributario por rol y canal; cuentas completas/`****XXXX`/ocultas y casos cortos y vacíos; enmascaramiento en texto sin afectar RUT tributarios. Incluir contextos `listado`/`auditoria` y canales `recepcion`/`guia_despacho`, y actualizar las pruebas de integración que afirmaban máscaras obsoletas. [SC-009]
 - [x] T160 [US12] Sincronizar `spec.md`, `data-model.md`, `plan.md`, `tasks.md`, `README.md`, `quickstart.md` y los contratos con la matriz, y verificar `npx vitest run`, `npm run lint` y `npm run format:check` sin errores. [FR-004, FR-025, SC-009]
 
 **Punto de control**: una sola fuente canónica (`visibilidad.js`) gobierna los tres datos sensibles en los cinco roles y en todos los canales.
@@ -450,22 +450,24 @@
 
 ---
 
-## Estado de las Fases 17–23 (2026-11-25)
+## Estado de las Fases 16–23 (2026-11-25)
 
-> Estado global: las tareas funcionales T127, T137 y T139 están cerradas y sus pruebas pasan. Queda como validación externa el recorrido manual de los escenarios 1 a 8 de `quickstart.md` (T144/T155/T168).
+> **Fuente canónica**: esta sección y la tabla «Deuda conocida» de `tasks.md` son el registro único del estado de las Fases 16–23; `spec.md` y `plan.md` contienen solo un resumen con referencia cruzada aquí.
+>
+> Estado global: implementación completada (**cerrada con nota**); las tareas funcionales T127, T137 y T139 están cerradas y sus pruebas pasan. El recorrido manual de los escenarios 1 a 8 de `quickstart.md` (T144/T155/T168) queda registrado como **validación humana externa**, no como trabajo pendiente.
 
 - **Fase 16**: cerrada (`visibilidad.js`, `PERMISOS` y pruebas de matriz).
 - **Fase 17**: navegación agrupada, solo lectura, bloqueo de accesos, historial/exportación, encabezado y filtro del `solicitante` en servicios, UI y CSV implementados y verificados (T127 cerrada).
 - **Fase 18**: ajustes de permisos por historia y panel por los cinco roles implementados y verificados, con «Mis solicitudes» para cada rol e indicadores según FR-035 (T137 y T139 cerradas).
-- **Fase 19**: semilla, contratos y documentación sincronizados; verificación automatizada completada (27 archivos, 320 pruebas aprobadas, 56 omitidas; `npm run lint`, `npm run format:check` y `npm run build` sin errores). El recorrido manual de los escenarios 1 a 8 de `quickstart.md` queda como procedimiento de validación en navegador.
+- **Fase 19**: semilla, contratos y documentación sincronizados; verificación automatizada completada (27 archivos aprobados y 10 omitidos; 320 pruebas aprobadas y 56 omitidas; `npm run lint`, `npm run format:check` y `npm run build` sin errores). El recorrido manual de los escenarios 1 a 8 de `quickstart.md` queda como validación humana externa en navegador.
 - **Fase 20**: cerrada; rol fijo, indicador de sesión, nombre de `jefe_compras`, creación de solicitudes por los cinco roles y pruebas de sesión implementados y verificados (T146–T155).
 - **Fase 21**: cerrada; matriz RBAC unificada de RUT personal, RUT tributario y cuentas bancarias implementada en `visibilidad.js` y propagada a vistas, modales, búsquedas, trazabilidad, CSV y asistente, con pruebas por rol y canal (T156–T160).
 - **Fase 22**: cerrada; catálogos bancarios y de tipos de cuenta, auto-relleno de CuentaRUT, tabla y buscador de proveedores ampliados, semilla de 12 proveedores y botón de carga base en Modo Real (T169–T173, FR-038–FR-041, SC-018–SC-019).
-- **Fase 23**: cerrada; Modo Demo / Modo Real con snapshot separado, ingreso por correo o RUT, padrón administrable con OTP, suspensión, parámetros dinámicos, desbloqueo de excepciones y auditoría forense implementados y verificados (T161–T168). Suite: 27 archivos, 320 pruebas aprobadas y 56 omitidas; `lint`, `format:check` y `build` sin errores. El recorrido manual de los escenarios de `quickstart.md` queda como validación en navegador.
+- **Fase 23**: cerrada; Modo Demo / Modo Real con snapshot separado, ingreso por correo o RUT, padrón administrable con OTP, suspensión, parámetros dinámicos, desbloqueo de excepciones y auditoría forense implementados y verificados (T161–T168). Suite: 27 archivos aprobados y 10 omitidos; 320 pruebas aprobadas y 56 omitidas; `lint`, `format:check` y `build` sin errores. El recorrido manual de los escenarios de `quickstart.md` queda como validación humana externa en navegador.
 
 ## Deuda conocida
 
-El estado de estas tareas se registra aquí y se replica en `plan.md` para que el congelamiento no esconda trabajo pendiente. T101, T104, T107, T108, T109, T110, T117, T118, T119, T120, T127, T137 y T139 figuran como cerradas; T121-T144 y T146-T155 están cerradas con nota; T156–T160 están cerradas; T144/T155/T168 conservan el recorrido manual en navegador.
+El estado de estas tareas se registra aquí de forma canónica y `spec.md`/`plan.md` lo referencian, para que el congelamiento no esconda trabajo pendiente. T101, T104, T107, T108, T109, T110, T117, T118, T119, T120, T127, T137 y T139 figuran como cerradas; T121-T144 y T146-T155 están cerradas con nota; T156–T160 están cerradas; T144/T155/T168 conservan el recorrido manual en navegador como validación humana externa.
 
 | Tarea | Estado  | Justificación de la deuda                                                                                                                                                                                                                    | Referencia                          |
 | ----- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
@@ -479,8 +481,8 @@ El estado de estas tareas se registra aquí y se replica en `plan.md` para que e
 | T118  | Cerrada | Pendiente 2 de `data-model.md` §10 resuelto: `anulada` con `motivo_anulacion` en devoluciones y resto de documentos, con registro forense. | FR-029                              |
 | T119  | Cerrada | Decisión aplicada: se elimina `borrador` del modelo de OC y se conserva `emitida` como estado inicial; `data-model.md` y `plan.md` sincronizados.                                                                                          | FR-010                              |
 | T120  | Cerrada | Auditoría global de SC-003 en `flujo-compras.test.js`: se verifican las dos vías de cumplimiento (tres cotizaciones vigentes o justificación de proveedor único) sobre todas las OC no anuladas.                                            | SC-003                              |
-| T121-T144 | En curso | Fase 16 fundacional cerrada (T121-T124); Fases 17-19 con navegación, modo lectura, panel, pruebas y documentación pendientes. | FR-033 a FR-036, SC-015 a SC-017 |
-| T146-T155 | En curso | Rol fijo, indicador, nombre de `jefe_compras`, creación por cinco roles y pruebas de sesión implementadas (T146-T149, T152); pendientes T150, T151 y T153-T155. | FR-005, FR-006, FR-034, FR-037 |
+| T121-T144 | Cerrada con nota | Fases 16 a 19 cerradas, incluidas T127, T137 y T139; T144 conserva el recorrido manual de `quickstart.md` como validación humana externa. | FR-033 a FR-036, SC-015 a SC-017 |
+| T146-T155 | Cerrada con nota | Rol fijo, indicador, nombre de `jefe_compras`, creación por cinco roles y pruebas de sesión implementadas y verificadas (T146-T154); T155 conserva el recorrido manual de `quickstart.md` como validación humana externa. | FR-005, FR-006, FR-034, FR-037 |
 
 ---
 
@@ -508,7 +510,9 @@ El estado de estas tareas se registra aquí y se replica en `plan.md` para que e
 - **US12 (Fase 17)** y **Ajustes por historia (Fase 18)**: dependen de la Fase 16 y pueden avanzar en paralelo, salvo T138, que depende de T125, y T133 y T134, cuyos botones requieren T126.
 - **Cierre del rediseño (Fase 19)**: al finalizar las fases 17 y 18.
 - **Solicitudes para los cinco roles y rol fijo (Fase 20)**: T146–T149 pueden empezar tras la Fase 16 (T149 en paralelo); T150 depende de T121 y T149; T151 de T150; T152 y T153 de T146–T148 (T152 también de T149); T154 y T155 cierran la fase. Conviene ejecutar T147 antes o junto con T125 y T130, porque las tres tocan la barra superior y la navegación.
-- **Gobernanza de identidades y datos (Fase 23)**: depende de la Fase 21 porque toda edición usa la matriz canónica de `visibilidad.js`. T161 habilita el conmutador y el ingreso dual; T162 y T163 comparten el modal de ficha; T164 consume los eventos generados por T162, T163, T165 y T166; T167 y T168 cierran la fase.
+- **Matriz RBAC de datos sensibles (Fase 21)**: depende de las fases 1 a 20 y consolida la visibilidad de RUT y cuentas usada por US1, US12 y la exportación. T156 centraliza la matriz en `visibilidad.js`; T157 y T158 la propagan a servicios, vistas, trazabilidad, CSV y asistente; T159 y T160 verifican y sincronizan la documentación.
+- **Catálogos bancarios y listado de proveedores (Fase 22)**: depende de la Fase 21 porque la matriz de `visibilidad.js` rige la cuenta enmascarada del listado. T169 y T170 amplían el formulario y el auto-relleno de `CuentaRUT`; T171 y T172 el listado y la carga base en Modo Real; T173 cierra la fase.
+- **Gobernanza de identidades y datos (Fase 23)**: depende de la Fase 21 porque toda edición usa la matriz canónica de `visibilidad.js`, y de la Fase 22 porque el padrón y los parámetros se apoyan en los catálogos ya centralizados. T161 habilita el conmutador y el ingreso dual; T162 y T163 comparten el modal de ficha; T164 consume los eventos generados por T162, T163, T165 y T166; T167 y T168 cierran la fase.
 
 ### Dependencias Críticas
 
@@ -579,7 +583,7 @@ Ejemplo de paralelismo: tras T121, ejecutar en paralelo T122/T123 (matriz y sus 
 | FR-001    | T011, T012, T013, T014, T015                   |
 | FR-002    | T014                                           |
 | FR-003    | T016                                           |
-| FR-004    | T017, T062, T093, T121, T133, T134             |
+| FR-004    | T017, T062, T093, T121, T133, T134, T156, T157, T158, T159, T160 |
 | FR-005    | T020, T021, T022, T023, T121, T150, T151, T155 |
 | FR-006    | T024 (sup. por T135), T121, T135, T148, T149, T150, T151, T155 |
 | FR-007    | T051, T052                                     |
@@ -600,12 +604,12 @@ Ejemplo de paralelismo: tras T121, ejecutar en paralelo T122/T123 (matriz y sus 
 | FR-022    | T086                                           |
 | FR-023    | T066, T067, T068                               |
 | FR-024    | T074, T075, T076, T127, T150                   |
-| FR-025    | T017, T093, T094, T095, T096, T129             |
+| FR-025    | T017, T093, T094, T095, T096, T129, T156, T157, T158, T159, T160 |
 | FR-026    | T097, T098, T100, T101, T110                   |
 | FR-027    | T102, T106                                     |
 | FR-028    | T103, T106                                     |
 | FR-029    | T104, T106, T109, T118                         |
-| FR-030    | T105, T106, T129, T134                         |
+| FR-030    | T105, T106, T129, T134, T156, T157, T158, T159, T160 |
 | FR-031    | T078, T079, T080, T081, T082 (sup. por T141), T083, T084, T141 |
 | FR-032    | T085, T111, T116                               |
 | FR-033    | T121, T122, T126, T127, T128, T129, T140, T150 |
@@ -643,7 +647,7 @@ Ejemplo de paralelismo: tras T121, ejecutar en paralelo T122/T123 (matriz y sus 
 | SC-006   | T089             |
 | SC-007   | T087             |
 | SC-008   | T077, T089       |
-| SC-009   | T096             |
+| SC-009   | T096, T156, T157, T158, T159, T160 |
 | SC-010   | T077, T099       |
 | SC-011   | T098, T101, T110 |
 | SC-012   | T106             |
@@ -690,9 +694,5 @@ Ejemplo de paralelismo: tras T121, ejecutar en paralelo T122/T123 (matriz y sus 
 - No modificar src/storage.js ni eslint.config.mjs.
 - Prohibido vistas/botones genéricos del template base.
 
-## Funciones puras de visibilidad sensible
-
-- [x] T156 [P] Implementar en `src/compras/visibilidad.js` la matriz canónica y las funciones puras `puedeVerRutEmpleado`, `enmascararRut`, `rutEmpleadoVisible`, `puedeVerRutProveedor`, `enmascararRutProveedor`, `formatearRutVisible`, `puedeVerDatosBancarios`, `enmascararCuentaPorRol`, `sanitizarRutsEnTexto` y `enmascararDatosEnTexto`, con las constantes `RUT_OCULTO` (`••••••••-•`) y `CUENTA_NO_DISPONIBLE` (`No disponible`). `enmascararRut`/`enmascararCuenta` de `src/compras/reglas.js` y `puedeVerDatosBancarios` de `src/module-config.js` re-exportan/delegan, no definen una segunda fuente de reglas. [FR-004, FR-025]
-- [x] T159 [P] Agregar `tests/unit/compras/visibilidad-sensible.test.js` con la matriz RBAC completa: RUT de terceros oculto para `solicitante`, `comprador` y `bodega`; `18.XXX.XXX-5` para `jefe_compras` solo en auditoría; completo para `admin_ti`; RUT propio siempre visible; RUT tributario por rol y canal; cuentas completas/`****XXXX`/ocultas y casos cortos; enmascaramiento en texto sin afectar RUT tributarios. [SC-009]
-- Restricción: no modificar `src/storage.js` ni `eslint.config.mjs`.
+> Nota: las definiciones canónicas de T156–T160 están en la Fase 21 (matriz RBAC unificada de datos sensibles) y no se repiten aquí.
 
