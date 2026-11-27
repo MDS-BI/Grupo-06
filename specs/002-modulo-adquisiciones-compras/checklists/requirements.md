@@ -80,6 +80,28 @@
 - [x] UI-02 está explicitada en `spec.md`, `plan.md` y `tasks.md`: única barra lateral `Compras` agrupada en `Panel / Adquisiciones / Compras` filtrada por `visibilidad.js`; KPI superiores con contadores numéricos explícitos sin `undefined`/`NaN`; `Pendientes por rol` con códigos completos (`SC-2026-0001`, `OC-2026-0001`, `FAC-1002`, `DEV-2026-0001`), badges con tilde y acciones/enlaces inferiores alineados al fondo de cada tarjeta.
 - [x] Trazabilidad documental: FR-047/SC-024 cubren UI-01 y FR-048/SC-025 cubren UI-02; Fase 24/T174–T179 en `tasks.md` registra la alineación y el análisis.
 
+## Precisión documental para la reconstrucción (2026-11-26)
+
+- [x] `spec.md`, `plan.md` y `tasks.md` explican que `public/login-bg.avif` está respaldado en `specs/002-modulo-adquisiciones-compras/assets/login-bg.avif`, que se copia a `public/` si no existe al reconstruir y que se mantiene el degradado oscuro CSS de respaldo.
+- [x] El modal de consentimiento fija `Preferencias de interfaz (tema y navegación)` y `Datos locales de demostración` en fila horizontal con `display: flex; align-items: center; gap: 10px; justify-content: flex-start; text-align: left`; el checkbox usa `width: auto; margin: 0; flex-shrink: 0`, queda a la izquierda del `<label>` y nunca se centra ni usa `width: 100%`.
+- [x] Los botones `Aceptar` y `Solo esenciales` están alineados horizontalmente al pie del modal con separación adecuada.
+- [x] UI-02 describe una única barra lateral izquierda con encabezado `Compras` y grupos `PANEL`, `ADQUISICIONES` y `COMPRAS` filtrados por `visibilidad.js`, sin botón superior azul duplicado `Compras` sobre `PANEL`.
+- [x] La vista `Panel` usa el título/breadcrumb exacto `Panel › Resumen General` y la combinación `Panel › Panel` queda prohibida.
+- [x] Los KPI se calculan por rol activo según `visibilidad.js`; `solicitante` ve solo sus solicitudes y las OC y recepciones asociadas, sin KPI ni conteos de `Facturas` ni de `Aprobadas para pago`.
+- [x] Los KPI principales forman una fila horizontal compacta de hasta 4 tarjetas según el rol, con altura compacta, acento sutil superior/lateral, tipografía numérica clara e íconos SVG distintos por métrica; `Pendientes por rol` y `Alertas` quedan visibles sin scroll excesivo.
+- [x] Las tablas exigen `padding` mínimo de `12px 14px` por celda y separación clara entre columnas, con `white-space: nowrap` en `CÓDIGO` (`PRV-001`) y `RUT` (`12.345.678-5`).
+- [x] La columna `CUENTA` de `Proveedores` incluye banco y tipo de cuenta junto al número; `Catálogo` muestra estado activo/inactivo en estado/vigencia y `ACCIONES` solo contiene botones/enlaces según permisos del rol.
+- [x] `data-model.md` y `spec.md` definen una sola semilla consolidada de 12 proveedores `PRV-001` a `PRV-012` con `razonSocial`, `nombreFantasia`, `giro`, `rut` válido Módulo 11, banco + tipo de cuenta + número, `estado` y `calificacion` completos, y prohíben la coexistencia o mezcla con `PROV-001` a `PROV-007`.
+- [x] `tasks.md` registra las precisiones como Fase 25/T180–T183 y actualiza la trazabilidad de FR-023, FR-040, FR-047, FR-048, SC-024 y SC-025; `plan.md` concentra las decisiones en la sección de fidelidad.
+
+## Auditoría de preparabilidad para reconstrucción (2026-11-26)
+
+- [x] `plan.md` y `contracts/` listan las rutas exactas y las exportaciones que `src/app.js`, `src/main.js` y `src/module-config.js` importan de `src/compras/` y del núcleo base, incluido el alias `puedeVerDatosBancariosVisible`.
+- [x] Los enlaces relativos al contrato `001-erp-base-module/contracts/entity-storage.md` apuntan a `specs/001-erp-base-module/contracts/entity-storage.md` desde `plan.md` y desde `contracts/`.
+- [x] `plan.md`, `tasks.md` y `contracts/` prohíben modificar `src/storage.js`, `tests/unit/storage.test.js` y `eslint.config.mjs`, y distinguen la API real de `src/storage.js` de las operaciones `erp_compras:*` de `src/compras/almacenamiento.js`.
+- [x] Las especificaciones no exigen paquetes ausentes de `package.json`: cero dependencias de ejecución, solo las `devDependencies` declaradas, CSV propio, fechas nativas y tipografía Google Fonts con respaldo `system-ui`.
+- [x] `quickstart.md` y `plan.md` verifican `npx vitest run`, `npm run lint` y `npm run build`, y explican que `/speckit.implement` copia `assets/login-bg.avif` a `public/login-bg.avif` solo si no existe, conservando el degradado CSS de respaldo.
+
 ## Notas
 
 - La codificación y el separador de las exportaciones CSV están explicitados en la sección Clarifications (UTF-8 con BOM y `;`) y se mantienen delegados a `plan.md` como fuente técnica detallada en FR-024, US10 y SC-010.

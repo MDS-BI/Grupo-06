@@ -1,7 +1,7 @@
 # Data Model: Módulo Adquisiciones y Compras
 
 **Feature**: `002-modulo-adquisiciones-compras` (el `001` corresponde al módulo base del template del curso)
-**Estado**: Borrador v1.3 (23 de noviembre de 2026). Reemplaza el borrador del módulo Ventas / CRM; ver sección 9.
+**Estado**: Borrador v1.6 (26 de noviembre de 2026). Reemplaza el borrador del módulo Ventas / CRM; ver sección 9.
 **Alcance**: Solo frontend, sobre el template del curso. Los datos se persisten como datos semilla (JSON) y en `localStorage` del navegador. No hay backend.
 
 ---
@@ -355,6 +355,8 @@ Persona natural o empresa que vende bienes o servicios a la organización. Es el
 | banco, tipo_cuenta, numero_cuenta | string | opcional; catálogo cerrado si se registran           | Datos para el pago (S). `banco` y `tipo_cuenta` siguen los catálogos de §3.3.1; `CuentaRUT (BancoEstado)` exige `BancoEstado`. Completos para `jefe_compras` y `admin_ti`; `****XXXX` para `comprador`; ocultos para `solicitante` y `bodega`. `vistaProveedor()` expone `cuenta_visible`: completo, `****XXXX`, `No registrado` (sin cuenta) o `No disponible` (sin acceso). Solo `admin_ti` puede editarlos |
 | fecha_cambio_cuenta               | date   | se actualiza al modificar datos bancarios             | Permite alertar pagos a cuentas recién cambiadas (ver sección 6)                                                                                     |
 | fecha_registro                    | date   | obligatorio                                           |                                                                                                                                                      |
+
+**Convención de nombres en la semilla consolidada**: las claves físicas de `semilla.json` son `razon_social`, `nombre_fantasia`, `giro`, `rut`, `banco`, `tipo_cuenta`, `numero_cuenta`, `estado` y `calificacion_promedio`. En la documentación de interfaz y de reconstrucción se denominan respectivamente `razonSocial`, `nombreFantasia`, `giro`, `rut`, banco + tipo de cuenta + número, `estado` y `calificacion`. La semilla es una sola colección de 12 proveedores con códigos `PRV-001` a `PRV-012`; la serie `PROV-001` a `PROV-007` no existe y está prohibida (§9.3, FR-040).
 
 **Correspondencia canónica de estados de proveedor** (`ETIQUETA_ESTADO` en `src/compras/proveedores.js`):
 
@@ -794,6 +796,8 @@ Los identificadores de estas entidades deben coincidir con los que use el templa
 | Gasto en micro y pequeñas empresas | ∑ neto de OC a proveedores `micro` o `pequeña` / gasto del período                                        |
 | Evaluación promedio por proveedor  | promedio de (nota_calidad + nota_plazo + nota_servicio)/3, junto con el n° de evaluaciones                 |
 
+**Ámbito de los KPI del Panel (UI-02)**: los indicadores mostrados se calculan sobre los registros habilitados al rol activo por `visibilidad.js` (FR-033/FR-034). Para `solicitante` comprenden solo sus solicitudes y las OC y recepciones asociadas; nunca incluyen `Facturas` ni `Aprobadas para pago`. La presentación es una fila horizontal compacta de hasta 4 KPI principales por rol, con acento sutil, cifra legible e íconos SVG distintos por métrica, sin desplazar `Pendientes por rol` ni `Alertas` fuera de la vista.
+
 ---
 
 ## 9. Registro de cambios
@@ -807,6 +811,7 @@ Los identificadores de estas entidades deben coincidir con los que use el templa
 | v1.3        | 23-11-2026      | Rediseño de permisos por rol: `admin_ti` pasa a ser administrador del sistema (datos bancarios, desbloqueo de proveedores y trazabilidad; el resto en solo lectura) y deja de aprobar solicitudes y devoluciones; la segregación de funciones (regla 8) se aplica sin excepciones; solo el rol `comprador` emite OC; se documenta como riesgo asumido que el comprador concilia facturas de OC que él emitió (sección 6). Los cinco roles pueden crear solicitudes y cada usuario edita solo las suyas; si el solicitante es `jefe_compras`, aprueba otro `jefe_compras` (sección 3.7, reglas 2 y 8) y la semilla agrega un segundo usuario `jefe_compras`. Se documenta como riesgo asumido que el comprador cotice y emita la OC de una solicitud que él mismo creó (sección 6). El rol queda fijo durante la sesión (FR-037): se agrega a la sección 6 el riesgo "Ingreso simulado (FR-037) y rol fijo por sesión" y se ajusta la descripción de `rol_usuario` (sección 3.14). Se alinea con FR-005, FR-006 y FR-033 a FR-037 de `spec.md` |
 | v1.4        | 25-11-2026      | Matriz RBAC unificada de RUT personal de empleados, RUT tributario de proveedores y cuentas bancarias centralizada en `src/compras/visibilidad.js` (FR-004, FR-025, SC-009). Se elimina la dependencia del tipo de persona para enmascarar el RUT tributario, se distinguen `No registrado` y `No disponible` en `cuenta_visible` y se ajusta la trazabilidad a la representación autorizada por rol |
 | v1.5        | 25-11-2026      | Enriquecimiento de PROVEEDOR con `codigo`, `nombre_fantasia`, `rubro`/`categoria`, `estado` legible y `calificacion_promedio`; catálogos cerrados de bancos y tipos de cuenta chilenos con regla de auto-relleno de CuentaRUT (§3.3.1, FR-038–FR-039); semilla-base de 12 proveedores sintéticos (§9.3) y carga de catálogos maestros disponible en Modo Real (FR-041) |
+| v1.6        | 26-11-2026      | Precisión documental para la reconstrucción (Fase 25): semilla consolidada única de 12 proveedores `PRV-001`–`PRV-012` con todos los campos completos y prohibición de la serie `PROV-001`–`PROV-007`; convención de nombres `razonSocial`/`nombreFantasia`/`calificacion` frente a las claves `snake_case` del JSON; KPI del Panel calculados por rol activo y sin conteos de facturas para `solicitante` (§8); alineado con FR-023, FR-040, FR-047, FR-048, SC-024 y SC-025 de `spec.md` |
 
 ---
 
@@ -844,4 +849,14 @@ El seed (semilla.json) debe incluir, en las 12 colecciones transaccionales, dato
 
 ### 9.3 Proveedores semilla (FR-040)
 
-La semilla-base contiene **12 proveedores chilenos sintéticos** (`prov-001` a `prov-012`, códigos `PRV-001` a `PRV-012`) con RUT válido Módulo 11, razón social, nombre de fantasía, giro y rubro, correo, teléfono, dirección comercial, región y comuna, estado legible (`Activo`, `En evaluación` o `Suspendido`, ver correspondencia en §3.3), calificación promedio mayor que cero y datos bancarios configurados con los catálogos de §3.3.1. Incluye un caso de `CuentaRUT (BancoEstado)` y un caso de institución de pago prepago para demostrar el catálogo completo. El botón **Cargar catálogo base de proveedores/insumos** agrega proveedores por `entity_id` ausente y carga centros de costo, productos y catálogo solo si esas colecciones están vacías; un ID semilla ya existente se conserva con las ediciones del usuario (FR-041).
+La semilla-base contiene **una sola colección consolidada de 12 proveedores chilenos sintéticos** (`prov-001` a `prov-012`, códigos `PRV-001` a `PRV-012`) en `src/compras/semilla.json`. Cada registro está completo y tiene:
+
+- `razonSocial` (`razon_social`) y `nombreFantasia` (`nombre_fantasia`) no vacíos.
+- `giro` y rubro (`rubro`/`categoria`), con correo, teléfono, dirección comercial, región y comuna.
+- `rut` con dígito verificador válido según Módulo 11 y único en la colección (formato `12.345.678-5` en la interfaz, `12345678-5` en el JSON).
+- Datos bancarios completos: `banco` y `tipo_cuenta` del catálogo de §3.3.1 y `numero_cuenta` registrado, con `fecha_cambio_cuenta` cuando corresponda; se incluye un caso de `CuentaRUT (BancoEstado)` y uno de institución de pago prepago para demostrar el catálogo completo.
+- `estado` legible (`Activo`, `En evaluación` o `Suspendido`, con la correspondencia de §3.3) y `calificacion` (`calificacion_promedio`) mayor que cero.
+
+**Prohibición de series duplicadas**: la semilla, la interfaz y cualquier reconstrucción DEBEN usar exclusivamente la serie `PRV-001` a `PRV-012`. NO DEBE existir, mezclarse ni conservarse como alternativa una serie `PROV-001` a `PROV-007` de registros incompletos (sin banco, tipo de cuenta, número, estado o calificación). Si apareciera en datos heredados, se descarta y se reemplaza por el registro equivalente de la serie `PRV-###` consolidada.
+
+El botón **Cargar catálogo base de proveedores/insumos** agrega proveedores por `entity_id` ausente y carga centros de costo, productos y catálogo solo si esas colecciones están vacías; un ID semilla ya existente se conserva con las ediciones del usuario (FR-041). En la tabla de `Proveedores` la columna `CUENTA` muestra banco y tipo de cuenta junto al número en la representación autorizada por FR-004, y las celdas de `CÓDIGO` y `RUT` no se parten en varias líneas (`white-space: nowrap`); en `Catálogo`, `ACCIONES` solo incluye controles permitidos por el rol (FR-023, FR-048).

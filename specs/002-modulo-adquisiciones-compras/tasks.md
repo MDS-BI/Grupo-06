@@ -668,8 +668,8 @@ Ejemplo de paralelismo: tras T121, ejecutar en paralelo T122/T123 (matriz y sus 
 | SC-021   | T167 |
 | SC-022   | T167 |
 | SC-023   | T167 |
-| SC-024   | T174, T179 |
-| SC-025   | T175, T179 |
+| SC-024   | T174, T179, T180, T183 |
+| SC-025   | T175, T179, T181, T183 |
 
 ### Historias de Usuario
 
@@ -692,10 +692,11 @@ Ejemplo de paralelismo: tras T121, ejecutar en paralelo T122/T123 (matriz y sus 
 | Rediseño de permisos (fundacional, ajustes y cierre) | Transversal | T121-T124, T133-T144   |
 | Solicitudes para los cinco roles y rol fijo (Fase 20) | Transversal | T146-T155         |
 | US13 - Administrar usuarios con OTP y auditoría forense | P1 | T161-T168 |
-| UI-01 - Portal de acceso corporativo | P1 | T174, T176, T177, T178, T179 |
-| UI-02 - Navegación agrupada y panel ejecutivo | P1 | T175, T176, T178, T179 |
-| Catálogos bancarios y listado de proveedores (Fase 22) | Transversal | T169-T173 |
+| UI-01 - Portal de acceso corporativo | P1 | T174, T176, T177, T178, T179, T180, T183 |
+| UI-02 - Navegación agrupada y panel ejecutivo | P1 | T175, T176, T178, T179, T181, T183 |
+| Catálogos bancarios y listado de proveedores (Fase 22) | Transversal | T169-T173, T182 |
 | Fidelidad de interfaz UI-01/UI-02 (Fase 24) | Transversal | T174-T179 |
+| Precisión documental de fidelidad y semilla (Fase 25) | Transversal | T180-T183 |
 
 ## Fase 24: Fidelidad de interfaz UI-01/UI-02 (2026-11-25)
 
@@ -703,8 +704,8 @@ Ejemplo de paralelismo: tras T121, ejecutar en paralelo T122/T123 (matriz y sus 
 
 **Prueba Independiente**: un implementador puede reconstruir portal y Panel leyendo solo `spec.md`, `plan.md` y `tasks.md`: encuentra tipografía, paleta, fondo, botón de tema, comportamiento de modo presentación, estructura de navegación, KPI y formato de pendientes con trazabilidad a FR-047/FR-048 y SC-024/SC-025.
 
-- [x] T174 [UI-01] [FR-047] [SC-024] Documentar en `spec.md` el portal corporativo: `Plus Jakarta Sans` (400/500/600/700), paleta GitHub Dark `#0D1117/#161B22/#2F81F7` con Modo Claro `#F6F8FA/#FFFFFF/#0969DA`, fondo `public/login-bg.avif` en escala de grises, tarjeta central elevada, botón de tema circular `40x40px` fijo (`top:20px; right:20px`) con íconos SVG sol/luna sincronizados, campo dual correo/RUT, Mostrar/Ocultar clave sin subrayado, sin selector visual de Modo Demo / Modo Real, inicio con semilla completa de 8 usuarios (`semilla.json` v3) y botón **Activar modo presentación** con Directorio Interno de acceso rápido en un clic.
-- [x] T175 [UI-02] [FR-048] [SC-025] Documentar en `spec.md` la navegación y Panel ejecutivo: única barra lateral `Compras` agrupada en `Panel / Adquisiciones / Compras` filtrada por `visibilidad.js`; KPI superiores con contadores numéricos explícitos sin `undefined`/`NaN`; `Pendientes por rol` con códigos completos (`SC-2026-0001`, `OC-2026-0001`, `FAC-1002`, `DEV-2026-0001`), badges con tilde y enlaces/acciones inferiores alineados al fondo de cada tarjeta.
+- [x] T174 [UI-01] [FR-047] [SC-024] Documentar en `spec.md` el portal corporativo: `Plus Jakarta Sans` (400/500/600/700), paleta GitHub Dark `#0D1117/#161B22/#2F81F7` con Modo Claro `#F6F8FA/#FFFFFF/#0969DA`, fondo `public/login-bg.avif` en escala de grises, tarjeta central elevada, botón de tema circular `40x40px` fijo (`top:20px; right:20px`) con íconos SVG sol/luna sincronizados, campo dual correo/RUT, Mostrar/Ocultar clave sin subrayado, sin selector visual de Modo Demo / Modo Real, inicio con semilla completa de 8 usuarios (`semilla.json` v3) y botón **Activar modo presentación** con Directorio Interno de acceso rápido en un clic. Precisado en T180: respaldo `assets/login-bg.avif` con degradado oscuro CSS de respaldo, opciones de consentimiento `Preferencias de interfaz (tema y navegación)` y `Datos locales de demostración` en fila horizontal alineada a la izquierda con checkbox `width:auto; margin:0; flex-shrink:0` a la izquierda del `<label>`, y botones `Aceptar` / `Solo esenciales` alineados horizontalmente al pie del modal.
+- [x] T175 [UI-02] [FR-048] [SC-025] Documentar en `spec.md` la navegación y Panel ejecutivo: única barra lateral `Compras` agrupada en `Panel / Adquisiciones / Compras` filtrada por `visibilidad.js`; KPI superiores con contadores numéricos explícitos sin `undefined`/`NaN`; `Pendientes por rol` con códigos completos (`SC-2026-0001`, `OC-2026-0001`, `FAC-1002`, `DEV-2026-0001`), badges con tilde y enlaces/acciones inferiores alineados al fondo de cada tarjeta. Precisado en T181: encabezado `Compras` con grupos `PANEL`/`ADQUISICIONES`/`COMPRAS` sin botón azul duplicado, título `Panel › Resumen General`, KPI por rol activo sin facturas para `solicitante`, fila compacta de hasta 4 KPI y formato de tablas (`padding` mínimo `12px 14px`, `nowrap` en `CÓDIGO`/`RUT`, `CUENTA` con banco/tipo/número, estado/vigencia en `Catálogo` y `ACCIONES` según permisos).
 - [x] T176 [UI-01] [UI-02] Incorporar en `plan.md` las decisiones UI-01/UI-02, impactos de arquitectura de interfaz, restricciones de portal/navegación y referencia a Fase 24 como fuente de fidelidad visual.
 - [x] T177 [FR-042] Alinear en `spec.md`, `plan.md` y `tasks.md` la tensión entre UI-01 y el antiguo conmutador Modo Demo / Modo Real: la UI no expone selector visual de modo; la gobernanza/snapshot puede persistir en almacenamiento sin reintroducir el selector.
 - [x] T178 [UI-01] [UI-02] Actualizar trazabilidad en `tasks.md`: dependencias, estado de Fases 16–24, deuda conocida y cobertura de FR-047/FR-048/SC-024/SC-025.
@@ -714,13 +715,32 @@ Ejemplo de paralelismo: tras T121, ejecutar en paralelo T122/T123 (matriz y sus 
 
 ---
 
+## Fase 25: Precisión documental de fidelidad y semilla (2026-11-26)
+
+**Propósito**: fijar por escrito los detalles visuales y funcionales que faltaban para reconstruir UI-01/UI-02 desde cero y evitar una segunda semilla de proveedores. No se modifica código, interfaz ni datos: los cambios se limitan a `spec.md`, `plan.md`, `data-model.md`, `tasks.md` y `checklists/requirements.md`.
+
+**Prueba Independiente**: un implementador lee solo los cinco archivos documentales y obtiene el respaldo del fondo y el layout del consentimiento, la navegación sin botón duplicado, el título exacto del Panel, los KPI por rol, el formato de tablas y una sola semilla de 12 proveedores completos.
+
+- [x] T180 [UI-01] [FR-047] [SC-024] Precisar en `spec.md` y `plan.md` que `public/login-bg.avif` se respalda en `specs/002-modulo-adquisiciones-compras/assets/login-bg.avif`, copiándolo a `public/` durante `/speckit.implement` si no existe y conservando el degradado oscuro CSS de respaldo; fijar `Preferencias de interfaz (tema y navegación)` y `Datos locales de demostración` en fila horizontal (`display:flex; align-items:center; gap:10px; justify-content:flex-start; text-align:left`) con checkbox `width:auto; margin:0; flex-shrink:0` a la izquierda del `<label>` (nunca centrado ni `width:100%`), y botones `Aceptar` y `Solo esenciales` alineados horizontalmente al pie del modal.
+- [x] T181 [UI-02] [FR-048] [SC-025] Precisar en `spec.md` y `plan.md` la barra izquierda con encabezado `Compras` y grupos `PANEL`, `ADQUISICIONES`, `COMPRAS` filtrados por `visibilidad.js`, sin botón superior azul duplicado; título exacto `Panel › Resumen General`; KPI calculados por rol activo con `solicitante` limitado a sus solicitudes, OC y recepciones, sin KPI de `Facturas` ni `Aprobadas para pago`; fila compacta de hasta 4 KPI con acento sutil, cifra legible e íconos SVG distintos, con `Pendientes por rol` y `Alertas` visibles; tablas con `padding` mínimo `12px 14px`, `white-space:nowrap` en `CÓDIGO`/`RUT`, `CUENTA` con banco y tipo de cuenta junto al número, estado/vigencia activo/inactivo en `Catálogo` y `ACCIONES` solo con controles permitidos por rol (FR-023, FR-033).
+- [x] T182 [FR-040] [SC-019] Precisar en `data-model.md` §3.3, §8 y §9.3 y en `spec.md` FR-040 una sola semilla consolidada de 12 proveedores `PRV-001` a `PRV-012` con `razonSocial`, `nombreFantasia`, `giro`, `rut` Módulo 11, banco + tipo de cuenta + número, `estado` y `calificacion` completos; prohibir la coexistencia o mezcla con la serie incompleta `PROV-001` a `PROV-007` y documentar la equivalencia entre nombres conceptuales en camelCase y claves `snake_case` del JSON.
+- [x] T183 [UI-01] [UI-02] Actualizar `checklists/requirements.md` con las verificaciones de T180–T182 y revisar que no queden contradicciones entre `spec.md`, `plan.md`, `data-model.md` y esta fase.
+
+- [x] T184 [auditoría de reconstrucción] Documentar en `plan.md` y `contracts/` las rutas exactas de `src/compras/` y las exportaciones que consumen `src/app.js`, `src/main.js` y `src/module-config.js`, conservando alias y superficie exportada. Corregir los enlaces relativos al contrato `001-erp-base-module/contracts/entity-storage.md`.
+- [x] T185 [auditoría de reconstrucción] Prohibir explícitamente en `plan.md`, `tasks.md` y `contracts/` la modificación de `src/storage.js`, `tests/unit/storage.test.js` y `eslint.config.mjs`, y fijar la API exacta del núcleo base frente a las operaciones propias de `src/compras/almacenamiento.js`.
+- [x] T186 [auditoría de reconstrucción] Alinear `plan.md`, `quickstart.md` y los contratos con `package.json`/`vitest.config.mjs`: sin dependencias de ejecución ni librerías ausentes, tipografía Google Fonts con respaldo `system-ui`, comandos `npm run lint`, `npx vitest run` y `npm run build` verificados, y copia de `assets/login-bg.avif` a `public/` durante `/speckit.implement`.
+
+**Punto de control**: las precisiones T180–T183 y la auditoría T184–T186 quedan trazadas en FR-023/FR-040/FR-047/FR-048 y SC-024/SC-025 sin tocar la implementación.
+
+---
+
 ## Arquitectura actual y restricciones (MVP)
 
 - Interfaz UI-01/UI-02: tipografía global `Plus Jakarta Sans` (400/500/600/700); paleta base GitHub Dark (`#0D1117`, `#161B22`, `#2F81F7`) con soporte de Modo Claro (`#F6F8FA`, `#FFFFFF`, `#0969DA`); fondo `public/login-bg.avif`; botón de tema circular `40x40px` fijo en esquina superior derecha; íconos SVG sol/luna sincronizados.
 - Login UI-01: sin selector visual de Modo Demo / Modo Real; inicio directo con semilla completa de 8 usuarios (`semilla.json` v3) y botón **Activar modo presentación** para Directorio Interno de acceso rápido en un clic; campo dual correo/RUT y Mostrar/Ocultar clave sin subrayado.
 - Navegación/Panel UI-02: única barra lateral `Compras` con agrupación `Panel / Adquisiciones / Compras` filtrada por `visibilidad.js`; KPI numéricos explícitos sin `undefined`/`NaN`; `Pendientes por rol` con códigos completos, badges con tilde y acciones alineadas al fondo de tarjeta.
 - RBAC estricto por rol (solicitante, comprador, jefe_compras, bodega, admin_ti) según matriz FR-033.
-- No modificar src/storage.js ni eslint.config.mjs.
+- No modificar `src/storage.js`, `tests/unit/storage.test.js` ni `eslint.config.mjs`; los contratos usan solo la API existente de `src/storage.js` (`loadEntities`/`saveEntities`, entre otras) y no inventan funciones genéricas `load…/save…/add…`.
 - Prohibido renderizar vistas o botones genéricos del template base (Documentos, Entidades, Búsqueda, Panel genérico).
 
 > Nota: las definiciones canónicas de T156–T160 están en la Fase 21 (matriz RBAC unificada de datos sensibles) y no se repiten aquí.

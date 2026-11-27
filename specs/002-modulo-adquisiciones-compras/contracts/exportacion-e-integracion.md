@@ -68,13 +68,33 @@ Describir las interfaces que el módulo `002` expone hacia el usuario y hacia ot
 
 | Vínculo             | Estado en el MVP | Contrato                                                                                                                                                  |
 | ------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Módulo base (`001`) | Activo           | Proveedores se guardan como Entidades; las OC viven en `erp_compras:ordenes` con el mismo contrato de almacenamiento. Se respeta [entity-storage.md](../../../001-erp-base-module/contracts/entity-storage.md). |
+| Módulo base (`001`) | Activo           | Proveedores se guardan como Entidades; las OC viven en `erp_compras:ordenes` con el mismo contrato de almacenamiento. Se respeta [entity-storage.md](../../001-erp-base-module/contracts/entity-storage.md). |
 | Inventario          | Simulado         | `erp_compras:productos` es de solo lectura; las cantidades aceptadas de una recepción son la señal que Inventario deberá usar para aumentar el stock.     |
 | Contabilidad        | Simulada         | Una factura `aprobada_pago` representa la cuenta por pagar; el pago real y el asiento contable quedan fuera del módulo.                                   |
 | RR.HH.              | Simulado         | `erp_compras:usuarios` y `erp_compras:centros_costo` son maestros de solo lectura; el rol simulado sustituye a la autenticación real.                     |
 | SII                 | Fuera de alcance | Las facturas y notas de crédito se ingresan manualmente; no hay descarga de documentos tributarios electrónicos.                                          |
 
 Los identificadores de producto, proveedor, usuario y centro de costo se comparten entre módulos. No hay llamadas de red: toda la integración futura debe realizarse conservando esos identificadores y los formatos de fecha `YYYY-MM-DD`.
+
+## Interfaces exactas consumidas por `src/app.js` y `src/module-config.js`
+
+Las rutas y exportaciones siguientes son normativas para la reconstrucción. `src/main.js` importa `boot` desde `./app.js`, y el arranque consume:
+
+| Consumidor             | Ruta importada                | Exportaciones importadas                                                                                                                            |
+| ---------------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/app.js`           | `./module-config.js`          | `loadModuleConfig`, `normalizeConfig`, `setActiveConfig`                                                                                            |
+| `src/app.js`           | `./components/shell.js`       | `renderLogo`, `monogramFor`, `applyShellLabels`, `setActiveModule`                                                                                  |
+| `src/app.js`           | `./compras/almacenamiento.js` | `cargarSemilla`, `capturarDatosCompras`, `estaAutenticado`, `getSesion`, `getUsuarioActivo`, `inicializarModoReal`, `leer`, `restaurarDatosCompras` |
+| `src/app.js`           | `./compras/autenticacion.js`  | `CLAVE_DEMO`, `cerrarSesion`, `iniciarSesionConIdentificador`, `listarDirectorioUsuarios`                                                           |
+| `src/app.js`           | `./compras/administracion.js` | `usuarioSuspendido`                                                                                                                                 |
+| `src/app.js`           | `./compras/gobernanza.js`     | `guardarDato`, `guardarModo`, `leerDato`, `obtenerModo`                                                                                             |
+| `src/app.js`           | `./compras/reglas.js`         | `requiereNombre`                                                                                                                                    |
+| `src/app.js`           | `./compras/vista.js`          | `etiquetaRol`, `reiniciarVistaCompras`, `renderComprasView`                                                                                         |
+| `src/app.js`           | `./compras/asistente.js`      | `cerrarAsistente`, `reiniciarAsistente`, `sincronizarAsistente`                                                                                     |
+| `src/app.js`           | `./compras/cookies.js`        | `inicializarCookiesUI`                                                                                                                              |
+| `src/module-config.js` | `./compras/visibilidad.js`    | `puedeVerDatosBancarios` (alias local `puedeVerDatosBancariosVisible`)                                                                               |
+
+`src/module-config.js` exporta `userConfig`, `COMPRAS_PARAMETROS`, `puedeVerDatosBancarios`, `puedeEditarDatosBancarios`, `COMPRAS_CONFIG`, `DEFAULT_CONFIG`, `FIELD_TYPES`, `BASE_FIELDS`, `normalizeConfig`, `setActiveConfig`, `getConfig`, `labelFor` y `loadModuleConfig`. La API de persistencia del núcleo base se detalla en [almacenamiento-compras.md](almacenamiento-compras.md#api-exacta-del-núcleo-base-no-modificar) y no se amplía en este módulo. Está prohibido modificar `src/storage.js`, `tests/unit/storage.test.js` ni `eslint.config.mjs`.
 
 ## Expectativas de compatibilidad
 

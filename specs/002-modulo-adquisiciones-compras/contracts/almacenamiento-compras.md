@@ -2,7 +2,7 @@
 
 ## Propósito
 
-Definir las claves, la forma de los registros y las operaciones de persistencia propias de la funcionalidad `002`. Este contrato complementa, sin reemplazar, el [contrato de entidades y documentos del módulo base](../../../001-erp-base-module/contracts/entity-storage.md). Los proveedores se guardan como Entidades del template; el resto de las colecciones viven en `localStorage` bajo el prefijo `erp_compras:`.
+Definir las claves, la forma de los registros y las operaciones de persistencia propias de la funcionalidad `002`. Este contrato complementa, sin reemplazar, el [contrato de entidades y documentos del módulo base](../../001-erp-base-module/contracts/entity-storage.md). Los proveedores se guardan como Entidades del template; el resto de las colecciones viven en `localStorage` bajo el prefijo `erp_compras:`.
 
 ## Claves y colecciones
 
@@ -25,7 +25,17 @@ Definir las claves, la forma de los registros y las operaciones de persistencia 
 | `erp_compras:meta`          | Estado de carga de la semilla (`semilla_cargada`)                   | Módulo 002  |
 | `erp_compras:sesion`        | Usuario y rol de la sesión simulada, fijos hasta cerrar sesión      | Módulo 002  |
 
-Toda clave se construye con `clave(nombre)`, que antepone `erp_compras:` al nombre de la colección. Las claves del módulo base nunca se modifican desde este contrato.
+Toda clave del módulo `002` se construye con `clave(nombre)`, que antepone `erp_compras:` al nombre de la colección. Las claves del módulo base (`erp_base_module:entities` y `erp_base_module:documents`) nunca se modifican desde este contrato.
+
+## API exacta del núcleo base (no modificar)
+
+El archivo `src/storage.js` se conserva sin cambios funcionales y expone exactamente:
+
+- Entidades: `loadEntities()`, `saveEntities(entities)`, `validateEntity(payload)`, `addEntity(payload)`, `updateEntity(id, updates)`, `deleteEntity(id)`, `searchEntities(term)`.
+- Documentos: `loadDocuments()`, `saveDocuments(documents)`, `validateDocument(payload, currentStatus)`, `addDocument(payload)`, `updateDocument(id, updates)`, `deleteDocument(id)`, `deleteDocumentsForEntity(entityId)`.
+- Utilidades y reinicio: `isValidDate(value)` y `clearAll()`.
+
+`src/compras/proveedores.js` y `src/compras/almacenamiento.js` importan solo `loadEntities`/`saveEntities` desde esa ruta; el resto de operaciones de este contrato (`leer`, `guardar`, `agregar`, `buscar`, `actualizar`, `puedeEliminar`, `eliminar`, `limpiarColeccion`) pertenecen a `src/compras/almacenamiento.js` y operan sobre claves `erp_compras:*`. No se debe documentar ni invocar una función `load…`, `save…`, `add…`, `update…` o `delete…` genérica que no exista en `src/storage.js`. Está prohibido modificar `src/storage.js`, `tests/unit/storage.test.js` ni `eslint.config.mjs`.
 
 ## Forma de los datos
 

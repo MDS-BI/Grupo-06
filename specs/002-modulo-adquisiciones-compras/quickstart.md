@@ -8,24 +8,25 @@
 
 - Node.js y npm compatibles con las versiones de Vite y Vitest declaradas en `package.json`.
 - Un navegador de escritorio moderno con `localStorage` disponible.
-- No se necesita backend, base de datos ni conexión a internet después de instalar dependencias. El acceso es simulado con la clave genérica `Compras2026`: el campo de identificación acepta correo corporativo o RUT válido con Módulo 11. El portal implementa **UI-01**: no expone selector visual de modo; inicia directamente con la semilla completa de **8 usuarios** (`semilla.json` v3) y el botón **Activar modo presentación** despliega el Directorio Interno de acceso rápido con ingreso en un clic. Al desactivar el modo presentación, el directorio vuelve a quedar oculto. El rol queda fijo hasta cerrar sesión; para usar otro rol, cierre sesión e ingrese de nuevo.
+- No se necesita backend ni base de datos después de instalar dependencias. La tipografía `Plus Jakarta Sans` se solicita desde Google Fonts cuando hay conexión; sin internet se aplica el respaldo `system-ui` declarado en `src/styles.css`, por lo que la funcionalidad no depende de la red. El acceso es simulado con la clave genérica `Compras2026`: el campo de identificación acepta correo corporativo o RUT válido con Módulo 11. El portal implementa **UI-01**: no expone selector visual de modo; inicia directamente con la semilla completa de **8 usuarios** (`semilla.json` v3) y el botón **Activar modo presentación** despliega el Directorio Interno de acceso rápido con ingreso en un clic. Al desactivar el modo presentación, el directorio vuelve a quedar oculto. El rol queda fijo hasta cerrar sesión; para usar otro rol, cierre sesión e ingrese de nuevo.
 
 ## Configuración
 
-1. Desde la raíz del repositorio, instale las dependencias:
+1. Si la reconstrucción se ejecuta con `/speckit.implement`, verifique que `specs/002-modulo-adquisiciones-compras/assets/login-bg.avif` exista y cópielo a `public/login-bg.avif` solo si esa ruta no existe. No se modifica ningún otro archivo; mientras la imagen no esté disponible, `src/styles.css` conserva el degradado oscuro de respaldo.
+2. Desde la raíz del repositorio, instale las dependencias:
 
    ```bash
    npm install
    ```
 
-2. Inicie el servidor de desarrollo:
+3. Inicie el servidor de desarrollo:
 
    ```bash
    npm run dev
    ```
 
-3. Abra la URL local que muestra Vite (por defecto `http://localhost:5173`).
-4. En la pantalla de acceso escriba un correo de la semilla (por ejemplo `francisca.herrera@pyme.cl`) o su RUT (por ejemplo `16.345.678-8`) y la clave genérica `Compras2026`. El sistema inicia con los 8 usuarios de la semilla; puede pulsar **Activar modo presentación** y elegir una de las ocho entradas del Directorio Interno para completar correo y clave con un clic. El botón **Mostrar/Ocultar** permite verificar la clave y **Cerrar sesión** devuelve a esta pantalla sin borrar los datos. Con la sesión iniciada no es posible cambiar de rol: en los escenarios, "como `<rol>`" significa cerrar sesión e ingresar con el correo o RUT de ese rol (los dos `jefe_compras` son `andres.contreras@pyme.cl` y `valentina.lagos@pyme.cl`).
+4. Abra la URL local que muestra Vite (por defecto `http://localhost:5173`).
+5. En la pantalla de acceso escriba un correo de la semilla (por ejemplo `francisca.herrera@pyme.cl`) o su RUT (por ejemplo `16.345.678-8`) y la clave genérica `Compras2026`. El sistema inicia con los 8 usuarios de la semilla; puede pulsar **Activar modo presentación** y elegir una de las ocho entradas del Directorio Interno para completar correo y clave con un clic. El botón **Mostrar/Ocultar** permite verificar la clave y **Cerrar sesión** devuelve a esta pantalla sin borrar los datos. Con la sesión iniciada no es posible cambiar de rol: en los escenarios, "como `<rol>`" significa cerrar sesión e ingresar con el correo o RUT de ese rol (los dos `jefe_compras` son `andres.contreras@pyme.cl` y `valentina.lagos@pyme.cl`).
 
 La primera visita carga automáticamente `src/compras/semilla.json`: 8 usuarios (dos `jefe_compras` y dos `bodega`), 4 centros de costo, 20 productos, 12 proveedores, 10 solicitudes, 7 cotizaciones, 8 órdenes de compra, 5 recepciones, 7 documentos de facturación, 2 devoluciones, 10 referencias de catálogo y 2 evaluaciones. Todos los datos son ficticios y las fechas se ajustan al día actual.
 
@@ -42,7 +43,7 @@ Después recargue la página para que se vuelva a cargar la semilla.
 | Comando                | Resultado esperado                                                                                              |
 | ---------------------- | --------------------------------------------------------------------------------------------------------------- |
 | `npm run dev`          | Servidor Vite activo; la interfaz pide acceso y luego muestra solo el módulo Adquisiciones y Compras.          |
-| `npm test -- --run`    | 321 pruebas aprobadas en 27 archivos y 56 omitidas en 10 archivos (los omitidos pertenecen al template base).   |
+| `npm test -- --run` o `npx vitest run` | 321 pruebas aprobadas en 27 archivos y 56 omitidas en 10 archivos (los omitidos pertenecen al template base). |
 | `npm run lint`         | 0 errores y 0 advertencias.                                                                                      |
 | `npm run build`        | Build de producción sin errores.                                                                                |
 | `npm run preview`      | El build se sirve en `http://localhost:4173` con el mismo comportamiento.                                       |
