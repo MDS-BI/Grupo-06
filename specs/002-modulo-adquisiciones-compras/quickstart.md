@@ -8,7 +8,7 @@
 
 - Node.js y npm compatibles con las versiones de Vite y Vitest declaradas en `package.json`.
 - Un navegador de escritorio moderno con `localStorage` disponible.
-- No se necesita backend, base de datos ni conexión a internet después de instalar dependencias. El acceso es simulado con la clave genérica `Compras2026`: el campo de identificación acepta correo corporativo o RUT válido con Módulo 11. El conmutador **Modo Demo / Modo Real** persiste su selección; **Modo Demo** habilita el directorio con el botón **Activar modo presentación**, mientras que en **Modo Real** el directorio no se revela. El rol queda fijo hasta cerrar sesión; para usar otro rol, cierre sesión e ingrese de nuevo.
+- No se necesita backend, base de datos ni conexión a internet después de instalar dependencias. El acceso es simulado con la clave genérica `Compras2026`: el campo de identificación acepta correo corporativo o RUT válido con Módulo 11. El portal implementa **UI-01**: no expone selector visual de modo; inicia directamente con la semilla completa de **8 usuarios** (`semilla.json` v3) y el botón **Activar modo presentación** despliega el Directorio Interno de acceso rápido con ingreso en un clic. Al desactivar el modo presentación, el directorio vuelve a quedar oculto. El rol queda fijo hasta cerrar sesión; para usar otro rol, cierre sesión e ingrese de nuevo.
 
 ## Configuración
 
@@ -25,7 +25,7 @@
    ```
 
 3. Abra la URL local que muestra Vite (por defecto `http://localhost:5173`).
-4. En la pantalla de acceso escriba un correo de la semilla (por ejemplo `francisca.herrera@pyme.cl`) o su RUT (por ejemplo `16.345.678-8`) y la clave genérica `Compras2026`. En **Modo Demo** puede pulsar **Activar modo presentación** y elegir una de las ocho entradas del directorio para completar correo y clave con un clic; cada entrada revela la clave para exhibirla. El botón **Mostrar** permite verificar la clave y **Cerrar sesión** devuelve a esta pantalla sin borrar los datos. Con la sesión iniciada no es posible cambiar de rol: en los escenarios, "como `<rol>`" significa cerrar sesión e ingresar con el correo o RUT de ese rol (los dos `jefe_compras` son `andres.contreras@pyme.cl` y `valentina.lagos@pyme.cl`).
+4. En la pantalla de acceso escriba un correo de la semilla (por ejemplo `francisca.herrera@pyme.cl`) o su RUT (por ejemplo `16.345.678-8`) y la clave genérica `Compras2026`. El sistema inicia con los 8 usuarios de la semilla; puede pulsar **Activar modo presentación** y elegir una de las ocho entradas del Directorio Interno para completar correo y clave con un clic. El botón **Mostrar/Ocultar** permite verificar la clave y **Cerrar sesión** devuelve a esta pantalla sin borrar los datos. Con la sesión iniciada no es posible cambiar de rol: en los escenarios, "como `<rol>`" significa cerrar sesión e ingresar con el correo o RUT de ese rol (los dos `jefe_compras` son `andres.contreras@pyme.cl` y `valentina.lagos@pyme.cl`).
 
 La primera visita carga automáticamente `src/compras/semilla.json`: 8 usuarios (dos `jefe_compras` y dos `bodega`), 4 centros de costo, 20 productos, 12 proveedores, 10 solicitudes, 7 cotizaciones, 8 órdenes de compra, 5 recepciones, 7 documentos de facturación, 2 devoluciones, 10 referencias de catálogo y 2 evaluaciones. Todos los datos son ficticios y las fechas se ajustan al día actual.
 
@@ -123,16 +123,16 @@ Con los datos semilla ya hay documentos en todos los estados. Para repetir el ci
 
 **Resultado esperado**: las colecciones `erp_compras:*` y la Entidad base conservan los cambios entre recargas, y el reinicio devuelve la semilla original. Las claves y operaciones están descritas en [contracts/almacenamiento-compras.md](contracts/almacenamiento-compras.md).
 
-### 8. Gobernanza: modos, padrón, OTP y auditoría forense (FR-042–FR-046, SC-020–SC-023)
+### 8. Gobernanza: modo presentación, padrón, OTP y auditoría forense (FR-042–FR-046, SC-020–SC-023)
 
-1. En la pantalla de acceso seleccione **Modo Demo**, pulse **Activar modo presentación** y confirme que las ocho entradas muestran nombre, correo, clave, rol y centro de costo. Cambie a **Modo Real**, recargue y confirme que el directorio no aparece ni existe en el DOM; ingrese con `13.789.012-7` y `Compras2026`.
+1. En la pantalla de acceso confirme que no existe un selector visual de modo. Pulse **Activar modo presentación** y verifique que el Directorio Interno despliega las ocho entradas con nombre, correo, clave, rol y centro de costo; al desactivar la presentación, el directorio vuelve a quedar oculto. Ingrese con `13.789.012-7` y `Compras2026` y confirme que el acceso por RUT Módulo 11 válido resuelve al usuario correcto.
 2. Como `admin_ti`, abra el **Padrón de Usuarios · Administración TI**: debe tener ocho filas con nombre propio, RUT completo, correo, centro de costo, estado y acciones. El nombre `Tomás Villarroel Sepúlveda` y los demás son enlaces; pulse `Camila Rojas Soto`.
-3. En la ficha confirme que Nombre, Correo corporativo, RUT, Rol y Centro de costo están bloqueados. Pulse **Solicitar autorización del titular (Código OTP)**; en Modo Demo aparece la ayuda visual con el código y se crea una notificación interna al titular. Escriba un código erróneo y compruebe el rechazo; luego escriba el código mostrado y confirme que los campos se habilitan. Modifique el nombre, guarde y verifique que el RUT inválido o el correo mal formado se rechazan, pero el cambio válido se aplica.
+3. En la ficha confirme que Nombre, Correo corporativo, RUT, Rol y Centro de costo están bloqueados. Pulse **Solicitar autorización del titular (Código OTP)**; durante el modo presentación puede aparecer la ayuda visual con el código y se crea una notificación interna al titular. Escriba un código erróneo y compruebe el rechazo; luego escriba el código mostrado y confirme que los campos se habilitan. Modifique el nombre, guarde y verifique que el RUT inválido o el correo mal formado se rechazan, pero el cambio válido se aplica.
 4. Vuelva al padrón, abra la ficha de `Diego Muñoz Vera`, solicite autorización para cambiar estado, valide el OTP y pulse **Suspender cuenta**. Intente ingresar con `diego.munoz@pyme.cl` o `17.234.567-0`: el sistema lo rechaza. Confirme que no puede suspenderse a sí mismo ni dejar al sistema sin `admin_ti` activo.
 5. En **Parámetros de compras** solicite OTP y cambie el umbral de cotizaciones a `900000` y la tolerancia a `0,02`. Confirme que el nuevo umbral se aplica de inmediato en Cotizaciones y Órdenes de compra y persiste tras recargar.
 6. Abra **Log de Auditoría Forense**: cada edición, suspensión, reactivación, cambio de parámetros y desbloqueo de excepciones debe mostrar actor, usuario afectado, tipo de evento, campos anterior → nuevo, resultado OTP y timestamp, con **Integridad verificada**. Exporte el CSV; un código reutilizado o expirado debe rechazarse y no generar evento.
 
-**Resultado esperado**: los datos de cada modo permanecen separados, ningún campo personal cambia sin OTP vigente, las cuentas suspendidas no ingresan y toda operación sensible queda registrada de forma íntegra y consultable solo por `admin_ti`.
+**Resultado esperado**: el portal cumple UI-01 (sin selector visual de modo, 8 usuarios iniciales y Directorio Interno activado por **Activar modo presentación**), ningún campo personal cambia sin OTP vigente, las cuentas suspendidas no ingresan y toda operación sensible queda registrada de forma íntegra y consultable solo por `admin_ti`.
 
 ## Verificación automatizada de las reglas
 

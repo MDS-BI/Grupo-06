@@ -68,13 +68,20 @@
 - [x] FR-038 enumera los doce bancos chilenos y los cinco tipos de cuenta, exige listas desplegables y determina la normalización de alias y el rechazo de valores fuera del catálogo.
 - [x] FR-039 define el auto-relleno de CuentaRUT desde el cuerpo numérico del RUT del proveedor, el banco fijo `BancoEstado`, el aviso editable y la restricción de banco.
 - [x] FR-040 fija las siete columnas del listado, el buscador amplio y sincronizado, y el mínimo de ocho proveedores sintéticos con RUT Módulo 11 y datos completos (semilla-base de 12).
-- [x] FR-041 mantiene el botón **Cargar catálogo base de proveedores/insumos** en Modo Real: agrega proveedores por `entity_id` ausente, carga los catálogos solo si están vacíos y conserva íntegramente los registros ya editados por el usuario.
+- [x] FR-041 mantiene el botón **Cargar catálogo base de proveedores/insumos** para completar catálogos maestros sin borrar datos del usuario: agrega proveedores por `entity_id` ausente, carga los catálogos solo si están vacíos y conserva íntegramente los registros ya editados por el usuario.
 - [x] US1 incorpora escenarios verificables para catálogos, auto-relleno, listado y carga base; SC-018 y SC-019 miden el cumplimiento.
 - [x] `data-model.md` v1.5 documenta los nuevos atributos de PROVEEDOR, los catálogos de §3.3.1, la regla de CuentaRUT y la semilla de 12 proveedores en §9.3.
 - [x] Las pruebas unitarias de catálogos y las pruebas de integración de proveedores y vista cubren banco, tipo de cuenta, auto-relleno, columnas, semilla y botón de carga base.
 
+## Fidelidad de interfaz UI-01/UI-02 (2026-11-25)
+
+- [x] UI-01 está explicitada en `spec.md`, `plan.md` y `tasks.md`: tipografía global `Plus Jakarta Sans` (400/500/600/700), paleta GitHub Dark `#0D1117/#161B22/#2F81F7` con Modo Claro `#F6F8FA/#FFFFFF/#0969DA`, fondo `public/login-bg.avif` en escala de grises, tarjeta central elevada, botón de tema circular `40x40px` fijo (`top:20px; right:20px`) con íconos SVG sol/luna sincronizados, campo dual correo/RUT y Mostrar/Ocultar clave sin subrayado.
+- [x] UI-01 no expone selector visual de modo: el portal inicia con la semilla completa de 8 usuarios (`semilla.json` v3) y ofrece **Activar modo presentación** para desplegar el Directorio Interno de acceso rápido en un clic; al desactivar la presentación el directorio se oculta.
+- [x] UI-02 está explicitada en `spec.md`, `plan.md` y `tasks.md`: única barra lateral `Compras` agrupada en `Panel / Adquisiciones / Compras` filtrada por `visibilidad.js`; KPI superiores con contadores numéricos explícitos sin `undefined`/`NaN`; `Pendientes por rol` con códigos completos (`SC-2026-0001`, `OC-2026-0001`, `FAC-1002`, `DEV-2026-0001`), badges con tilde y acciones/enlaces inferiores alineados al fondo de cada tarjeta.
+- [x] Trazabilidad documental: FR-047/SC-024 cubren UI-01 y FR-048/SC-025 cubren UI-02; Fase 24/T174–T179 en `tasks.md` registra la alineación y el análisis.
+
 ## Notas
 
 - La codificación y el separador de las exportaciones CSV están explicitados en la sección Clarifications (UTF-8 con BOM y `;`) y se mantienen delegados a `plan.md` como fuente técnica detallada en FR-024, US10 y SC-010.
-- La narrativa canónica acordada usa **necesito** en lugar de _quiero_; las once historias son uniformes en ese punto y corresponden al patrón Como / Quiero / Para.
+- La narrativa canónica acordada usa **necesito** en lugar de _quiero_; las historias mantienen el patrón Como / necesito / Para.
 - La especificación está lista para `/speckit.clarify` o `/speckit.plan`.

@@ -418,14 +418,14 @@
 
 ## Fase 22: Catálogos bancarios y listado de proveedores (2026-11-25)
 
-**Objetivo**: centralizar los catálogos chilenos de bancos y tipos de cuenta, la regla de auto-relleno de CuentaRUT, el listado completo de proveedores y la carga del catálogo base en Modo Real (FR-038–FR-041, SC-018–SC-019, US1 escenarios 8–11).
+**Objetivo**: centralizar los catálogos chilenos de bancos y tipos de cuenta, la regla de auto-relleno de CuentaRUT, el listado completo de proveedores y la carga del catálogo base (FR-038–FR-041, SC-018–SC-019, US1 escenarios 8–11).
 
-**Prueba Independiente**: en el formulario de Datos Bancarios se despliegan los doce bancos y cinco tipos de cuenta; al elegir CuentaRUT se fija `BancoEstado` y se auto-completa el número desde el RUT; el listado muestra ocho columnas y doce filas semilla; en Modo Real la carga base agrega catálogos sin borrar registros del usuario.
+**Prueba Independiente**: en el formulario de Datos Bancarios se despliegan los doce bancos y cinco tipos de cuenta; al elegir CuentaRUT se fija `BancoEstado` y se auto-completa el número desde el RUT; el listado muestra ocho columnas y doce filas semilla; la carga base agrega catálogos sin borrar registros del usuario.
 
 - [x] T169 [US1] [FR-038] [SC-018] Implementar los catálogos cerrados de bancos y tipos de cuenta y la normalización de alias en `src/compras/proveedores.js` y `src/compras/vista.js`; rechazar valores fuera del catálogo. Pruebas en `tests/unit/compras/catalogos-bancarios.test.js`.
 - [x] T170 [US1] [FR-039] [SC-018] Implementar el auto-relleno de CuentaRUT (banco fijo `BancoEstado`, número sin dígito verificador, aviso editable y restricción de banco) en `src/compras/proveedores.js`; pruebas en `tests/unit/compras/catalogos-bancarios.test.js` y `tests/integration/compras/vista.test.js`.
 - [x] T171 [US1] [FR-040] [SC-019] Mostrar las ocho columnas y ampliar el buscador sincronizado en `src/compras/vista.js`, con un ancho mínimo de 320 px en escritorio y placeholder legible sin truncamiento (aserto en `tests/integration/compras/vista.test.js`); completar los 12 proveedores semilla en `src/compras/semilla.json`; pruebas en `tests/integration/compras/proveedores.test.js` y `vista.test.js`.
-- [x] T172 [US1] [FR-041] Mantener operativo en Modo Real el botón **Cargar catálogo base de proveedores/insumos**: agrega proveedores por `entity_id` ausente, carga los catálogos solo si están vacíos y conserva sin cambios los ID semilla ya editados por el usuario; prueba en `tests/integration/compras/proveedores.test.js`.
+- [x] T172 [US1] [FR-041] Mantener operativo el botón **Cargar catálogo base de proveedores/insumos**: agrega proveedores por `entity_id` ausente, carga los catálogos solo si están vacíos y conserva sin cambios los ID semilla ya editados por el usuario; prueba en `tests/integration/compras/proveedores.test.js`.
 - [x] T173 [SC-018, SC-019] Verificación automatizada completada: `npx vitest run` (27 archivos aprobados y 10 omitidos; 321 pruebas aprobadas y 56 omitidas), `npm run lint`, `npm run format:check` y `npm run build` sin errores.
 
 **Punto de control**: catálogos cerrados, CuentaRUT, listado y carga base verificables de forma independiente.
@@ -434,11 +434,11 @@
 
 ## Fase 23: Gobernanza de identidades y datos (2026-11-25)
 
-**Propósito**: incorporar el conmutador Modo Demo / Modo Real, el ingreso dual por correo o RUT, el padrón administrable con consentimiento OTP, la suspensión de cuentas, los parámetros dinámicos, el desbloqueo de excepciones y el Log de Auditoría Forense (FR-042–FR-046, US13, SC-020–SC-023).
+**Propósito**: incorporar ingreso dual por correo o RUT, el padrón administrable con consentimiento OTP, la suspensión de cuentas, los parámetros dinámicos, el desbloqueo de excepciones y el Log de Auditoría Forense (FR-042–FR-046, US13, SC-020–SC-023). La gobernanza de modo/snapshot puede existir en almacenamiento, pero **UI-01/FR-047** prohíbe exponer un selector visual de Modo Demo / Modo Real en el portal.
 
-**Prueba Independiente**: en Modo Demo el directorio revela correo y clave; en Modo Real no se materializan credenciales en el DOM. `admin_ti` ve ocho nombres propios con RUT completo, abre cada ficha desde el enlace del nombre, no puede editar sin OTP vigente y cada cambio queda en el log forense. El umbral configurado se aplica de inmediato a las reglas de negocio.
+**Prueba Independiente**: el portal inicia con la semilla completa y no expone selector visual de modo; el directorio interno se revela solo con **Activar modo presentación**. `admin_ti` ve ocho nombres propios con RUT completo, abre cada ficha desde el enlace del nombre, no puede editar sin OTP vigente y cada cambio queda en el log forense. El umbral configurado se aplica de inmediato a las reglas de negocio.
 
-- [x] T161 [FR-042] Conmutador Modo Demo / Modo Real persistido en `gobernanza.js` con instantáneas separadas por modo en `almacenamiento.js`, ingreso por correo o RUT Módulo 11 en `autenticacion.js`, error junto al campo y directorio revelable solo en Modo Demo desde `app.js`/`index.html`.
+- [x] T161 [FR-042] Gobernanza de modo/snapshot persistida en `gobernanza.js` y `almacenamiento.js`, ingreso por correo o RUT Módulo 11 en `autenticacion.js`, error junto al campo y directorio revelable por modo presentación desde `app.js`/`index.html`, sin selector visual de Modo Demo / Modo Real (alineado con UI-01/FR-047).
 - [x] T162 [FR-043] Padrón completo en `vista.js` con ocho usuarios de nombre propio, RUT resuelto por `visibilidad.js`, correo, centro de costo, estado y acciones; enlace clicable por nombre hacia la ficha, suspensión y reactivación con `administracion.js`, bloqueo de autop suspensión y de dejar sin `admin_ti` activo.
 - [x] T163 [FR-044] Solicitud y validación de OTP de 6 dígitos con vigencia de 5 minutos y máximo 3 intentos en `gobernanza.js`, notificación interna al titular, ayuda visual solo en Modo Demo, campos bloqueados hasta la validación y guardado con validación de RUT Módulo 11 y correo corporativo.
 - [x] T164 [FR-045] Log de Auditoría Forense inmutable en `auditoria.js`, separado de `trazabilidad.js`, con hash encadenado, filtros por actor/afectado/tipo, verificación de integridad y exportación CSV restringida a `admin_ti`.
@@ -451,11 +451,11 @@
 
 ---
 
-## Estado de las Fases 16–23 (2026-11-25)
+## Estado de las Fases 16–24 (2026-11-25)
 
-> **Fuente canónica**: esta sección y la tabla «Deuda conocida» de `tasks.md` son el registro único del estado de las Fases 16–23; `spec.md` y `plan.md` contienen solo un resumen con referencia cruzada aquí.
+> **Fuente canónica**: esta sección y la tabla «Deuda conocida» de `tasks.md` son el registro único del estado de las Fases 16–24; `spec.md` y `plan.md` contienen solo un resumen con referencia cruzada aquí.
 >
-> Estado global: implementación completada, MVP funcional, verificado y listo para entrega (**cerrada con nota**); las tareas funcionales T127, T137 y T139 están cerradas y sus pruebas pasan. El recorrido manual de los escenarios 1 a 8 de `quickstart.md` (T144/T155/T168) queda registrado como **validación humana externa**, no como trabajo pendiente.
+> Estado global: implementación completada, MVP funcional, verificado y listo para entrega (**cerrada con nota**); las tareas funcionales T127, T137 y T139 están cerradas y sus pruebas pasan. La Fase 24 documenta explícitamente las Historias UI-01/UI-02 en los artefactos de `specs/` para que una reconstrucción desde cero reproduzca la misma interfaz. El recorrido manual de los escenarios 1 a 8 de `quickstart.md` (T144/T155/T168) queda registrado como **validación humana externa**, no como trabajo pendiente.
 
 - **Fase 16**: cerrada (`visibilidad.js`, `PERMISOS` y pruebas de matriz).
 - **Fase 17**: navegación agrupada, solo lectura, bloqueo de accesos, historial/exportación, encabezado y filtro del `solicitante` en servicios, UI y CSV implementados y verificados (T127 cerrada).
@@ -463,12 +463,13 @@
 - **Fase 19**: semilla, contratos y documentación sincronizados; verificación automatizada completada (27 archivos aprobados y 10 omitidos; 321 pruebas aprobadas y 56 omitidas; `npm run lint`, `npm run format:check` y `npm run build` sin errores). El recorrido manual de los escenarios 1 a 8 de `quickstart.md` queda como validación humana externa en navegador.
 - **Fase 20**: cerrada; rol fijo, indicador de sesión, nombre de `jefe_compras` y `bodega`, creación de solicitudes por los cinco roles y pruebas de sesión implementados y verificados (T146–T155).
 - **Fase 21**: cerrada; matriz RBAC unificada de RUT personal, RUT tributario y cuentas bancarias implementada en `visibilidad.js` y propagada a vistas, modales, búsquedas, trazabilidad, CSV y asistente, con pruebas por rol y canal (T156–T160).
-- **Fase 22**: cerrada; catálogos bancarios y de tipos de cuenta, auto-relleno de CuentaRUT, tabla y buscador de proveedores ampliados, semilla de 12 proveedores y botón de carga base en Modo Real (T169–T173, FR-038–FR-041, SC-018–SC-019).
-- **Fase 23**: cerrada; Modo Demo / Modo Real con snapshot separado, ingreso por correo o RUT, padrón administrable con OTP, suspensión, parámetros dinámicos, desbloqueo de excepciones y auditoría forense implementados y verificados (T161–T168). Suite: 27 archivos aprobados y 10 omitidos; 321 pruebas aprobadas y 56 omitidas; `lint`, `format:check` y `build` sin errores. El recorrido manual de los escenarios de `quickstart.md` queda como validación humana externa en navegador.
+- **Fase 22**: cerrada; catálogos bancarios y de tipos de cuenta, auto-relleno de CuentaRUT, tabla y buscador de proveedores ampliados, semilla de 12 proveedores y botón de carga base disponible para completar catálogos maestros sin borrar datos del usuario (T169–T173, FR-038–FR-041, SC-018–SC-019).
+- **Fase 23**: cerrada; ingreso por correo o RUT, padrón administrable con OTP, suspensión, parámetros dinámicos, desbloqueo de excepciones y auditoría forense implementados y verificados (T161–T168). La gobernanza de modo/snapshot puede persistir a nivel de almacenamiento, pero el portal no expone selector visual de Modo Demo / Modo Real (alineado por UI-01/Fase 24). Suite: 27 archivos aprobados y 10 omitidos; 321 pruebas aprobadas y 56 omitidas; `lint`, `format:check` y `build` sin errores. El recorrido manual de los escenarios de `quickstart.md` queda como validación humana externa en navegador.
+- **Fase 24**: cerrada en documentación; UI-01 y UI-02 quedan explícitas en `spec.md`, `plan.md` y `tasks.md` con trazabilidad a FR-047/FR-048 y SC-024/SC-025 para reconstrucción fiel de la interfaz desde `specs/`.
 
 ## Deuda conocida
 
-El estado de estas tareas se registra aquí de forma canónica y `spec.md`/`plan.md` lo referencian, para que el congelamiento no esconda trabajo pendiente. T101, T104, T107, T108, T109, T110, T117, T118, T119, T120, T127, T137 y T139 figuran como cerradas; T121-T144 y T146-T155 están cerradas con nota; T156–T160 están cerradas; T144/T155/T168 conservan el recorrido manual en navegador como validación humana externa.
+El estado de estas tareas se registra aquí de forma canónica y `spec.md`/`plan.md` lo referencian, para que el congelamiento no esconda trabajo pendiente. T101, T104, T107, T108, T109, T110, T117, T118, T119, T120, T127, T137 y T139 figuran como cerradas; T121-T144 y T146-T155 están cerradas con nota; T156–T160 están cerradas; T174–T179 están cerradas en documentación (Fase 24); T144/T155/T168 conservan el recorrido manual en navegador como validación humana externa.
 
 | Tarea | Estado  | Justificación de la deuda                                                                                                                                                                                                                    | Referencia                          |
 | ----- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
@@ -512,8 +513,8 @@ El estado de estas tareas se registra aquí de forma canónica y `spec.md`/`plan
 - **Cierre del rediseño (Fase 19)**: al finalizar las fases 17 y 18.
 - **Solicitudes para los cinco roles y rol fijo (Fase 20)**: T146–T149 pueden empezar tras la Fase 16 (T149 en paralelo); T150 depende de T121 y T149; T151 de T150; T152 y T153 de T146–T148 (T152 también de T149); T154 y T155 cierran la fase. Conviene ejecutar T147 antes o junto con T125 y T130, porque las tres tocan la barra superior y la navegación.
 - **Matriz RBAC de datos sensibles (Fase 21)**: depende de las fases 1 a 20 y consolida la visibilidad de RUT y cuentas usada por US1, US12 y la exportación. T156 centraliza la matriz en `visibilidad.js`; T157 y T158 la propagan a servicios, vistas, trazabilidad, CSV y asistente; T159 y T160 verifican y sincronizan la documentación.
-- **Catálogos bancarios y listado de proveedores (Fase 22)**: depende de la Fase 21 porque la matriz de `visibilidad.js` rige la cuenta enmascarada del listado. T169 y T170 amplían el formulario y el auto-relleno de `CuentaRUT`; T171 y T172 el listado y la carga base en Modo Real; T173 cierra la fase. T172 depende además de T161 (conmutador Modo Real): T161 se ejecuta al inicio de la Fase 23, en paralelo con el cierre de la Fase 22, y precede a T172, por lo que no hay ciclo entre las fases 22 y 23.
-- **Gobernanza de identidades y datos (Fase 23)**: depende de la Fase 21 porque toda edición usa la matriz canónica de `visibilidad.js`; T161 (conmutador e ingreso dual) puede iniciarse en paralelo con la Fase 22 y debe preceder a T172; T162–T168 dependen además de la Fase 22 porque el padrón y los parámetros se apoyan en los catálogos ya centralizados. T162 y T163 comparten el modal de ficha; T164 consume los eventos generados por T162, T163, T165 y T166; T167 y T168 cierran la fase.
+- **Catálogos bancarios y listado de proveedores (Fase 22)**: depende de la Fase 21 porque la matriz de `visibilidad.js` rige la cuenta enmascarada del listado. T169 y T170 amplían el formulario y el auto-relleno de `CuentaRUT`; T171 y T172 el listado y la carga base; T173 cierra la fase. T172 depende además de T161 (gobernanza de modo/snapshot y datos base): T161 se ejecuta al inicio de la Fase 23, en paralelo con el cierre de la Fase 22, y precede a T172, por lo que no hay ciclo entre las fases 22 y 23.
+- **Gobernanza de identidades y datos (Fase 23)**: depende de la Fase 21 porque toda edición usa la matriz canónica de `visibilidad.js`; T161 (gobernanza de modo/snapshot e ingreso dual) puede iniciarse en paralelo con la Fase 22 y debe preceder a T172; T162–T168 dependen además de la Fase 22 porque el padrón y los parámetros se apoyan en los catálogos ya centralizados. T162 y T163 comparten el modal de ficha; T164 consume los eventos generados por T162, T163, T165 y T166; T167 y T168 cierran la fase. La UI del portal debe seguir UI-01/FR-047: sin selector visual de Modo Demo / Modo Real.
 
 ### Dependencias Críticas
 
@@ -629,6 +630,8 @@ Ejemplo de paralelismo: tras T121, ejecutar en paralelo T122/T123 (matriz y sus 
 | FR-044    | T163 |
 | FR-045    | T164, T166 |
 | FR-046    | T165 |
+| FR-047    | T174, T176, T177, T178, T179 |
+| FR-048    | T175, T176, T178, T179 |
 
 ### Requisitos de Integración
 
@@ -665,6 +668,8 @@ Ejemplo de paralelismo: tras T121, ejecutar en paralelo T122/T123 (matriz y sus 
 | SC-021   | T167 |
 | SC-022   | T167 |
 | SC-023   | T167 |
+| SC-024   | T174, T179 |
+| SC-025   | T175, T179 |
 
 ### Historias de Usuario
 
@@ -687,15 +692,36 @@ Ejemplo de paralelismo: tras T121, ejecutar en paralelo T122/T123 (matriz y sus 
 | Rediseño de permisos (fundacional, ajustes y cierre) | Transversal | T121-T124, T133-T144   |
 | Solicitudes para los cinco roles y rol fijo (Fase 20) | Transversal | T146-T155         |
 | US13 - Administrar usuarios con OTP y auditoría forense | P1 | T161-T168 |
+| UI-01 - Portal de acceso corporativo | P1 | T174, T176, T177, T178, T179 |
+| UI-02 - Navegación agrupada y panel ejecutivo | P1 | T175, T176, T178, T179 |
 | Catálogos bancarios y listado de proveedores (Fase 22) | Transversal | T169-T173 |
+| Fidelidad de interfaz UI-01/UI-02 (Fase 24) | Transversal | T174-T179 |
+
+## Fase 24: Fidelidad de interfaz UI-01/UI-02 (2026-11-25)
+
+**Propósito**: dejar explícitos en `specs/` los requisitos de interfaz UI-01 y UI-02 para que una reconstrucción desde cero reproduzca la misma experiencia, sin modificar implementación (`src/`, `tests/`, `index.html`, `public/`).
+
+**Prueba Independiente**: un implementador puede reconstruir portal y Panel leyendo solo `spec.md`, `plan.md` y `tasks.md`: encuentra tipografía, paleta, fondo, botón de tema, comportamiento de modo presentación, estructura de navegación, KPI y formato de pendientes con trazabilidad a FR-047/FR-048 y SC-024/SC-025.
+
+- [x] T174 [UI-01] [FR-047] [SC-024] Documentar en `spec.md` el portal corporativo: `Plus Jakarta Sans` (400/500/600/700), paleta GitHub Dark `#0D1117/#161B22/#2F81F7` con Modo Claro `#F6F8FA/#FFFFFF/#0969DA`, fondo `public/login-bg.avif` en escala de grises, tarjeta central elevada, botón de tema circular `40x40px` fijo (`top:20px; right:20px`) con íconos SVG sol/luna sincronizados, campo dual correo/RUT, Mostrar/Ocultar clave sin subrayado, sin selector visual de Modo Demo / Modo Real, inicio con semilla completa de 8 usuarios (`semilla.json` v3) y botón **Activar modo presentación** con Directorio Interno de acceso rápido en un clic.
+- [x] T175 [UI-02] [FR-048] [SC-025] Documentar en `spec.md` la navegación y Panel ejecutivo: única barra lateral `Compras` agrupada en `Panel / Adquisiciones / Compras` filtrada por `visibilidad.js`; KPI superiores con contadores numéricos explícitos sin `undefined`/`NaN`; `Pendientes por rol` con códigos completos (`SC-2026-0001`, `OC-2026-0001`, `FAC-1002`, `DEV-2026-0001`), badges con tilde y enlaces/acciones inferiores alineados al fondo de cada tarjeta.
+- [x] T176 [UI-01] [UI-02] Incorporar en `plan.md` las decisiones UI-01/UI-02, impactos de arquitectura de interfaz, restricciones de portal/navegación y referencia a Fase 24 como fuente de fidelidad visual.
+- [x] T177 [FR-042] Alinear en `spec.md`, `plan.md` y `tasks.md` la tensión entre UI-01 y el antiguo conmutador Modo Demo / Modo Real: la UI no expone selector visual de modo; la gobernanza/snapshot puede persistir en almacenamiento sin reintroducir el selector.
+- [x] T178 [UI-01] [UI-02] Actualizar trazabilidad en `tasks.md`: dependencias, estado de Fases 16–24, deuda conocida y cobertura de FR-047/FR-048/SC-024/SC-025.
+- [x] T179 Ejecutar `/speckit.analyze` sobre `spec.md`, `plan.md`, `tasks.md` y constitución; registrar hallazgos y confirmar 0 contradicciones tras remediación.
+
+**Punto de control**: UI-01/UI-02 quedan reconstruibles desde `specs/` con trazabilidad y sin contradicciones.
+
+---
 
 ## Arquitectura actual y restricciones (MVP)
 
-- Interfaz GitHub Dark (#0D1117, #161B22, #2F81F7), barra lateral con íconos SVG lineales, Asistente IA local con guardrails RBAC y dominio ERP.
-- Login conmutador Modo Demo / Modo Real sin saltos de layout.
-- RBAC estricto y dataset semilla completo (8 usuarios chilenos, 12 colecciones).
+- Interfaz UI-01/UI-02: tipografía global `Plus Jakarta Sans` (400/500/600/700); paleta base GitHub Dark (`#0D1117`, `#161B22`, `#2F81F7`) con soporte de Modo Claro (`#F6F8FA`, `#FFFFFF`, `#0969DA`); fondo `public/login-bg.avif`; botón de tema circular `40x40px` fijo en esquina superior derecha; íconos SVG sol/luna sincronizados.
+- Login UI-01: sin selector visual de Modo Demo / Modo Real; inicio directo con semilla completa de 8 usuarios (`semilla.json` v3) y botón **Activar modo presentación** para Directorio Interno de acceso rápido en un clic; campo dual correo/RUT y Mostrar/Ocultar clave sin subrayado.
+- Navegación/Panel UI-02: única barra lateral `Compras` con agrupación `Panel / Adquisiciones / Compras` filtrada por `visibilidad.js`; KPI numéricos explícitos sin `undefined`/`NaN`; `Pendientes por rol` con códigos completos, badges con tilde y acciones alineadas al fondo de tarjeta.
+- RBAC estricto por rol (solicitante, comprador, jefe_compras, bodega, admin_ti) según matriz FR-033.
 - No modificar src/storage.js ni eslint.config.mjs.
-- Prohibido vistas/botones genéricos del template base.
+- Prohibido renderizar vistas o botones genéricos del template base (Documentos, Entidades, Búsqueda, Panel genérico).
 
 > Nota: las definiciones canónicas de T156–T160 están en la Fase 21 (matriz RBAC unificada de datos sensibles) y no se repiten aquí.
 
